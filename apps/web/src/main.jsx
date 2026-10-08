@@ -5,6 +5,7 @@ import App from "./App.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import "./styles.css";
 import "./reporting.css";
+import "./shortages.css";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

@@ -3,6 +3,7 @@ import {
   WATER_LEVEL_OPTIONS,
   optionLabel,
 } from "../../../../packages/shared/reportOptions.js";
+import ShortageDetails from "./ShortageDetails.jsx";
 
 const locationLabels = {
   DEVICE: "Device location",
@@ -20,12 +21,25 @@ export default function ReportDetails({ report }) {
         </p>
       )}
       <div className="report-status" role="status">
-        <span className="status-badge degraded">Pending verification</span>
+        <span className="status-badge degraded">
+          {report.verificationStatus === "VERIFIED"
+            ? "Verified (simulated)"
+            : "Pending verification"}
+        </span>
         <p>
-          Your report is saved. Verification and emergency response tools will
-          be introduced in later phases.
+          Your report is saved. Local shortage evidence is calculated separately
+          from field verification.
         </p>
       </div>
+      {report.detectionStatus === "DEFERRED" && (
+        <p className="missing-evidence">
+          Your report is saved. Shortage analysis is temporarily unavailable;
+          refresh to retry.
+        </p>
+      )}
+      {report.shortageEvent && (
+        <ShortageDetails event={report.shortageEvent} compact />
+      )}
       <dl className="report-details">
         <div>
           <dt>Report ID</dt>
@@ -105,8 +119,16 @@ export default function ReportDetails({ report }) {
           <span>Saved in AquaShield.</span>
         </li>
         <li>
-          <strong>Verification pending</strong>
-          <span>No shortage has been confirmed or response assigned yet.</span>
+          <strong>
+            {report.verificationStatus === "VERIFIED"
+              ? "Simulated field verification"
+              : "Verification pending"}
+          </strong>
+          <span>
+            {report.shortageEvent
+              ? "Local evidence has been analyzed. No emergency response is assigned."
+              : "No local event analysis or emergency response is available yet."}
+          </span>
         </li>
       </ol>
     </>

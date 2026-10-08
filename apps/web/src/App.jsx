@@ -8,6 +8,8 @@ import ReportPage from "./pages/ReportPage.jsx";
 import ReportHistoryPage from "./pages/ReportHistoryPage.jsx";
 import ReportStatusPage from "./pages/ReportStatusPage.jsx";
 import ReportSuccessPage from "./pages/ReportSuccessPage.jsx";
+import ShortagesPage from "./pages/ShortagesPage.jsx";
+import ShortageStatusPage from "./pages/ShortageStatusPage.jsx";
 
 export default function App() {
   return (
@@ -19,10 +21,10 @@ export default function App() {
         <Route path="report/success" element={<ReportSuccessPage />} />
         <Route path="report/:id" element={<ReportStatusPage />} />
         <Route path="my-reports" element={<ReportHistoryPage />} />
-        <Route
-          path="admin"
-          element={<WorkspacePage audience="Municipal team" />}
-        />
+        <Route path="admin" element={<ShortagesPage />} />
+        <Route path="admin/shortages" element={<ShortagesPage />} />
+        <Route path="admin/shortages/:id" element={<ShortageStatusPage />} />
+        <Route path="alerts" element={<ShortagesPage />} />
         <Route
           path="operator"
           element={<WorkspacePage audience="Tanker operator" />}

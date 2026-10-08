@@ -11,10 +11,11 @@ test("backend root and API index expose the completed phase metadata", async () 
   const root = await request(app).get("/").expect(200);
   assert.equal(root.body.data.api, "/api");
   const api = await request(app).get("/api").expect(200);
-  assert.equal(api.body.data.phase, 2);
+  assert.equal(api.body.data.phase, 3);
   assert.deepEqual(api.body.data.endpoints, {
     health: "/api/health",
     reports: "/api/reports",
+    shortages: "/api/shortages",
   });
 });
 
@@ -44,7 +45,7 @@ for (const database of ["disconnected", "unavailable"]) {
 test("unknown and later-phase endpoints return consistent 404 errors", async () => {
   for (const url of [
     "/missing",
-    "/api/shortages",
+    "/api/allocations",
     "/api/auth/me",
     "/api/ai/detect",
   ]) {

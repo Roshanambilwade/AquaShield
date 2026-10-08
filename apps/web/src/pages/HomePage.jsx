@@ -53,6 +53,9 @@ export default function HomePage() {
             <Link to="/my-reports" className="button button-secondary">
               Track my report
             </Link>
+            <Link to="/alerts" className="button button-secondary">
+              View active local alerts
+            </Link>
           </div>
         </div>
         <div className="water-art" aria-hidden="true">
@@ -77,10 +80,10 @@ export default function HomePage() {
         </div>
       </section>
       <section className="foundation-note" aria-label="Project availability">
-        <span className="phase-badge">Phase 2</span>
+        <span className="phase-badge">Phase 3</span>
         <p>
-          Citizen reporting is available. Verification, crisis analysis, local
-          alerts, and dispatch will arrive in later phases.
+          Citizen reporting, shortage detection, confidence and severity are
+          available. Emergency response operations will arrive in later phases.
         </p>
       </section>
       <section className="workspace-section" aria-labelledby="workspace-title">

@@ -146,11 +146,11 @@ test("demo seed is repeatable, public, labeled, and separate from private histor
         { upsert: true, timestamps: false },
       );
   }
-  assert.equal(await Report.countDocuments({ isDemo: true }), 12);
+  assert.equal(await Report.countDocuments({ isDemo: true }), records.length);
   const { body } = await request(app)
     .get("/api/reports?demo=true&limit=5")
     .expect(200);
-  assert.equal(body.data.pagination.total, 12);
+  assert.equal(body.data.pagination.total, records.length);
   assert.equal(body.data.reports.length, 5);
   assert.equal(
     body.data.reports.every((report) => report.isDemo),

@@ -5,6 +5,7 @@ import {
   disconnectDatabase,
 } from "../../apps/api/src/config/database.js";
 import Report from "../../apps/api/src/models/Report.js";
+import { detectShortages } from "../../apps/api/src/services/shortageService.js";
 
 const createdIds = [];
 test.beforeAll(async () => {
@@ -13,6 +14,7 @@ test.beforeAll(async () => {
 test.afterAll(async () => {
   if (createdIds.length)
     await Report.deleteMany({ _id: { $in: createdIds }, isDemo: false });
+  await detectShortages(loadEnv());
   await disconnectDatabase();
 });
 

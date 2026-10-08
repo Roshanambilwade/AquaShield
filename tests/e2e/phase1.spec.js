@@ -22,7 +22,7 @@ test("overview has no browser errors or horizontal overflow", async ({
     "A coordinated response.",
   );
   await expect(page.getByLabel("Project availability")).toContainText(
-    "Phase 2",
+    "Phase 3",
   );
   await expect(page.getByRole("navigation")).toBeVisible();
   expect(
@@ -46,10 +46,12 @@ test("basic routes support navigation and direct refresh", async ({ page }) => {
     .click();
   await expect(page).toHaveURL("/admin");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Your workspace starts here.",
+    "Water crisis overview",
   );
   await page.reload();
-  await expect(page.getByText("Phase 1 foundation")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Water crisis overview",
+  );
   await page
     .getByRole("navigation")
     .getByRole("link", { name: "Operator", exact: true })

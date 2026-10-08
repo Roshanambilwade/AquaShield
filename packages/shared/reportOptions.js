@@ -18,6 +18,10 @@ export const WATER_LEVEL_OPTIONS = [
 // Locality center from the specification. It is not a household's exact location.
 export const LOCALITY_CENTERS = [
   { id: "AREA_01", name: "Panchavati", lat: 20.011, lng: 73.79 },
+  { id: "AREA_02", name: "Satpur", lat: 20.005, lng: 73.735 },
+  { id: "AREA_03", name: "Indira Nagar", lat: 19.97, lng: 73.785 },
+  { id: "AREA_04", name: "Nashik Road", lat: 19.955, lng: 73.835 },
+  { id: "AREA_05", name: "Adgaon", lat: 20.035, lng: 73.825 },
 ];
 
 export const MAX_PHOTO_BYTES = 2 * 1024 * 1024;

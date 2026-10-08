@@ -9,6 +9,7 @@ import Report, {
   initializeReportStorage,
 } from "../../apps/api/src/models/Report.js";
 import { seedDemoReports } from "../../apps/api/src/demo/seedReports.js";
+import { detectShortages } from "../../apps/api/src/services/shortageService.js";
 
 const ownedIds = [];
 test.beforeAll(async () => {
@@ -20,6 +21,7 @@ test.afterAll(async () => {
   // Delete only the exact report IDs created by these browser tests.
   if (ownedIds.length)
     await Report.deleteMany({ _id: { $in: ownedIds }, isDemo: false });
+  await detectShortages(loadEnv());
   await disconnectDatabase();
 });
 

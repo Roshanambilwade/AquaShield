@@ -2,9 +2,9 @@ import express, { Router } from "express";
 import { createReportControllers } from "../controllers/reportController.js";
 import { createSubmissionLimiter } from "../middleware/submissionLimit.js";
 
-export function createReportRouter(databaseStatus) {
+export function createReportRouter(databaseStatus, config) {
   const router = Router();
-  const controller = createReportControllers(databaseStatus);
+  const controller = createReportControllers(databaseStatus, config);
   // The larger limit is restricted to report submission for a bounded photo.
   router.post(
     "/",

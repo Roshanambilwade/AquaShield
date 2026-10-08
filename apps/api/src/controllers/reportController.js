@@ -11,6 +11,10 @@ import {
   listReports,
   getReport,
 } from "../services/reportService.js";
+import {
+  detectShortages,
+  getReportShortage,
+} from "../services/shortageService.js";
 
 function citizenToken(req, required = true) {
   const token = req.get("X-Citizen-Token");
@@ -24,7 +28,7 @@ function citizenToken(req, required = true) {
   return token;
 }
 
-export function createReportControllers(databaseStatus) {
+export function createReportControllers(databaseStatus, config) {
   async function ready() {
     if ((await databaseStatus()) !== "connected")
       throw new ApiError(
@@ -39,13 +43,22 @@ export function createReportControllers(databaseStatus) {
       const input = validate(reportInputSchema, req.body);
       await ready();
       const { report, created } = await createReport(input, token);
-      res
-        .status(created ? 201 : 200)
-        .json({
-          success: true,
-          message: "Your report has been received.",
-          data: report,
-        });
+      // A saved report must still be acknowledged if derived detection fails.
+      // Reads and idempotent retries re-run detection from persisted evidence.
+      let detectionStatus = "COMPLETE";
+      try {
+        await detectShortages(config);
+      } catch {
+        detectionStatus = "DEFERRED";
+        console.warn(
+          "Report saved; shortage detection will retry on the next request.",
+        );
+      }
+      res.status(created ? 201 : 200).json({
+        success: true,
+        message: "Your report has been received.",
+        data: { ...report, detectionStatus },
+      });
     },
     async list(req, res) {
       const query = validate(reportQuerySchema, req.query);
@@ -57,7 +70,18 @@ export function createReportControllers(databaseStatus) {
       const id = validate(reportIdSchema, req.params.id);
       const token = citizenToken(req, false);
       await ready();
-      res.json({ success: true, data: await getReport(id, token) });
+      const report = await getReport(id, token);
+      let shortageEvent = null;
+      let detectionStatus = "COMPLETE";
+      try {
+        shortageEvent = await getReportShortage(report, config);
+      } catch {
+        detectionStatus = "DEFERRED";
+      }
+      res.json({
+        success: true,
+        data: { ...report, shortageEvent, detectionStatus },
+      });
     },
   };
 }

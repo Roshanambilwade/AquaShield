@@ -3,6 +3,7 @@ import cors from "cors";
 import { getDatabaseStatus } from "./config/database.js";
 import { createApiRouter } from "./routes/index.js";
 import { createReportRouter } from "./routes/reports.js";
+import { createShortageRouter } from "./routes/shortages.js";
 import { ApiError, errorHandler, notFound } from "./middleware/errors.js";
 
 export function createApp(config, { databaseStatus = getDatabaseStatus } = {}) {
@@ -29,9 +30,10 @@ export function createApp(config, { databaseStatus = getDatabaseStatus } = {}) {
       res.set("Cache-Control", "no-store");
       next();
     },
-    createReportRouter(databaseStatus),
+    createReportRouter(databaseStatus, config),
   );
   app.use(express.json({ limit: "100kb" }));
+  app.use("/api/shortages", createShortageRouter(config, databaseStatus));
   app.get("/", (_req, res) =>
     res.json({ success: true, data: { name: "AquaShield API", api: "/api" } }),
   );

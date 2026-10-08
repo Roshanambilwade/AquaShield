@@ -7,9 +7,9 @@ try {
   if (config.NODE_ENV === "production")
     throw new Error("Demo seeding is disabled in production.");
   await connectDatabase(config);
-  await seedDemoReports();
+  await seedDemoReports(config);
   console.info(
-    "12 simulated reports are available at /my-reports?demo=true. Existing citizen reports were preserved.",
+    "66 simulated reports across 5 areas and derived shortage events are available at /admin?demo=true. Existing citizen reports were preserved.",
   );
 } catch {
   console.error(

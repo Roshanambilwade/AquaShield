@@ -2,7 +2,7 @@
 
 An intelligence and decision layer for emergency water management, by **AquaSentinels** for Environmental Hacks — Heat & Water Track.
 
-**Phases 1 and 2 are implemented.** The overrides at the top of [AQUASHIELD_SPEC.md](AQUASHIELD_SPEC.md) and the requested phase scope take precedence over the full MVP requirements. Phase 3 has not been started.
+**Phases 1–3 are implemented.** The overrides at the top of [AQUASHIELD_SPEC.md](AQUASHIELD_SPEC.md) and the requested phase scope take precedence over the full MVP requirements. Implementation stops before Phase 4. See [Phase 3 calculations and verification](docs/phase3.md) for the scoring formulas, configurable thresholds, APIs, limitations and exact change inventory.
 
 ## Completed
 
@@ -17,6 +17,9 @@ An intelligence and decision layer for emergency water management, by **AquaSent
 - MongoDB Report model, Zod validation, anonymous browser-owned history, and report confirmation/status pages.
 - Size-limited JPEG/PNG photos, validated and re-encoded by Sharp with metadata removed; submission rate limiting.
 - Repeatable simulated report seeding and real persistence tests, including reconnects and safe submission retries.
+- Geographic/time clustering, duplicate/suspicious evidence handling, persisted shortage events and independently counted verified reports.
+- Configurable deterministic confidence/severity, approximate affected-population estimates, elapsed shortage duration and explicit unknown inputs.
+- Municipal shortage overview with an offline geographic zone map, LOW/MEDIUM/HIGH/CRITICAL badges, emerging evidence and inspectable calculation tables.
 
 ## Running locally
 
@@ -58,11 +61,11 @@ A cryptographically random key is saved in browser local storage and sent in `X-
 
 The client sends a unique `submissionId`. Retrying an unchanged submission returns the existing report instead of creating another, including concurrent retries. POST submissions are limited to 30 per connection/IP per 15 minutes with an in-process limiter; production deployments will need appropriate proxy configuration and a shared limiter.
 
-Household size is citizen-provided. No wider affected population, shortage confidence, severity, or emergency response is inferred in Phase 2. Reports remain pending; no verification or edit endpoint is enabled yet.
+Household size is citizen-provided. Phase 3 derives approximate population, shortage confidence and severity in separate shortage events. Citizen reports remain pending field verification; no verification or edit endpoint is enabled. Public aggregate APIs never expose private report IDs, anonymous keys, descriptions, household coordinates or photos. Zone centers are averages of report coordinates, including explicitly approximate locality centers.
 
 ## Demo report data
 
-Run `npm run seed:demo`, then open `/my-reports?demo=true` using **View simulated demo reports**. This inserts 12 deterministic, fictional reports with fixed sample dates. Re-running the command does not duplicate them or delete citizen submissions. Seeded records and coordinates are clearly labeled simulated. They are publicly readable demo records and kept separate from private history. The seed command is disabled when `NODE_ENV=production`.
+Run `npm run seed:demo`, then open `/admin?demo=true` or `/my-reports?demo=true`. This inserts 66 deterministic fictional reports across Panchavati, Satpur, Indira Nagar, Nashik Road and Adgaon, plus simulated area/environment/incident context and derived shortage events. Panchavati is the critical hero scenario; the other zones demonstrate HIGH, MEDIUM, LOW and emerging evidence. Two repeat submissions and one conflicting-duration submission demonstrate exclusion from scoring. Re-running does not duplicate them or delete citizen submissions; it removes only the obsolete Phase 2 seed with its known fictional reporter key. Demo events use a fixed observation clock and never corroborate real citizen reports. Every displayed score is calculated from evidence. Demo seeding and demo shortage APIs are disabled in production.
 
 Browser tests require an installed Microsoft Edge by default and a built frontend (`npm run build` first). They start isolated API/preview servers on **5100/4174**, so those ports must be free. For Chrome, set `$env:PLAYWRIGHT_CHANNEL='chrome'`. For Playwright Chromium, set `$env:PLAYWRIGHT_BROWSERS_PATH` to a directory inside this repository, run `npx playwright install chromium`, then set `$env:PLAYWRIGHT_CHANNEL='chromium'`.
 
@@ -107,9 +110,11 @@ JWT, Redis, AWS, Bedrock, Strands AI demo mode, and map placeholders in `.env.ex
 | `/report/success?id=<id>` | Persisted report confirmation |
 | `/my-reports` | Anonymous browser-owned report history |
 | `/my-reports?demo=true` | Clearly labeled simulated report history |
-| `/report/:id` | Individual report details and pending status |
+| `/report/:id` | Owner-only report details, verification status and aggregate shortage evidence |
 | `/status` | API/database health, loading/error states, retry |
-| `/admin` | Municipal workspace placeholder |
+| `/admin`, `/admin/shortages`, `/alerts` | Aggregate municipal shortage overview and geographic map |
+| `/admin?demo=true` | Labeled deterministic multi-area demo |
+| `/admin/shortages/:id` | Shortage evidence and numeric calculation details |
 | `/operator` | Operator workspace placeholder |
 | Other paths | Friendly 404 |
 
@@ -122,6 +127,9 @@ JWT, Redis, AWS, Bedrock, Strands AI demo mode, and map placeholders in `.env.ex
 | GET | `/api/reports` | This browser's history; `page` and `limit` pagination |
 | GET | `/api/reports?demo=true` | Public simulated reports only |
 | GET | `/api/reports/:id` | Owner-only details/photo, or a public demo report |
+| GET | `/api/shortages`, `/api/shortages/:id` | Refresh and return public aggregates; `?demo=true` selects only simulated evidence |
+| POST | `/api/shortages/detect` | Rebuild persisted event aggregates from evidence; rate limited |
+| GET / POST | `/api/shortages/:id/severity`, `/api/shortages/:id/calculate-severity` | Inspect / refresh deterministic severity |
 
 Report POST/list require `X-Citizen-Token` (64 lowercase hexadecimal characters). All private reads are filtered by the hashed key. JSON errors remain consistent: `422` invalid report, `400` missing key, `404` unavailable report, `413` oversized payload, `429` rate limit, and `503` unavailable database. Photo contents are omitted from list/submission responses and included only in an authorized detail response.
 
@@ -152,6 +160,6 @@ Backend configuration, routes, controllers, and middleware are separate modules.
 
 The Report collection stores citizen-provided location/locality, supply details, household size, description, sanitized optional photo, anonymous owner hash, submission ID, timestamps, pending status, and a demo flag. JavaScript report options are shared between frontend and backend in `packages/shared/reportOptions.js`; there is no TypeScript shared-types package.
 
-Accounts, maps, clustering, confidence/severity scores, shortage dashboards, AI, AWS execution, allocation, dispatch, and delivery are deferred. Municipal/operator pages retain the Phase 1 placeholders. AWS remains mandatory for the eventual MVP; Strands + Bedrock integration is deferred to its requested phase and is not claimed as working here.
+Accounts, AI, AWS execution, forecasts, allocation, dispatch and delivery are deferred. The operator page retains the Phase 1 placeholder. Phase 3 adds Area and ShortageEvent collections and separate deterministic clustering, confidence, population, severity and fairness helper modules. The fairness helpers have no allocation workflow and require supplied delivery evidence. AWS remains mandatory for the eventual MVP; Strands + Bedrock integration is deferred to its requested phase and is not claimed as working here.
 
-Implementation stops after Phase 2. Later phases require a new instruction.
+Implementation stops after Phase 3. Later phases require a new instruction.

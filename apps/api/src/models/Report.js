@@ -56,10 +56,11 @@ const reportSchema = new mongoose.Schema(
     description: { type: String, trim: true, maxlength: 2000, default: "" },
     verificationStatus: {
       type: String,
-      enum: ["PENDING"],
+      enum: ["PENDING", "VERIFIED", "REJECTED"],
       default: "PENDING",
       immutable: true,
     },
+    verificationSource: { type: String, default: null },
     isDemo: { type: Boolean, default: false, immutable: true },
     hasPhoto: { type: Boolean, default: false },
     photo: { type: photoSchema, select: false },
