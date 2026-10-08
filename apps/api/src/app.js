@@ -4,6 +4,8 @@ import { getDatabaseStatus } from "./config/database.js";
 import { createApiRouter } from "./routes/index.js";
 import { createReportRouter } from "./routes/reports.js";
 import { createShortageRouter } from "./routes/shortages.js";
+import { createAuthRouter } from "./routes/auth.js";
+import { createDashboardRouter } from "./routes/dashboard.js";
 import { ApiError, errorHandler, notFound } from "./middleware/errors.js";
 
 export function createApp(config, { databaseStatus = getDatabaseStatus } = {}) {
@@ -33,6 +35,8 @@ export function createApp(config, { databaseStatus = getDatabaseStatus } = {}) {
     createReportRouter(databaseStatus, config),
   );
   app.use(express.json({ limit: "100kb" }));
+  app.use("/api/auth", createAuthRouter(config, databaseStatus));
+  app.use("/api/dashboard", createDashboardRouter(config, databaseStatus));
   app.use("/api/shortages", createShortageRouter(config, databaseStatus));
   app.get("/", (_req, res) =>
     res.json({ success: true, data: { name: "AquaShield API", api: "/api" } }),

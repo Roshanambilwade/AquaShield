@@ -2,7 +2,7 @@
 
 An intelligence and decision layer for emergency water management, by **AquaSentinels** for Environmental Hacks — Heat & Water Track.
 
-**Phases 1–3 are implemented.** The overrides at the top of [AQUASHIELD_SPEC.md](AQUASHIELD_SPEC.md) and the requested phase scope take precedence over the full MVP requirements. Implementation stops before Phase 4. See [Phase 3 calculations and verification](docs/phase3.md) for the scoring formulas, configurable thresholds, APIs, limitations and exact change inventory.
+**Phases 1–4 are implemented.** The overrides at the top of [AQUASHIELD_SPEC.md](AQUASHIELD_SPEC.md) and the requested phase scope take precedence over the full MVP requirements. Implementation stops after the Phase 4 admin dashboard and map. See [Phase 4 setup and verification](docs/phase4.md) and [Phase 3 calculations](docs/phase3.md).
 
 ## Completed
 
@@ -20,6 +20,9 @@ An intelligence and decision layer for emergency water management, by **AquaSent
 - Geographic/time clustering, duplicate/suspicious evidence handling, persisted shortage events and independently counted verified reports.
 - Configurable deterministic confidence/severity, approximate affected-population estimates, elapsed shortage duration and explicit unknown inputs.
 - Municipal shortage overview with an offline geographic zone map, LOW/MEDIUM/HIGH/CRITICAL badges, emerging evidence and inspectable calculation tables.
+- Administrator provisioning, password hashing, expiring MongoDB sessions, role authorization and server-side logout.
+- Protected command center with eight KPI cards, OpenStreetMap/Leaflet plus offline map fallback, private report layers, event filters/details, activity and evidence analytics.
+- Explicit unknown operational values and a Phase 5 AI placeholder; no fleet, allocation, dispatch, delivery or forecasting workflow.
 
 ## Running locally
 
@@ -45,9 +48,12 @@ npm run build
 npm run test:e2e
 npm run test:dev-origins
 npm run seed:demo
+npm run admin:create
 ```
 
 `test:mongo` requires a reachable MongoDB. The Phase 1 health test is read-only; Phase 2 persistence tests use a uniquely named temporary database and remove only that database afterward. Override their server URI with `MONGODB_TEST_URI` if needed. Browser tests use the configured application database, ensure the simulated demo reports exist, and delete only the exact non-demo report IDs they create. The labeled demo records remain available afterward.
+
+Provision an administrator with `npm run admin:create`. Development generates a random password in the ignored `.local/admin-access.json` when `ADMIN_PASSWORD` is unset. Open `/admin` and sign in using that file. Existing accounts are never overwritten. Production provisioning requires explicit `ADMIN_EMAIL` and `ADMIN_PASSWORD` (at least 12 characters). No public registration or shared default password exists. See [Phase 4](docs/phase4.md) for session/security details and map fallback.
 
 ## Citizen report workflow
 
@@ -77,17 +83,19 @@ Both applications use the root `.env`. Shell values take precedence. Backend sta
 
 The frontend build explicitly sets `NODE_ENV=production`, so the backend's development setting in the shared `.env` does not turn the React build into a development bundle.
 
-| Variable | Purpose | Default |
-| --- | --- | --- |
-| `NODE_ENV` | `development`, `test`, or `production` | `development` |
-| `PORT` | API port | `5000` |
-| `MONGODB_URI` | MongoDB URI | Local `aquashield` database |
-| `MONGODB_CONNECT_TIMEOUT_MS` | Connection/server selection timeout | `5000` |
-| `MONGODB_RETRY_INTERVAL_MS` | Initial connection retry delay | `5000` |
-| `CORS_ORIGIN` | Comma-separated exact origins; no trailing slash | Development/test: `http://localhost:5173,http://127.0.0.1:5173`; required explicitly in production |
-| `VITE_API_BASE_URL` | Public relative or absolute API base URL | `/api` |
-| `API_PROXY_TARGET` | Vite dev/preview proxy target | `http://127.0.0.1:<PORT>` |
-| `MONGODB_TEST_URI` | Optional read-only MongoDB test target | `MONGODB_URI` |
+| Variable                                      | Purpose                                            | Default                                                                                            |
+| --------------------------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `NODE_ENV`                                    | `development`, `test`, or `production`             | `development`                                                                                      |
+| `PORT`                                        | API port                                           | `5000`                                                                                             |
+| `MONGODB_URI`                                 | MongoDB URI                                        | Local `aquashield` database                                                                        |
+| `MONGODB_CONNECT_TIMEOUT_MS`                  | Connection/server selection timeout                | `5000`                                                                                             |
+| `MONGODB_RETRY_INTERVAL_MS`                   | Initial connection retry delay                     | `5000`                                                                                             |
+| `CORS_ORIGIN`                                 | Comma-separated exact origins; no trailing slash   | Development/test: `http://localhost:5173,http://127.0.0.1:5173`; required explicitly in production |
+| `VITE_API_BASE_URL`                           | Public relative or absolute API base URL           | `/api`                                                                                             |
+| `API_PROXY_TARGET`                            | Vite dev/preview proxy target                      | `http://127.0.0.1:<PORT>`                                                                          |
+| `MONGODB_TEST_URI`                            | Optional read-only MongoDB test target             | `MONGODB_URI`                                                                                      |
+| `ADMIN_SESSION_HOURS`                         | Admin session lifetime, 0.1–24 hours               | `8`                                                                                                |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | Provisioning command only; password ≥12 characters | Development can generate credentials; production requires email/password                           |
 
 Only variables prefixed with `VITE_` are exposed to the browser. Never use that prefix for secrets. `.env` files, build output, dependencies, and local test artifacts are ignored by Git.
 
@@ -103,33 +111,41 @@ JWT, Redis, AWS, Bedrock, Strands AI demo mode, and map placeholders in `.env.ex
 
 ## Routes
 
-| Frontend route | Behavior |
-| --- | --- |
-| `/` | Citizen landing page and base layout |
-| `/report` | Water problem reporting form |
-| `/report/success?id=<id>` | Persisted report confirmation |
-| `/my-reports` | Anonymous browser-owned report history |
-| `/my-reports?demo=true` | Clearly labeled simulated report history |
-| `/report/:id` | Owner-only report details, verification status and aggregate shortage evidence |
-| `/status` | API/database health, loading/error states, retry |
-| `/admin`, `/admin/shortages`, `/alerts` | Aggregate municipal shortage overview and geographic map |
-| `/admin?demo=true` | Labeled deterministic multi-area demo |
-| `/admin/shortages/:id` | Shortage evidence and numeric calculation details |
-| `/operator` | Operator workspace placeholder |
-| Other paths | Friendly 404 |
+| Frontend route               | Behavior                                                                       |
+| ---------------------------- | ------------------------------------------------------------------------------ |
+| `/`                          | Citizen landing page and base layout                                           |
+| `/report`                    | Water problem reporting form                                                   |
+| `/report/success?id=<id>`    | Persisted report confirmation                                                  |
+| `/my-reports`                | Anonymous browser-owned report history                                         |
+| `/my-reports?demo=true`      | Clearly labeled simulated report history                                       |
+| `/report/:id`                | Owner-only report details, verification status and aggregate shortage evidence |
+| `/status`                    | API/database health, loading/error states, retry                               |
+| `/login`                     | Administrator sign-in                                                          |
+| `/admin`, `/admin/shortages` | Protected command center and shortage map/table                                |
+| `/alerts`                    | Public aggregate shortage evidence; no private report/fleet layers             |
+| `/alerts/:id`                | Public aggregate detail without private assessment context                     |
+| `/admin?demo=true`           | Labeled deterministic multi-area demo                                          |
+| `/admin/shortages/:id`       | Shortage evidence and numeric calculation details                              |
+| `/admin/analytics`           | Protected evidence analytics                                                   |
+| `/operator`                  | Operator workspace placeholder                                                 |
+| Other paths                  | Friendly 404                                                                   |
 
-| Method | Backend route | Behavior |
-| --- | --- | --- |
-| GET | `/` | Backend identity and API link |
-| GET | `/api` | Phase/version and endpoint metadata |
-| GET | `/api/health` | `200` when MongoDB responds to ping; `503` otherwise |
-| POST | `/api/reports` | Validate/save report; `201` new, `200` idempotent retry |
-| GET | `/api/reports` | This browser's history; `page` and `limit` pagination |
-| GET | `/api/reports?demo=true` | Public simulated reports only |
-| GET | `/api/reports/:id` | Owner-only details/photo, or a public demo report |
-| GET | `/api/shortages`, `/api/shortages/:id` | Refresh and return public aggregates; `?demo=true` selects only simulated evidence |
-| POST | `/api/shortages/detect` | Rebuild persisted event aggregates from evidence; rate limited |
-| GET / POST | `/api/shortages/:id/severity`, `/api/shortages/:id/calculate-severity` | Inspect / refresh deterministic severity |
+| Method     | Backend route                                                              | Behavior                                                                           |
+| ---------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| GET        | `/`                                                                        | Backend identity and API link                                                      |
+| GET        | `/api`                                                                     | Phase/version and endpoint metadata                                                |
+| GET        | `/api/health`                                                              | `200` when MongoDB responds to ping; `503` otherwise                               |
+| POST       | `/api/reports`                                                             | Validate/save report; `201` new, `200` idempotent retry                            |
+| GET        | `/api/reports`                                                             | This browser's history; `page` and `limit` pagination                              |
+| GET        | `/api/reports?demo=true`                                                   | Public simulated reports only                                                      |
+| GET        | `/api/reports/:id`                                                         | Owner-only details/photo, or a public demo report                                  |
+| GET        | `/api/shortages`, `/api/shortages/:id`                                     | Refresh and return public aggregates; `?demo=true` selects only simulated evidence |
+| POST       | `/api/shortages/detect`                                                    | Admin-only aggregate refresh; rate limited                                         |
+| GET / POST | `/api/shortages/:id/severity`, `/api/shortages/:id/calculate-severity`     | Public inspect / admin-only refresh of deterministic severity                      |
+| POST       | `/api/auth/login`, `/api/auth/logout`                                      | Rate-limited admin login / authenticated session revocation                        |
+| GET        | `/api/auth/me`                                                             | Validate admin session and role                                                    |
+| GET        | `/api/dashboard/summary`, `/api/dashboard/map`, `/api/dashboard/analytics` | Protected metrics/activity, map layers and analytics                               |
+| GET        | `/api/dashboard/shortages/:id`                                             | Protected assessment context and recorded delivery history if available            |
 
 Report POST/list require `X-Citizen-Token` (64 lowercase hexadecimal characters). All private reads are filtered by the hashed key. JSON errors remain consistent: `422` invalid report, `400` missing key, `404` unavailable report, `413` oversized payload, `429` rate limit, and `503` unavailable database. Photo contents are omitted from list/submission responses and included only in an authorized detail response.
 
@@ -160,6 +176,6 @@ Backend configuration, routes, controllers, and middleware are separate modules.
 
 The Report collection stores citizen-provided location/locality, supply details, household size, description, sanitized optional photo, anonymous owner hash, submission ID, timestamps, pending status, and a demo flag. JavaScript report options are shared between frontend and backend in `packages/shared/reportOptions.js`; there is no TypeScript shared-types package.
 
-Accounts, AI, AWS execution, forecasts, allocation, dispatch and delivery are deferred. The operator page retains the Phase 1 placeholder. Phase 3 adds Area and ShortageEvent collections and separate deterministic clustering, confidence, population, severity and fairness helper modules. The fairness helpers have no allocation workflow and require supplied delivery evidence. AWS remains mandatory for the eventual MVP; Strands + Bedrock integration is deferred to its requested phase and is not claimed as working here.
+Citizen accounts, AI, AWS execution, forecasts, allocation, dispatch and delivery workflows are deferred. Phase 4 adds User/AdminSession collections and protected read-only dashboard services that reuse Phase 3 aggregates. The operator page retains the Phase 1 placeholder. Phase 3 adds Area and ShortageEvent collections and separate deterministic clustering, confidence, population, severity and fairness helper modules. The fairness helpers have no allocation workflow and require supplied delivery evidence. AWS remains mandatory for the eventual MVP; Strands + Bedrock integration is deferred to its requested phase and is not claimed as working here.
 
-Implementation stops after Phase 3. Later phases require a new instruction.
+Implementation stops after Phase 4. Later phases require a new instruction.

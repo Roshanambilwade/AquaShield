@@ -9,11 +9,13 @@ export function createApiRouter(databaseStatus) {
       data: {
         name: "AquaShield API",
         version: "0.1.0",
-        phase: 3,
+        phase: 4,
         endpoints: {
           health: "/api/health",
           reports: "/api/reports",
           shortages: "/api/shortages",
+          auth: "/api/auth",
+          dashboard: "/api/dashboard",
         },
       },
     }),

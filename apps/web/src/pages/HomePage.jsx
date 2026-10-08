@@ -80,10 +80,11 @@ export default function HomePage() {
         </div>
       </section>
       <section className="foundation-note" aria-label="Project availability">
-        <span className="phase-badge">Phase 3</span>
+        <span className="phase-badge">Phase 4</span>
         <p>
-          Citizen reporting, shortage detection, confidence and severity are
-          available. Emergency response operations will arrive in later phases.
+          Citizen reporting and shortage evidence are available. Municipal teams
+          can sign in to the command center. Emergency response operations will
+          arrive in later phases.
         </p>
       </section>
       <section className="workspace-section" aria-labelledby="workspace-title">

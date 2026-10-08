@@ -2,6 +2,7 @@ const baseUrl = (import.meta.env.VITE_API_BASE_URL || "/api").replace(
   /\/+$/,
   "",
 );
+import { adminHeaders } from "./adminApi.js";
 export async function shortageRequest(
   demo,
   { id, method = "GET", signal } = {},
@@ -17,6 +18,7 @@ export async function shortageRequest(
           : AbortSignal.timeout(15000),
         headers: {
           Accept: "application/json",
+          ...(method === "POST" ? adminHeaders() : {}),
           ...(method === "POST" ? { "Content-Type": "application/json" } : {}),
         },
         body: method === "POST" ? "{}" : undefined,

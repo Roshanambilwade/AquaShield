@@ -13,16 +13,23 @@ import { demoReports } from "../../apps/api/src/demo/reports.js";
 import { demoAreas } from "../../apps/api/src/demo/areas.js";
 import Report from "../../apps/api/src/models/Report.js";
 import ShortageEvent from "../../apps/api/src/models/ShortageEvent.js";
+import { prepareBrowserAdmin } from "../helpers/admin.js";
+let admin;
 
 const createdIds = [];
 test.beforeAll(async () => {
   await connectDatabase(loadEnv());
   await seedDemoReports();
+  admin = await prepareBrowserAdmin();
+});
+test.beforeEach(async ({ page }) => {
+  await admin.signIn(page);
 });
 test.afterAll(async () => {
   if (createdIds.length)
     await Report.deleteMany({ _id: { $in: createdIds }, isDemo: false });
   await detectShortages(loadEnv());
+  await admin.cleanup();
   await disconnectDatabase();
 });
 
@@ -231,9 +238,9 @@ test("shortage loading, service error and retry recover to an empty state", asyn
     );
   });
   await page.goto("/admin");
-  await expect(page.getByRole("status")).toContainText(
-    "Loading shortage evidence",
-  );
+  await expect(
+    page.getByRole("status").filter({ hasText: "Loading shortage evidence" }),
+  ).toContainText("Loading shortage evidence");
   await expect(page.getByRole("alert")).toContainText(
     "temporarily unavailable",
   );

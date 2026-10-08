@@ -22,7 +22,8 @@
     "test:mongo": "npm run test:mongo -w @aquashield/api",
     "test:e2e": "playwright test",
     "test:dev-origins": "playwright test --config playwright.dev.config.js",
-    "seed:demo": "npm run seed:demo -w @aquashield/api"
+    "seed:demo": "npm run seed:demo -w @aquashield/api",
+    "admin:create": "npm run admin:create -w @aquashield/api"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

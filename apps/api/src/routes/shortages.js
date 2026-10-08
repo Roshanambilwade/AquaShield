@@ -3,6 +3,7 @@ import { z } from "zod";
 import { validate, reportIdSchema } from "../validation/report.js";
 import { ApiError } from "../middleware/errors.js";
 import { createSubmissionLimiter } from "../middleware/submissionLimit.js";
+import { requireAdmin } from "../middleware/admin.js";
 import {
   listShortages,
   getShortage,
@@ -39,6 +40,7 @@ export function createShortageRouter(config, databaseStatus) {
   );
   router.post(
     "/detect",
+    requireAdmin(databaseStatus),
     createSubmissionLimiter({ max: 10 }),
     async (req, res) => {
       validate(z.object({}).strict(), req.body ?? {});
@@ -65,6 +67,7 @@ export function createShortageRouter(config, databaseStatus) {
   });
   router.post(
     "/:id/calculate-severity",
+    requireAdmin(databaseStatus),
     createSubmissionLimiter({ max: 10 }),
     async (req, res) => {
       validate(z.object({}).strict(), req.body ?? {});

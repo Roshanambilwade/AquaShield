@@ -13,9 +13,10 @@ import { buildShortageEvents } from "../src/services/reportClusteringService.js"
 import { demoReports } from "../src/demo/reports.js";
 import { demoAreas } from "../src/demo/areas.js";
 import { detectShortages } from "../src/services/shortageService.js";
+import { createAdmin, loginAdmin } from "../src/services/authService.js";
 
 const databaseName = `aquashield_phase3_test_${randomUUID().replaceAll("-", "")}`;
-let config, app, firstId, firstToken, eventId;
+let config, app, firstId, firstToken, eventId, adminToken;
 const input = (overrides = {}) => ({
   submissionId: randomUUID(),
   location: { lat: 20.011, lng: 73.79 },
@@ -35,6 +36,10 @@ before(async () => {
   config.MONGODB_URI = process.env.MONGODB_TEST_URI || config.MONGODB_URI;
   await connectDatabase(config, { dbName: databaseName });
   app = createApp(config);
+  const password = randomBytes(24).toString("hex");
+  await createAdmin({ email: "phase3-test@example.test", password });
+  adminToken = (await loginAdmin("phase3-test@example.test", password, config))
+    .token;
 });
 after(async () => {
   if (mongoose.connection.name === databaseName)
@@ -134,9 +139,14 @@ test("public event and severity APIs expose aggregate evidence without private i
     .get(`/api/shortages/${eventId}/severity`)
     .expect(200);
   assert.deepEqual(severity.body.data, event.severity);
-  await request(app).post("/api/shortages/detect").send({}).expect(200);
+  await request(app)
+    .post("/api/shortages/detect")
+    .set("Authorization", `Bearer ${adminToken}`)
+    .send({})
+    .expect(200);
   await request(app)
     .post(`/api/shortages/${eventId}/calculate-severity`)
+    .set("Authorization", `Bearer ${adminToken}`)
     .send({})
     .expect(200);
   assert.equal(await ShortageEvent.countDocuments({ isDemo: false }), 1);
@@ -246,6 +256,7 @@ test("invalid, unavailable and later-phase mutation endpoints remain safe", asyn
   await request(app).get("/api/shortages?demo=invalid").expect(422);
   await request(app)
     .post("/api/shortages/detect")
+    .set("Authorization", `Bearer ${adminToken}`)
     .send({ severityScore: 99 })
     .expect(422);
   await request(app)

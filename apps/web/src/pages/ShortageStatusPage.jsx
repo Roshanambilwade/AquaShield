@@ -1,8 +1,9 @@
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import useShortages from "../hooks/useShortages.js";
 import ShortageDetails from "../components/ShortageDetails.jsx";
+import { OperationalDetails } from "../components/AdminDashboardPanels.jsx";
 
-export default function ShortageStatusPage() {
+export default function ShortageStatusPage({ admin = false }) {
   const { id } = useParams();
   const [params] = useSearchParams();
   const demo = params.get("demo") === "true";
@@ -23,9 +24,13 @@ export default function ShortageStatusPage() {
       {state.data && (
         <div className="event-panel">
           <ShortageDetails event={state.data} />
+          {admin && <OperationalDetails id={id} demo={demo} />}
         </div>
       )}
-      <Link className="button button-secondary" to={`/admin?demo=${demo}`}>
+      <Link
+        className="button button-secondary"
+        to={`/${admin ? "admin" : "alerts"}?demo=${demo}`}
+      >
         Back to shortage overview
       </Link>
     </div>

@@ -6,12 +6,16 @@ import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import "./styles.css";
 import "./reporting.css";
 import "./shortages.css";
+import "./admin.css";
+import AuthProvider from "./components/AuthProvider.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <ErrorBoundary>
       <BrowserRouter>
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </BrowserRouter>
     </ErrorBoundary>
   </StrictMode>,

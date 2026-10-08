@@ -10,6 +10,9 @@ import ReportStatusPage from "./pages/ReportStatusPage.jsx";
 import ReportSuccessPage from "./pages/ReportSuccessPage.jsx";
 import ShortagesPage from "./pages/ShortagesPage.jsx";
 import ShortageStatusPage from "./pages/ShortageStatusPage.jsx";
+import AdminLayout from "./components/AdminLayout.jsx";
+import LoginPage from "./pages/LoginPage.jsx";
+import AnalyticsPage from "./pages/AnalyticsPage.jsx";
 
 export default function App() {
   return (
@@ -21,10 +24,15 @@ export default function App() {
         <Route path="report/success" element={<ReportSuccessPage />} />
         <Route path="report/:id" element={<ReportStatusPage />} />
         <Route path="my-reports" element={<ReportHistoryPage />} />
-        <Route path="admin" element={<ShortagesPage />} />
-        <Route path="admin/shortages" element={<ShortagesPage />} />
-        <Route path="admin/shortages/:id" element={<ShortageStatusPage />} />
+        <Route path="login" element={<LoginPage />} />
+        <Route path="admin" element={<AdminLayout />}>
+          <Route index element={<ShortagesPage admin />} />
+          <Route path="shortages" element={<ShortagesPage admin />} />
+          <Route path="shortages/:id" element={<ShortageStatusPage admin />} />
+          <Route path="analytics" element={<AnalyticsPage />} />
+        </Route>
         <Route path="alerts" element={<ShortagesPage />} />
+        <Route path="alerts/:id" element={<ShortageStatusPage />} />
         <Route
           path="operator"
           element={<WorkspacePage audience="Tanker operator" />}

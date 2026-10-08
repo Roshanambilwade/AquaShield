@@ -1,5 +1,16 @@
 import { test, expect } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
+import { prepareBrowserAdmin } from "../helpers/admin.js";
+let admin;
+test.beforeAll(async () => {
+  admin = await prepareBrowserAdmin();
+});
+test.beforeEach(async ({ page }) => {
+  await admin.signIn(page);
+});
+test.afterAll(async () => {
+  await admin.cleanup();
+});
 
 const health = {
   success: true,
@@ -22,7 +33,7 @@ test("overview has no browser errors or horizontal overflow", async ({
     "A coordinated response.",
   );
   await expect(page.getByLabel("Project availability")).toContainText(
-    "Phase 3",
+    "Phase 4",
   );
   await expect(page.getByRole("navigation")).toBeVisible();
   expect(
@@ -41,7 +52,7 @@ test("overview has no browser errors or horizontal overflow", async ({
 test("basic routes support navigation and direct refresh", async ({ page }) => {
   await page.goto("/");
   await page
-    .getByRole("navigation")
+    .getByRole("navigation", { name: "Main navigation" })
     .getByRole("link", { name: "Municipal team" })
     .click();
   await expect(page).toHaveURL("/admin");
@@ -53,7 +64,7 @@ test("basic routes support navigation and direct refresh", async ({ page }) => {
     "Water crisis overview",
   );
   await page
-    .getByRole("navigation")
+    .getByRole("navigation", { name: "Main navigation" })
     .getByRole("link", { name: "Operator", exact: true })
     .click();
   await expect(page).toHaveURL("/operator");

@@ -11,6 +11,7 @@ const schema = z
       .enum(["development", "test", "production"])
       .default("development"),
     PORT: z.coerce.number().int().min(1).max(65535).default(5000),
+    ADMIN_SESSION_HOURS: z.coerce.number().min(0.1).max(24).default(8),
     MONGODB_URI: z
       .string()
       .regex(/^mongodb(?:\+srv)?:\/\/\S+$/, "Use a MongoDB connection URI")
