@@ -6,8 +6,8 @@ const workspaces = [
     label: "For communities",
     title: "A voice for every household.",
     text: "A shared place for residents to raise water concerns and follow the response.",
-    to: "/status",
-    action: "View system status",
+    to: "/report",
+    action: "Report water shortage",
   },
   {
     number: "02",
@@ -43,13 +43,17 @@ export default function HomePage() {
             <span>A coordinated response.</span>
           </h1>
           <p className="hero-description">
-            An intelligence and decision layer for emergency water management.
-            Built around local needs, transparent decisions, and human
-            oversight.
+            Report water problems in your area. Share what your household is
+            experiencing and track your report in one place.
           </p>
-          <Link to="/status" className="button">
-            Check system status <span aria-hidden="true">↗</span>
-          </Link>
+          <div className="hero-actions">
+            <Link to="/report" className="button">
+              Report water shortage <span aria-hidden="true">↗</span>
+            </Link>
+            <Link to="/my-reports" className="button button-secondary">
+              Track my report
+            </Link>
+          </div>
         </div>
         <div className="water-art" aria-hidden="true">
           <div className="orbit orbit-one" />
@@ -73,10 +77,10 @@ export default function HomePage() {
         </div>
       </section>
       <section className="foundation-note" aria-label="Project availability">
-        <span className="phase-badge">Phase 1</span>
+        <span className="phase-badge">Phase 2</span>
         <p>
-          The foundation is in place. Reporting, crisis analysis, and dispatch
-          will arrive in later phases.
+          Citizen reporting is available. Verification, crisis analysis, local
+          alerts, and dispatch will arrive in later phases.
         </p>
       </section>
       <section className="workspace-section" aria-labelledby="workspace-title">

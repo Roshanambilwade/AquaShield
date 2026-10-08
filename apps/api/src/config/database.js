@@ -2,12 +2,13 @@ import mongoose from "mongoose";
 
 mongoose.set("bufferCommands", false);
 
-export async function connectDatabase(config) {
+export async function connectDatabase(config, { dbName } = {}) {
   await mongoose.connect(config.MONGODB_URI, {
     serverSelectionTimeoutMS: config.MONGODB_CONNECT_TIMEOUT_MS,
     connectTimeoutMS: config.MONGODB_CONNECT_TIMEOUT_MS,
     socketTimeoutMS: config.MONGODB_CONNECT_TIMEOUT_MS,
     maxPoolSize: 10,
+    ...(dbName ? { dbName } : {}),
   });
 }
 

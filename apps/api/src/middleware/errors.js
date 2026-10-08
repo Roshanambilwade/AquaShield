@@ -31,6 +31,21 @@ export function errorHandler(error, _req, res, next) {
     status = 413;
     code = "PAYLOAD_TOO_LARGE";
     message = "The request body is too large.";
+  } else if (
+    [
+      "MongoNetworkError",
+      "MongoNetworkTimeoutError",
+      "MongoServerSelectionError",
+      "MongooseServerSelectionError",
+    ].includes(error.name)
+  ) {
+    status = 503;
+    code = "DATABASE_UNAVAILABLE";
+    message = "Reports cannot be accessed right now. Please try again shortly.";
+  } else if (error.name === "ValidationError") {
+    status = 422;
+    code = "VALIDATION_ERROR";
+    message = "Please check the report details.";
   } else if (error.status >= 400 && error.status < 500) {
     status = error.status;
     code = "INVALID_REQUEST";

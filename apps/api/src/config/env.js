@@ -27,7 +27,6 @@ const schema = z.object({
     .default(5000),
   CORS_ORIGIN: z
     .string()
-    .default("http://localhost:5173")
     .transform((value) => value.split(",").map((origin) => origin.trim()))
     .pipe(
       z
@@ -52,7 +51,15 @@ const schema = z.object({
 });
 
 export function parseEnv(source) {
-  const result = schema.safeParse(source);
+  // Explicit lists always win. Local defaults apply only outside production.
+  const result = schema.safeParse({
+    ...source,
+    CORS_ORIGIN:
+      source.CORS_ORIGIN ??
+      (source.NODE_ENV === "production"
+        ? undefined
+        : "http://localhost:5173,http://127.0.0.1:5173"),
+  });
   if (!result.success) {
     // Report field names, never environment values that may contain credentials.
     const fields = [

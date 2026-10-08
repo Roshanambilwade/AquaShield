@@ -39,3 +39,77 @@ export async function getHealth(signal) {
   }
   return payload;
 }
+import { getCitizenToken } from "./citizen.js";
+
+export class ReportApiError extends Error {
+  constructor(message, code, fields = {}) {
+    super(message);
+    this.code = code;
+    this.fields = fields;
+  }
+}
+
+async function reportRequest(path, { method = "GET", body, signal } = {}) {
+  const timeout = AbortSignal.timeout(15000);
+  let response;
+  try {
+    response = await fetch(`${baseUrl}/reports${path}`, {
+      method,
+      signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
+      headers: {
+        Accept: "application/json",
+        "X-Citizen-Token": getCitizenToken(),
+        ...(body ? { "Content-Type": "application/json" } : {}),
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      cache: "no-store",
+    });
+  } catch (error) {
+    if (error.name === "AbortError") throw error;
+    if (error.name === "TimeoutError")
+      throw new Error(
+        "The request timed out. Please try again. Retrying the same submission will not create a duplicate.",
+        { cause: error },
+      );
+    throw new Error(
+      error.message.startsWith("Browser storage")
+        ? error.message
+        : "Unable to reach AquaShield. Your details are still here; please try again.",
+      { cause: error },
+    );
+  }
+  let payload;
+  try {
+    payload = await response.json();
+  } catch {
+    throw new Error(
+      "The service returned an unexpected response. Please try again.",
+    );
+  }
+  if (!response.ok || !payload.success) {
+    const knownCodes = [
+      "VALIDATION_ERROR",
+      "INVALID_PHOTO",
+      "DATABASE_UNAVAILABLE",
+      "REPORT_NOT_FOUND",
+      "CITIZEN_KEY_REQUIRED",
+      "PAYLOAD_TOO_LARGE",
+      "RATE_LIMITED",
+    ];
+    throw new ReportApiError(
+      knownCodes.includes(payload.code)
+        ? payload.message
+        : "Unable to process your report. Please try again.",
+      payload.code,
+      payload.details?.fields,
+    );
+  }
+  return payload.data;
+}
+
+export const submitReport = (body) =>
+  reportRequest("", { method: "POST", body });
+export const getReport = (id, signal) =>
+  reportRequest(`/${encodeURIComponent(id)}`, { signal });
+export const getReports = (page, demo, signal) =>
+  reportRequest(`?page=${page}&demo=${demo}`, { signal });

@@ -7,12 +7,15 @@ import { parseEnv } from "../src/config/env.js";
 const config = parseEnv({ NODE_ENV: "test" });
 const app = createApp(config, { databaseStatus: async () => "connected" });
 
-test("backend root and API index expose only Phase 1 metadata", async () => {
+test("backend root and API index expose the completed phase metadata", async () => {
   const root = await request(app).get("/").expect(200);
   assert.equal(root.body.data.api, "/api");
   const api = await request(app).get("/api").expect(200);
-  assert.equal(api.body.data.phase, 1);
-  assert.deepEqual(api.body.data.endpoints, { health: "/api/health" });
+  assert.equal(api.body.data.phase, 2);
+  assert.deepEqual(api.body.data.endpoints, {
+    health: "/api/health",
+    reports: "/api/reports",
+  });
 });
 
 test("health reports connected services without leaking configuration", async () => {
@@ -41,7 +44,7 @@ for (const database of ["disconnected", "unavailable"]) {
 test("unknown and later-phase endpoints return consistent 404 errors", async () => {
   for (const url of [
     "/missing",
-    "/api/reports",
+    "/api/shortages",
     "/api/auth/me",
     "/api/ai/detect",
   ]) {
@@ -113,4 +116,64 @@ test("unconfigured origins receive a consistent 403 error", async () => {
     .expect(403);
   assert.equal(response.body.code, "CORS_ORIGIN_DENIED");
   assert.equal(response.headers["access-control-allow-origin"], undefined);
+});
+
+for (const origin of ["http://localhost:5173", "http://127.0.0.1:5173"]) {
+  test(`development permits report POST and preflight from ${origin}`, async () => {
+    const devApp = createApp(parseEnv({ NODE_ENV: "development" }));
+    const preflight = await request(devApp)
+      .options("/api/reports")
+      .set("Origin", origin)
+      .set("Access-Control-Request-Method", "POST")
+      .set("Access-Control-Request-Headers", "content-type,x-citizen-token")
+      .expect(204);
+    assert.equal(preflight.headers["access-control-allow-origin"], origin);
+    assert.match(
+      preflight.headers["access-control-allow-headers"],
+      /x-citizen-token/,
+    );
+    assert.equal(
+      preflight.headers["access-control-allow-credentials"],
+      undefined,
+    );
+    // Missing report data should reach validation, not be rejected by CORS.
+    const response = await request(devApp)
+      .post("/api/reports")
+      .set("Origin", origin)
+      .set("X-Citizen-Token", "a".repeat(64))
+      .send({})
+      .expect(422);
+    assert.equal(response.body.code, "VALIDATION_ERROR");
+    assert.equal(response.headers["access-control-allow-origin"], origin);
+  });
+}
+
+test("production permits only its explicit origin, including on report preflights", async () => {
+  const production = createApp(
+    parseEnv({
+      NODE_ENV: "production",
+      CORS_ORIGIN: "https://aquashield.example",
+    }),
+  );
+  await request(production)
+    .options("/api/reports")
+    .set("Origin", "https://aquashield.example")
+    .set("Access-Control-Request-Method", "POST")
+    .expect(204);
+  for (const origin of [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://untrusted.example",
+    "null",
+  ]) {
+    for (const method of ["post", "options"]) {
+      const agent = request(production);
+      const response = await agent[method]("/api/reports")
+        .set("Origin", origin)
+        .send({})
+        .expect(403);
+      assert.equal(response.body.code, "CORS_ORIGIN_DENIED");
+      assert.equal(response.headers["access-control-allow-origin"], undefined);
+    }
+  }
 });

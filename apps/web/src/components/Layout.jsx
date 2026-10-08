@@ -24,6 +24,10 @@ export default function Layout() {
           <NavLink to="/" end>
             Overview
           </NavLink>
+          <NavLink to="/report" end>
+            Report water shortage
+          </NavLink>
+          <NavLink to="/my-reports">My reports</NavLink>
           <NavLink to="/admin">Municipal team</NavLink>
           <NavLink to="/operator">Operator</NavLink>
           <NavLink to="/status">System status</NavLink>

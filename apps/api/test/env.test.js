@@ -6,7 +6,10 @@ test("development defaults are runnable without secrets", () => {
   const config = parseEnv({});
   assert.equal(config.PORT, 5000);
   assert.equal(config.MONGODB_URI, "mongodb://127.0.0.1:27017/aquashield");
-  assert.deepEqual(config.CORS_ORIGIN, ["http://localhost:5173"]);
+  assert.deepEqual(config.CORS_ORIGIN, [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+  ]);
   assert.equal(config.JWT_SECRET, undefined);
 });
 
@@ -48,5 +51,24 @@ test("invalid configuration never leaks secret values", () => {
       assert.equal(error.message.includes("secret-value"), false);
       return true;
     },
+  );
+});
+
+test("production requires an explicit allowlist and never adds development origins", () => {
+  assert.throws(() => parseEnv({ NODE_ENV: "production" }), /CORS_ORIGIN/);
+  assert.deepEqual(
+    parseEnv({
+      NODE_ENV: "production",
+      CORS_ORIGIN: "https://aquashield.example",
+    }).CORS_ORIGIN,
+    ["https://aquashield.example"],
+  );
+});
+
+test("explicit development allowlists replace defaults", () => {
+  assert.deepEqual(
+    parseEnv({ NODE_ENV: "development", CORS_ORIGIN: "http://localhost:6000" })
+      .CORS_ORIGIN,
+    ["http://localhost:6000"],
   );
 });

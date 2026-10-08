@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import { getDatabaseStatus } from "./config/database.js";
 import { createApiRouter } from "./routes/index.js";
+import { createReportRouter } from "./routes/reports.js";
 import { ApiError, errorHandler, notFound } from "./middleware/errors.js";
 
 export function createApp(config, { databaseStatus = getDatabaseStatus } = {}) {
@@ -21,6 +22,14 @@ export function createApp(config, { databaseStatus = getDatabaseStatus } = {}) {
         );
       },
     }),
+  );
+  app.use(
+    "/api/reports",
+    (_req, res, next) => {
+      res.set("Cache-Control", "no-store");
+      next();
+    },
+    createReportRouter(databaseStatus),
   );
   app.use(express.json({ limit: "100kb" }));
   app.get("/", (_req, res) =>
