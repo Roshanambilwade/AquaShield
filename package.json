@@ -1,0 +1,35 @@
+{
+  "name": "aquashield",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/web",
+    "apps/api"
+  ],
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "concurrently --kill-others --names api,web \"npm run dev -w @aquashield/api\" \"npm run dev -w @aquashield/web\"",
+    "dev:api": "npm run dev -w @aquashield/api",
+    "dev:web": "npm run dev -w @aquashield/web",
+    "build": "npm run build -w @aquashield/web",
+    "start": "npm run start -w @aquashield/api",
+    "preview": "npm run preview -w @aquashield/web",
+    "lint": "eslint .",
+    "test": "npm run test -w @aquashield/api",
+    "test:mongo": "npm run test:mongo -w @aquashield/api",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.56.0",
+    "concurrently": "^9.2.1",
+    "eslint": "^10.12.0",
+    "eslint-plugin-react-hooks": "^7.0.0",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.4.0",
+    "prettier": "^3.6.2"
+  }
+}
