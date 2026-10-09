@@ -8,6 +8,8 @@ import { aiStatus } from "../config/ai.js";
 import User from "../models/User.js";
 import { serializeReport } from "./reportService.js";
 import { ApiError } from "../middleware/errors.js";
+import Allocation from "../models/Allocation.js";
+import { operationalAnalytics } from "./operationalAnalytics.js";
 
 const coordinates = z.object({
   lat: z.number().min(-90).max(90),
@@ -244,7 +246,14 @@ export async function dashboardMap(config, demo) {
 }
 
 export async function dashboardAnalytics(config, demo) {
-  const shortages = await listShortages(config, demo);
+  const [shortages, ops, allocations] = await Promise.all([
+    listShortages(config, demo),
+    operations(demo, config),
+    Allocation.find({ isDemo: demo })
+      .select("eventId status")
+      .limit(1001)
+      .lean(),
+  ]);
   const grouped = await Report.aggregate([
     { $match: { isDemo: demo } },
     {
@@ -263,6 +272,11 @@ export async function dashboardAnalytics(config, demo) {
     { $limit: 24 },
   ]);
   return {
+    operational: operationalAnalytics(
+      shortages.events,
+      ops,
+      allocations.length > 1000 ? null : allocations,
+    ),
     severityDistribution: ["LOW", "MEDIUM", "HIGH", "CRITICAL"].map(
       (level) => ({
         level,

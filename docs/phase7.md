@@ -106,20 +106,27 @@ real-world delivery. The UI keeps the revealed code only in component memory
 and clears it after acceptance. Production cannot read fictional deliveries or
 use their reveal endpoint.
 
-For a non-demo delivery, issuing an OTP requires an injected backend recipient
-handoff adapter. The default application has no SMS/email subscription or
-independent recipient delivery service; it fails with `VERIFICATION_UNAVAILABLE`
-before issuing a code. `createApp(config, { deliveryDependencies: { handoff } })`
-is the backend-only extension point. The adapter receives the transient code
-and trusted delivery/event references; it must implement recipient authorization
-and secure delivery and must never log the code. Failed handoff invalidates the
-issuance. No public endpoint can configure this adapter or supply trusted facts.
+For a non-demo delivery, the authenticated citizen portal now provides a handoff
+without SMS. After ARRIVED, the earliest eligible account-backed reporter in the
+persisted event is selected server-side as recipient. Duplicate/suspicious,
+ownerless and disabled accounts do not qualify. Selection is saved once; other
+citizens, administrators and operators cannot obtain the recipient's code.
+`POST /api/reports/:id/delivery-otp` requires an owned live report, accepts only
+`{}`, and returns only code, expiry and limitations. The code lives in component
+memory, never browser storage or plaintext database fields. It uses the same
+hash binding, expiry, cooldown, attempts and atomic verification protections.
+The operator enters the code shared by that recipient. The method is recorded
+as CITIZEN_PORTAL_OTP; identity, residency, physical quantity and every household's
+receipt remain independently unverified. Accounts must meet over-the-wire HTTPS
+and existing session-security requirements in any later public deployment.
 
-Thus the local fictional workflow is fully usable without subscriptions.
-**Production real-recipient delivery verification is blocked until a secure
-handoff channel is configured and independently verified.** Tests inject a
-controlled recipient channel; those tests do not establish real SMS delivery.
-OTP acceptance alone also does not prove actual litres reached each household.
+Operator-triggered external messaging still requires a backend handoff adapter:
+`createApp(config, { deliveryDependencies: { handoff } })`. Without that adapter,
+`POST /api/deliveries/:id/otp` fails with VERIFICATION_UNAVAILABLE; use the citizen
+portal instead. Failed external handoff invalidates its issuance. No SMS/email
+subscription, government identity check or provider has been added. Ownerless
+legacy reports have no citizen recipient and retain this explicit limitation.
+OTP acceptance does not prove actual litres reached each household.
 
 ## APIs and UI
 
@@ -137,6 +144,7 @@ and accept strict inputs. Production excludes fictional data.
 | POST | `/api/deliveries/:id/verify` | Owning OPERATOR; `{ "code": "<six digits>" }` |
 | POST | `/api/deliveries/:id/complete` | Owning OPERATOR; `{ "litresDelivered": <actual integer> }` |
 | POST | `/api/deliveries/:id/recover` | ADMIN only; `{}`; interrupted completion only |
+| POST | `/api/reports/:id/delivery-otp` | Designated CITIZEN with an owned eligible live report; `{}`; private portal code |
 
 `GET /api/operator/assignments` now includes owned delivery history alongside
 existing assignments and tankers. `/operator` adds TripCard controls.
@@ -208,9 +216,9 @@ shared multi-instance limits remain deployment hardening work.
 11. A citizen session can inspect `/my-reports?demo=true` and the seeded report
     details for the permitted fictional area response. Those legacy seed records
     are public fictional examples, not reassigned to a real citizen account.
-    Private owned-report tracking through a real-source allocation is separately
-    tested with controlled recipient handoff; ordinary real deliveries remain
-    blocked until that channel is configured. Do not claim that the seed report
+    Private owned-report tracking through a real-source allocation now uses the
+    citizen portal handoff; follow the separate real-source walkthrough in
+    docs/through-phase7-audit.md. Do not claim that the seed report
     belongs to a signed-in citizen or that their household received water.
 12. Only if completion was interrupted, an administrator selects **Recover
     completion**. After completion, a repeat demo reset removes only owned
@@ -228,7 +236,8 @@ inputs, strict bodies, ownership/admin permissions, lifecycle, hash binding,
 expiry, attempts, rate limiting, replay, concurrent verification/completion,
 actual quantity constraints, accounting, audited recoverable interruption,
 production/demo boundaries, citizen privacy, refresh and renewed login.
-Executed verification on 9–10 October 2026:
+Historical initial Phase 7 verification on 9–10 October 2026 (latest completion
+checks and authorized live-agent results are in docs/through-phase7-audit.md):
 
 | Command | Result |
 | --- | --- |
@@ -246,11 +255,11 @@ Existing Phase 1–6.5 regression suites remain passing. Tests include legacy
 delivery-ledger compatibility: missing allocation references do not collide
 under the partial unique index, and unknown verification methods remain unknown.
 
-Local Phase 7 behavior is verified. Production recipient verification remains
-blocked until a secure handoff adapter is configured and independently tested.
-Controlled test handoff and fictional demo OTP are not proof of production SMS
-or household receipt. Live Gemini remains separately unverified; no live AI,
-AWS, paid routing, or SMS requests were made during this work.
+Local Phase 7 behavior is verified; the later completion audit adds citizen
+portal handoff and its production-mode authorization tests. Controlled test
+handoff and fictional demo OTP are not proof of production SMS or household
+receipt. No live AI, AWS, paid routing or SMS requests were made in the initial
+Phase 7 work; later explicitly authorized Gemini outcomes are recorded separately.
 
 New files: `apps/api/src/models/Delivery.js`, `apps/api/src/routes/deliveries.js`,
 `apps/api/src/services/{deliveryService,deliveryOtp,routingService}.js`,

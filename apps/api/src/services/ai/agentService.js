@@ -24,7 +24,11 @@ export async function runAgent(
           ).allocationSnapshot(config, input.demo),
           config,
         )
-      : await evidenceLoader(config, input);
+      : role === "logistics" && evidenceLoader === loadEvidence
+        ? await (
+            await import("./logisticsEvidence.js")
+          ).loadLogisticsEvidence(config, input)
+        : await evidenceLoader(config, input);
   if (signal?.aborted)
     throw new ApiError(499, "AI_CANCELLED", "The assessment was cancelled.");
   let raw;

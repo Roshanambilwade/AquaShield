@@ -138,7 +138,9 @@ export default function TripCard({ delivery, admin = false, onChange }) {
         {d.otpVerified
           ? d.verificationMethod === "DEMO_OTP"
             ? "Demo OTP verified; simulated evidence"
-            : d.verificationMethod === "RECIPIENT_OTP"
+            : ["RECIPIENT_OTP", "CITIZEN_PORTAL_OTP"].includes(
+                  d.verificationMethod,
+                )
               ? "Recipient OTP accepted; not independent field proof"
               : "Recorded verification; method unknown"
           : "Not verified"}
@@ -166,6 +168,14 @@ export default function TripCard({ delivery, admin = false, onChange }) {
           )}
           {d.status === "ARRIVED" && !d.otpVerified && (
             <>
+              {!d.isDemo && (
+                <p>
+                  The designated citizen recipient can open their report status
+                  page and select “Get recipient delivery code”. Enter that code
+                  below. External recipient messaging requires a separately
+                  configured adapter.
+                </p>
+              )}
               <button
                 className="button button-secondary"
                 disabled={busy}

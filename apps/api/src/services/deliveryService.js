@@ -3,6 +3,8 @@ import Delivery from "../models/Delivery.js";
 import Allocation from "../models/Allocation.js";
 import Tanker from "../models/Tanker.js";
 import ShortageEvent from "../models/ShortageEvent.js";
+import Report from "../models/Report.js";
+import User from "../models/User.js";
 import { ApiError } from "../middleware/errors.js";
 import { conflict } from "./operationsService.js";
 import { validPoint, tripRoute } from "./routingService.js";
@@ -138,6 +140,9 @@ export async function deliveryById(id, actor, config, { secret = false } = {}) {
   const filter = {
     _id: id,
     ...(actor.role === "OPERATOR" ? { operatorId: actor.id } : {}),
+    ...(actor.role === "CITIZEN"
+      ? { recipientId: actor.id, isDemo: false }
+      : {}),
     ...(config.NODE_ENV === "production" ? { isDemo: false } : {}),
   };
   const query = Delivery.findOne(filter);
@@ -246,9 +251,18 @@ export async function issueDeliveryOtp(
   id,
   actor,
   config,
-  { revealDemo = false, handoff } = {},
+  { revealDemo = false, revealRecipient = false, handoff } = {},
 ) {
   const d = await deliveryById(id, actor, config);
+  if (
+    revealRecipient &&
+    (actor.role !== "CITIZEN" || d.isDemo || String(d.recipientId) !== actor.id)
+  )
+    throw new ApiError(
+      403,
+      "CITIZEN_REQUIRED",
+      "Only the designated citizen recipient can obtain this code.",
+    );
   if (revealDemo && (config.NODE_ENV === "production" || !d.isDemo))
     throw new ApiError(
       403,
@@ -260,7 +274,7 @@ export async function issueDeliveryOtp(
       "Arrival is required and verified codes cannot be reissued.",
     );
   await reservation(d);
-  if (!d.isDemo && !handoff)
+  if (!d.isDemo && !handoff && !revealRecipient)
     throw new ApiError(
       503,
       "VERIFICATION_UNAVAILABLE",
@@ -279,6 +293,11 @@ export async function issueDeliveryOtp(
     {
       $set: {
         otpHash: hash,
+        otpChannel: d.isDemo
+          ? "DEMO_OTP"
+          : revealRecipient
+            ? "CITIZEN_PORTAL_OTP"
+            : "RECIPIENT_OTP",
         otpSalt: salt,
         otpIssuedAt: now,
         otpExpiresAt: new Date(+now + config.DELIVERY_OTP_TTL_SECONDS * 1000),
@@ -296,7 +315,7 @@ export async function issueDeliveryOtp(
     throw conflict(
       "An OTP was recently issued or the trip changed. Wait before requesting another.",
     );
-  if (!d.isDemo) {
+  if (!d.isDemo && !revealRecipient) {
     try {
       await handoff({
         code,
@@ -317,6 +336,9 @@ export async function issueDeliveryOtp(
   }
   return {
     delivery: serializeDelivery(updated),
+    ...(revealRecipient
+      ? { recipientOtp: code, expiresAt: updated.otpExpiresAt }
+      : {}),
     ...(revealDemo
       ? {
           demoOtp: code,
@@ -371,7 +393,8 @@ export async function verifyDeliveryOtp(id, code, actor, config) {
         $set: {
           otpVerified: true,
           verifiedAt: new Date(),
-          verificationMethod: d.isDemo ? "DEMO_OTP" : "RECIPIENT_OTP",
+          verificationMethod:
+            d.otpChannel || (d.isDemo ? "DEMO_OTP" : "RECIPIENT_OTP"),
         },
         $unset: { otpHash: "", otpSalt: "" },
         $push: { audit: audit("DELIVERY_VERIFIED", actor) },
@@ -394,6 +417,71 @@ export async function verifyDeliveryOtp(id, code, actor, config) {
       "The code did not match. Verification attempts are limited.",
     );
   return serializeDelivery(updated);
+}
+// A citizen-initiated handoff needs no SMS service and stores only the OTP hash.
+// Select the earliest eligible account-backed report server-side, once per trip.
+// Duplicate/suspicious or ownerless reports never authorize code access.
+export async function citizenDeliveryOtp(reportId, actor, config) {
+  const report = await Report.findOne({
+    _id: reportId,
+    ownerId: actor.id,
+    isDemo: false,
+  });
+  if (!report) throw new ApiError(404, "REPORT_NOT_FOUND", "Report not found.");
+  const events = await ShortageEvent.find({
+    isDemo: false,
+    reportIds: report._id,
+  })
+    .select("reportIds")
+    .lean();
+  const allocation = await Allocation.findOne({
+    isDemo: false,
+    status: "ASSIGNED",
+    eventId: { $in: events.map((e) => e._id) },
+  }).sort({ assignedAt: -1 });
+  if (!allocation)
+    throw conflict("No assigned delivery is available for this report.");
+  const d = await ensureDelivery(allocation);
+  if (!d.recipientId) {
+    const event = events.find(
+      (e) => String(e._id) === String(allocation.eventId),
+    );
+    const reports = await Report.find({
+      _id: { $in: event.reportIds },
+      isDemo: false,
+      ownerId: { $ne: null },
+    })
+      .sort({ createdAt: 1, _id: 1 })
+      .select("ownerId")
+      .lean();
+    const active = await User.find({
+      _id: { $in: reports.map((r) => r.ownerId) },
+      role: "CITIZEN",
+      disabled: false,
+    })
+      .select("_id")
+      .lean();
+    const activeIds = new Set(active.map((u) => String(u._id)));
+    const recipient = reports.find((r) => activeIds.has(String(r.ownerId)));
+    if (!recipient)
+      throw conflict("No eligible citizen recipient is available.");
+    await Delivery.updateOne(
+      { _id: d._id, recipientId: null, status: "ARRIVED", otpVerified: false },
+      {
+        $set: { recipientId: recipient.ownerId },
+        $push: { audit: audit("CITIZEN_RECIPIENT_SELECTED", actor) },
+      },
+    );
+  }
+  const result = await issueDeliveryOtp(String(d._id), actor, config, {
+    revealRecipient: true,
+  });
+  return {
+    recipientOtp: result.recipientOtp,
+    expiresAt: result.expiresAt,
+    notice:
+      "Citizen portal handoff. Share this code with the assigned operator only after observing the area delivery. Your identity and household receipt are not independently verified.",
+  };
 }
 export async function completeDelivery(id, litres, actor, config) {
   const d = await deliveryById(id, actor, config);

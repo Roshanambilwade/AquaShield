@@ -4,7 +4,11 @@ An intelligence and decision layer for emergency water management, by **AquaSent
 
 **Phases 1–7, including Phase 6.5, are implemented locally; complete live Gemini execution remains unverified.** Phase 7 adds persisted operator trips, deterministic route estimates, protected OTP verification, actual delivered litres, completion recovery, municipal history and private citizen response updates. See [Phase 7 behavior, demo, security and verification](docs/phase7.md), [Phase 6.5 accounts](docs/phase65.md), [Phase 6 operations](docs/phase6.md), [Phase 5 agents](docs/phase5.md), [Phase 4](docs/phase4.md) and [Phase 3 calculations](docs/phase3.md).
 
-**Strategy:** AWS will host the functioning application; it is not a mandatory AI/LLM provider. Phase 5 integrates Strands Agents SDK with Google Gemini for Crisis Detection, Resource Allocation, Logistics and Early Warning. All numeric facts remain deterministic backend calculations. Bedrock is optional; unavailable local AWS CLI authentication does not block Gemini. Demo mode and SDK wiring are tested. A live model-access check succeeded, but generation returned Google HTTP 503; a complete live assessment remains unverified. AWS deployment has not been performed. See the [honest demo guide](docs/demo.md).
+Latest through-Phase-7 checks: 137 unit tests, 75 MongoDB tests, 92 desktop/mobile
+browser tests and both development-origin tests passed; lint/build passed.
+See [requirement coverage, remaining blocker and manual citizen handoff](docs/through-phase7-audit.md).
+
+**Strategy:** AWS will host the functioning application; it is not a mandatory AI/LLM provider. Phase 5 integrates Strands Agents SDK with Google Gemini for four roles. All numeric facts remain deterministic backend calculations. On 10 October 2026, authorized live Crisis Detection, Logistics and Early Warning tests passed validation; Resource Allocation generation returned Google HTTP 503 and remains unverified. Bedrock is optional; AWS deployment has not been performed. See the [through-Phase-7 audit](docs/through-phase7-audit.md) and [honest demo guide](docs/demo.md).
 
 ## Completed
 
@@ -27,7 +31,8 @@ An intelligence and decision layer for emergency water management, by **AquaSent
 - Four Strands/Gemini agent roles, protected read-only APIs and a responsive recommendation panel with backend numeric evidence, source references, missing inputs and human-review status.
 - Explicit key-free demo simulation, real-provider configuration/errors, bounded calls and validated output. Complete live Google assessment remains unverified after provider unavailability.
 - Persisted tanker management, source-attributed fairness evidence, deterministic eligible-candidate selection, explicit approval/rejection/assignment, audit snapshots, concurrency checks and private operator assignment views.
-- Database-backed ASSIGNED → EN_ROUTE → ARRIVED → DELIVERED trip controls, scrypt-hashed expiring delivery OTPs, actual litre accounting, conditional completion recovery, municipal delivery history and owner-scoped citizen response tracking. Demo OTP reveal is fictional and non-production only. Real recipient verification requires a backend handoff adapter; none is configured by default. Numerical forecasts remain later work.
+- Database-backed ASSIGNED → EN_ROUTE → ARRIVED → DELIVERED trip controls, scrypt-hashed expiring delivery OTPs, actual litre accounting, conditional completion recovery, municipal delivery history and owner-scoped citizen response tracking. A designated citizen can retrieve a private, single-use delivery code from their own report after arrival; SMS is not required. Account participation is not independent identity or household-receipt verification. Demo OTP reveal remains fictional and non-production only. Numerical forecasts remain later work.
+- Logistics advice consumes persisted backend trip/route estimates without dispatch authority. Operational analytics show recorded assignments, water response by area, response times, snapshot fleet utilization and high-priority areas needing support review.
 
 ## Running locally
 
@@ -126,7 +131,7 @@ Current admin authentication uses opaque MongoDB sessions, not `JWT_SECRET`. Red
 
 Explicit demo mode needs no key, performs no provider calls and shows “Demo AI simulation — no Gemini execution.” For real mode set `DEMO_AI_MODE=false`, a backend-only key and an account-accessible model ID, then restart. Missing configuration or provider failure returns an explicit error; there is no silent demo/Bedrock fallback. Never prefix the key with `VITE_`, commit it, log it or return it to browsers. AWS authentication is separate.
 
-`npm run test:ai:live` checks model access, then sends only fictional evidence through the actual Strands/Google provider, validates the response and prints safe stage/timing/error metadata. Missing key/model prints **SKIPPED**, not a verified result. The latest live diagnostic confirmed model access but generation returned Google HTTP 503; no complete live assessment is claimed. See [the full agent guide](docs/phase5.md).
+`npm run test:ai:live` checks model access, then sends only fictional evidence through the actual Strands/Google provider, validates the response and prints safe stage/timing/error metadata. Missing key/model prints **SKIPPED**, not success. Live calls require explicit authorization and can incur charges. Three roles passed the 10 October checks; Resource Allocation returned Google HTTP 503. See [current per-role results](docs/through-phase7-audit.md) and [the full agent guide](docs/phase5.md).
 
 ## Routes
 
@@ -218,7 +223,7 @@ Crisis Detection explains evidence/verification; Resource Allocation explains ba
 | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 5     | Implemented: four agent roles, protected APIs, dashboard panel, validated real-provider path and key-free demo mode. Complete live Gemini assessment remains unverified after provider unavailability. |
 | 6     | Implemented: deterministic fair allocation, fleet management, approval/rejection, atomic assignment and operator visibility. |
-| 7     | Implemented locally: route estimates, owned trips, demo OTP and recorded delivery; real recipient handoff remains unconfigured by default. |
+| 7     | Implemented locally: route estimates, owned trips, private citizen-portal OTP handoff, demo OTP, recorded delivery and operational analytics. |
 | 8     | Planned: full hardening and actual AWS deployment after compatibility/account checks.                                                                                      |
 | 9     | Planned: final demo, documentation and verified deployment evidence.                                                                                                       |
 
@@ -243,7 +248,9 @@ Authenticated ADMIN/OPERATOR: `GET /api/deliveries?demo=true|false` and
 `/arrive`, `/otp`, `/demo-otp`, `/verify` and `/complete`. ADMIN-only:
 `POST /api/deliveries/:id/recover`. Inputs, limits, recovery policy and the exact
 fictional UI walkthrough are documented in [docs/phase7.md](docs/phase7.md).
-Real OTP issuance fails closed without a secure backend recipient handoff adapter;
-codes are never exposed in ordinary production API responses. Normal tests use
-isolated databases, mocked routing and controlled recipient handoff, not paid
+`POST /api/reports/:id/delivery-otp` supplies a private code only to the designated
+authenticated citizen after arrival. Code retrieval is separate from ordinary
+report/staff responses. Operator-triggered messaging still fails closed without
+an external handoff adapter. Normal tests use isolated databases, mocked routing,
+citizen portal handoff and controlled recipient adapters, not paid
 services, live Gemini, production SMS or live GPS.

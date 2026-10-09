@@ -5,6 +5,7 @@ import { portalHome } from "../lib/portalAccess.js";
 import useReportData from "../hooks/useReportData.js";
 import ReportFeedback from "../components/ReportFeedback.jsx";
 import ReportDetails from "../components/ReportDetails.jsx";
+import CitizenDeliveryVerification from "../components/CitizenDeliveryVerification.jsx";
 
 export default function ReportStatusPage() {
   const auth = useContext(AuthContext);
@@ -22,6 +23,12 @@ export default function ReportStatusPage() {
         <section className="report-detail-card">
           <ReportDetails report={state.data} />
         </section>
+      )}
+      {state.data && auth.user?.role === "CITIZEN" && (
+        <CitizenDeliveryVerification
+          key={`${auth.user.id}:${state.data.id}:${state.data.responseStatus?.status}`}
+          report={state.data}
+        />
       )}
       <div className="form-actions">
         {state.code !== "CITIZEN_REQUIRED" && (

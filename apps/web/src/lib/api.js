@@ -108,6 +108,8 @@ async function reportRequest(path, { method = "GET", body, signal } = {}) {
       "DEMO_DISABLED",
       "PAYLOAD_TOO_LARGE",
       "RATE_LIMITED",
+      "DELIVERY_NOT_FOUND",
+      "OPERATION_CONFLICT",
     ];
     throw new ReportApiError(
       knownCodes.includes(payload.code)
@@ -126,3 +128,8 @@ export const getReport = (id, signal) =>
   reportRequest(`/${encodeURIComponent(id)}`, { signal });
 export const getReports = (page, demo, signal) =>
   reportRequest(`?page=${page}&demo=${demo}`, { signal });
+export const getDeliveryOtp = (id) =>
+  reportRequest(`/${encodeURIComponent(id)}/delivery-otp`, {
+    method: "POST",
+    body: {},
+  });

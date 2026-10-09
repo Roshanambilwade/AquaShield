@@ -1,6 +1,6 @@
 # Phase 5 — Strands/Gemini agent recommendations
 
-Phase 5 adds four read-only agent roles and replaces the administrator dashboard's inactive AI panel. React, Express and the integration are JavaScript. Phase 6 allocation/dispatch/delivery and the later deterministic prediction engine are not implemented. AWS deployment remains separate.
+This is the historical Phase 5 report: it added four read-only agent roles and replaced the administrator dashboard's inactive AI panel. React, Express and the integration are JavaScript. Phase 6/7 operations have since been implemented; prediction and AWS deployment remain separate. Current through-Phase-7 coverage and authorized 10 October live outcomes are in [the completion audit](through-phase7-audit.md): Crisis Detection, Logistics and Early Warning passed, while Resource Allocation returned Google HTTP 503. Older results below remain historical.
 
 ## Architecture and packages
 

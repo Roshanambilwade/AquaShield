@@ -15,6 +15,7 @@ import { invokeGemini } from "../src/services/ai/provider.js";
 import { sanitizeProviderError } from "../src/services/ai/providerErrors.js";
 import { directDiagnostic } from "../src/services/ai/directDiagnostic.js";
 import { observeGoogleStream } from "../src/services/ai/streamDiagnostics.js";
+import { attachLogisticsEvidence } from "../src/services/ai/logisticsEvidence.js";
 
 const config = parseEnv({ NODE_ENV: "test", DEMO_AI_MODE: "true" });
 const events = buildShortageEvents(
@@ -30,6 +31,46 @@ const facts = buildEvidence(
   { demo: true },
 );
 const evidenceLoader = async () => facts;
+test("logistics consumes authoritative trip estimates without exposing delivery IDs or household facts", () => {
+  const selected = facts.zones.find((z) => z.ref === facts.selectedRef);
+  const route = {
+    distanceKm: 2.5,
+    etaMinutes: 6,
+    distanceMethod: "STRAIGHT_LINE",
+    etaMethod: "AVERAGE_SPEED_ESTIMATE",
+    observationStatus: "RECENT_RECORDED",
+    routingStatus: "NOT_CONFIGURED",
+    originObservedAt: new Date(),
+    note: "Stored observations; approximate destination.",
+    origin: { lat: 20, lng: 73.79 },
+    geometry: ["PRIVATE"],
+  };
+  const enriched = attachLogisticsEvidence(
+    facts,
+    {
+      eventId: selected.eventId,
+      status: "ARRIVED",
+      operatorId: "PRIVATE",
+      recipientId: "PRIVATE",
+    },
+    route,
+  );
+  assert.equal(enriched.route.etaMinutes, 6);
+  assert.equal(enriched.route.tripStatus, "ARRIVED");
+  assert.notEqual(enriched.evidenceVersion, facts.evidenceVersion);
+  assert.equal(
+    JSON.stringify(modelEvidence(enriched)).includes("PRIVATE"),
+    false,
+  );
+  assert.equal(enriched.route.origin, undefined);
+  assert.equal(enriched.missingInputs.includes("Routing/ETA service"), false);
+  validateAdvice(demoAdvice("logistics", enriched), "logistics", enriched);
+  const missing = attachLogisticsEvidence(facts, null, null);
+  assert.equal(missing.route, null);
+  assert.ok(
+    missing.missingInputs.includes("Assigned trip for the selected zone"),
+  );
+});
 test("provider diagnostics distinguish safe failure categories without leaking nested errors", () => {
   const cases = [
     [{ name: "MaxTokensError" }, "AI_INVALID_OUTPUT"],

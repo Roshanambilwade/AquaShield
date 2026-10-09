@@ -23,6 +23,7 @@ import Delivery from "../src/models/Delivery.js";
 import Allocation from "../src/models/Allocation.js";
 import Tanker from "../src/models/Tanker.js";
 import ShortageEvent from "../src/models/ShortageEvent.js";
+import Report from "../src/models/Report.js";
 const dbName = `aquashield_delivery_test_${randomUUID().replaceAll("-", "")}`;
 let config,
   app,
@@ -463,6 +464,115 @@ test("production disables demo verification and missing real handoff fails close
   await call("post", `${live.path}/otp`, {}, opToken, noChannel).expect(503);
   assert.equal((await Delivery.findById(live.delivery._id)).otpVersion, 0);
 });
+
+test("logistics API consumes stored routes read-only and fairness analytics reflect completed litres", async () => {
+  const f = await fixture();
+  const before = (await Allocation.findById(f.allocation._id)).toObject();
+  const advice = await call(
+    "post",
+    "/api/ai/logistics",
+    { demo: true, eventId: f.event.id },
+    token,
+  ).expect(200);
+  assert.equal(advice.body.data.facts.route.tripStatus, "ASSIGNED");
+  assert.equal(advice.body.data.facts.route.distanceMethod, "STRAIGHT_LINE");
+  assert.equal(advice.body.data.execution.providerExecuted, false);
+  assert.deepEqual(
+    (await Allocation.findById(f.allocation._id)).toObject(),
+    before,
+  );
+  assert.equal(await Delivery.countDocuments(), 1);
+  await verified(f);
+  await call("post", `${f.path}/complete`, { litresDelivered: 3500 }).expect(
+    200,
+  );
+  const analytics = await call(
+    "get",
+    "/api/dashboard/analytics?demo=true",
+    undefined,
+    token,
+  ).expect(200);
+  const area = analytics.body.data.operational.areas.find(
+    (a) => a.area === "Panchavati",
+  );
+  assert.equal(area.deliveredLitres, 3500);
+  assert.equal(area.allocations, 1);
+  assert.equal(analytics.body.data.operational.estimatedPeopleServed, null);
+});
+
+test("citizen portal OTP supports real-source completion without messaging and excludes other roles and owners", async () => {
+  const f = await fixture({ live: true });
+  const report = await Report.findOne({
+    _id: { $in: f.event.reportIds },
+    ownerId: citizen.user.id,
+  });
+  const endpoint = `/api/reports/${report.id}/delivery-otp`;
+  const production = createApp({ ...config, NODE_ENV: "production" });
+  await call("post", endpoint, {}, stranger.token, production).expect(404);
+  await call("post", endpoint, {}, opToken, production).expect(403);
+  await call("post", endpoint, {}, token, production).expect(403);
+  await call(
+    "post",
+    endpoint,
+    { recipientId: citizen.user.id },
+    citizen.token,
+    production,
+  ).expect(422);
+  assert.notEqual(
+    (await call("post", endpoint, {}, citizen.token, production)).status,
+    200,
+  );
+  await arrived(f);
+  const results = await Promise.all(
+    [0, 1].map(() => call("post", endpoint, {}, citizen.token, production)),
+  );
+  assert.equal(results.filter((r) => r.status === 200).length, 1);
+  const result = results.find((r) => r.status === 200);
+  assert.match(result.body.data.recipientOtp, /^\d{6}$/);
+  assert.deepEqual(Object.keys(result.body.data).sort(), [
+    "expiresAt",
+    "notice",
+    "recipientOtp",
+  ]);
+  assert.equal(result.headers["cache-control"], "no-store");
+  const stored = await Delivery.findById(f.delivery._id).select(
+    "+otpHash +otpSalt",
+  );
+  assert.equal(String(stored.recipientId), citizen.user.id);
+  assert.equal(stored.otpChannel, "CITIZEN_PORTAL_OTP");
+  assert.equal(
+    JSON.stringify(stored).includes(result.body.data.recipientOtp),
+    false,
+  );
+  const staff = await call(
+    "get",
+    f.path,
+    undefined,
+    opToken,
+    production,
+  ).expect(200);
+  assert.equal(staff.body.data.delivery.recipientId, undefined);
+  await call(
+    "post",
+    `${f.path}/verify`,
+    { code: result.body.data.recipientOtp },
+    opToken,
+    production,
+  ).expect(200);
+  await call("post", endpoint, {}, citizen.token, production).expect(409);
+  await call(
+    "post",
+    `${f.path}/complete`,
+    { litresDelivered: 3500 },
+    opToken,
+    production,
+  ).expect(200);
+  assert.equal(
+    (await Delivery.findById(f.delivery._id)).verificationMethod,
+    "CITIZEN_PORTAL_OTP",
+  );
+  assert.equal((await Tanker.findById(f.tanker._id)).availableLitres, 4500);
+});
 test("trip route respects missing/stale locations and demo reset refuses active trips", async () => {
   const f = await fixture();
   await Delivery.updateOne(
@@ -616,18 +726,16 @@ test("reset of a completed owned demo preserves unrelated custom and live record
 test("legacy delivery ledger rows without allocation references do not block new unique trips", async () => {
   const f = await fixture();
   assert.equal(mongoose.connection.name, dbName);
-  await mongoose.connection
-    .collection("deliveries")
-    .insertMany(
-      [1, 2].map(() => ({
-        isDemo: true,
-        status: "DELIVERED",
-        otpVerified: true,
-        litresDelivered: 100,
-        areaId: "legacy",
-        deliveredAt: new Date(),
-      })),
-    );
+  await mongoose.connection.collection("deliveries").insertMany(
+    [1, 2].map(() => ({
+      isDemo: true,
+      status: "DELIVERED",
+      otpVerified: true,
+      litresDelivered: 100,
+      areaId: "legacy",
+      deliveredAt: new Date(),
+    })),
+  );
   const records = (
     await call("get", "/api/deliveries?demo=true", undefined, token).expect(200)
   ).body.data.deliveries;

@@ -1,5 +1,5 @@
 import { roles, actions } from "./contracts.js";
-export const PROMPT_VERSION = "bounded-output-v3";
+export const PROMPT_VERSION = "bounded-output-v4";
 export function agentPrompt(role) {
   const task = {
     detect:
@@ -7,7 +7,7 @@ export function agentPrompt(role) {
     allocate:
       "Explain the backend priority ordering and fairness limitations. Recommend only the supplied priorityRef for human assessment. Unknown history is not zero deliveries. When allocationContext exists, explain the supplied backend tanker choice and eligibility; do not select or invent a tanker yourself.",
     logistics:
-      "Explain the supplied fleet facts when present and missing route/ETA/assignment inputs. Recommend collecting logistics evidence. This assessment cannot dispatch or select a tanker.",
+      "Explain supplied fleet and persisted trip facts, route distance method, estimated ETA assumptions and observation limitations when present. Identify missing route/assignment evidence otherwise. Recommend collecting logistics evidence. This assessment cannot dispatch, select a tanker or complete delivery.",
     predict:
       "Explain current emerging evidence and missing trend/supply inputs. The risk model is not implemented yet; risk is unknown. Recommend evidence collection and cautious preparation, not a quantified or guaranteed forecast.",
   }[role];

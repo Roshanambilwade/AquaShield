@@ -6,12 +6,54 @@ import { createApp } from "../src/app.js";
 import { validPoint, tripRoute } from "../src/services/routingService.js";
 import { generateOtp, matchesOtp } from "../src/services/deliveryOtp.js";
 import { serializeDelivery } from "../src/services/deliveryService.js";
+import { operationalAnalytics } from "../src/services/operationalAnalytics.js";
 import {
   emptyTripInput,
   completeInput,
   otpInput,
 } from "../src/validation/delivery.js";
 const config = parseEnv({ NODE_ENV: "test" });
+test("operational fairness analytics count recorded quantities once and preserve unknown served population", () => {
+  const events = [
+    {
+      id: "event",
+      areaId: "area",
+      areaName: "Panchavati",
+      status: "ACTIVE",
+      severityLevel: "CRITICAL",
+    },
+  ];
+  const data = operationalAnalytics(
+    events,
+    {
+      tankers: [{ status: "AVAILABLE" }, { status: "EN_ROUTE" }],
+      deliveries: [
+        {
+          eventId: "event",
+          areaId: "area",
+          litresDelivered: 3500,
+          requestedAt: new Date(0),
+          deliveredAt: new Date(600000),
+        },
+      ],
+    },
+    [{ eventId: "event", status: "COMPLETED" }],
+  );
+  assert.equal(data.areas[0].allocations, 1);
+  assert.equal(data.areas[0].deliveredLitres, 3500);
+  assert.equal(data.areas[0].averageResponseMinutes, 10);
+  assert.equal(data.utilizationPercent, 50);
+  assert.equal(data.estimatedPeopleServed, null);
+  assert.equal(data.unservedHighPriorityAreas.length, 0);
+  const missing = operationalAnalytics(
+    events,
+    { tankers: null, deliveries: null },
+    null,
+  );
+  assert.equal(missing.areas[0].allocations, null);
+  assert.equal(missing.areas[0].deliveredLitres, null);
+  assert.equal(missing.unservedHighPriorityAreas[0].deliveryRecorded, null);
+});
 const fixture = {
   origin: { lat: 20, lng: 73.79 },
   destination: { lat: 20.02, lng: 73.8 },

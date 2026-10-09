@@ -174,6 +174,29 @@ export default function AiRecommendationPanel({ demo, event, configuration }) {
             </>
           )}
           <h3>Supporting reasons</h3>
+          {result.facts.route && (
+            <section aria-label="Backend logistics evidence">
+              <h3>Recorded trip and estimated route</h3>
+              <p>Trip status: {result.facts.route.tripStatus}</p>
+              <p>
+                {result.facts.route.distanceMethod === "ROAD_ROUTE"
+                  ? "Road distance"
+                  : "Straight-line distance"}
+                :{" "}
+                {result.facts.route.distanceKm == null
+                  ? "Unknown"
+                  : `${result.facts.route.distanceKm} km`}
+              </p>
+              <p>
+                Estimated ETA:{" "}
+                {result.facts.route.etaMinutes == null
+                  ? "Unknown"
+                  : `${result.facts.route.etaMinutes} min`}{" "}
+                · {result.facts.route.etaMethod}
+              </p>
+              <p>{result.facts.route.note}</p>
+            </section>
+          )}
           <ul>
             {result.advice.reasons.map((reason) => (
               <li key={reason}>{reason}</li>

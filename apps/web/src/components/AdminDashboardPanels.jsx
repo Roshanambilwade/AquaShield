@@ -193,6 +193,66 @@ export function AnalyticsPanel({ state }) {
             {state.data.note}
             {state.data.isDemo ? " All records shown are simulated." : ""}
           </p>
+          {state.data.operational && (
+            <section aria-label="Operational fairness analytics">
+              <h3>Recorded water response by area</h3>
+              <div className="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Area</th>
+                      <th>Assignments</th>
+                      <th>Recorded water delivered</th>
+                      <th>Average response</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {state.data.operational.areas.map((a, i) => (
+                      <tr key={i}>
+                        <td>{a.area}</td>
+                        <td>{a.allocations ?? "Unknown"}</td>
+                        <td>
+                          {a.deliveredLitres == null
+                            ? "Unknown"
+                            : `${a.deliveredLitres.toLocaleString()} L`}
+                        </td>
+                        <td>
+                          {a.averageResponseMinutes == null
+                            ? "Unknown"
+                            : `${a.averageResponseMinutes} min`}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p>
+                Recorded fleet utilization:{" "}
+                {state.data.operational.utilizationPercent == null
+                  ? "Unknown"
+                  : `${state.data.operational.utilizationPercent}%`}{" "}
+                (current snapshot).
+              </p>
+              <h3>High-priority areas requiring support review</h3>
+              {state.data.operational.unservedHighPriorityAreas.length ? (
+                <ul>
+                  {state.data.operational.unservedHighPriorityAreas.map(
+                    (a, i) => (
+                      <li key={i}>
+                        {a.area} · {a.severity} ·{" "}
+                        {a.deliveryRecorded == null
+                          ? "Delivery history unknown"
+                          : "No accepted delivery recorded"}
+                      </li>
+                    ),
+                  )}
+                </ul>
+              ) : (
+                <p>No such areas in the current evidence.</p>
+              )}
+              <p className="evidence-note">{state.data.operational.note}</p>
+            </section>
+          )}
         </>
       )}
     </section>

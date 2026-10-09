@@ -11,6 +11,11 @@ const schema = new mongoose.Schema(
     eventId: ref("ShortageEvent"),
     tankerId: ref("Tanker"),
     operatorId: ref("User"),
+    recipientId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
     areaId: { type: String, default: null },
     areaName: { type: String, required: true },
     destination: { type: point, default: null },
@@ -43,10 +48,14 @@ const schema = new mongoose.Schema(
     verifiedAt: Date,
     verificationMethod: {
       type: String,
-      enum: ["DEMO_OTP", "RECIPIENT_OTP"],
+      enum: ["DEMO_OTP", "RECIPIENT_OTP", "CITIZEN_PORTAL_OTP"],
       default: null,
     },
     otpHash: { type: String, select: false },
+    otpChannel: {
+      type: String,
+      enum: ["DEMO_OTP", "RECIPIENT_OTP", "CITIZEN_PORTAL_OTP"],
+    },
     otpSalt: { type: String, select: false },
     otpVersion: { type: Number, default: 0 },
     otpIssuedAt: Date,

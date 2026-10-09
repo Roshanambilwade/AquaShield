@@ -353,3 +353,128 @@ test("controlled recipient handoff completes a citizen response with private his
   for (const field of ["operatorId", "tankerId", "otp", "audit", "notes"])
     expect(summary[field]).toBeUndefined();
 });
+
+test("citizen portal hands off a private code through the UI and operator completion persists", async ({
+  page,
+}) => {
+  test.setTimeout(90000);
+  // Keep prior scenarios intact. New distinct locality/operator avoid fixture overlap.
+  const recipient = await citizenSession(config);
+  const op = await createOperator({
+    email: "portal-op@phase7.test",
+    name: "Portal operator",
+    password,
+  });
+  let reportId;
+  for (let i = 0; i < 3; i++) {
+    const owner = i === 0 ? recipient : await citizenSession(config);
+    const created = await api(
+      "post",
+      "/api/reports",
+      {
+        submissionId: randomUUID(),
+        location: { lat: 19.997 + i * 0.0002, lng: 73.752 },
+        locationSource: "MANUAL",
+        locality: "Satpur",
+        areaId: "AREA_02",
+        problem: "NO_WATER",
+        waterLevel: "EMPTY",
+        householdSize: 5,
+        reportedDurationHours: 24,
+      },
+      owner.token,
+    ).expect(201);
+    if (i === 0) reportId = created.body.data.id;
+  }
+  const event = await ShortageEvent.findOne({
+    isDemo: false,
+    reportIds: reportId,
+  });
+  expect(event.status).toBe("ACTIVE");
+  await api("post", "/api/operations/tankers", {
+    identifier: "PORTAL-LIVE",
+    name: "Portal test tanker",
+    capacityLitres: 5000,
+    availableLitres: 4500,
+    operatorId: op.id,
+    currentLocation: null,
+    observedAt: new Date().toISOString(),
+    status: "AVAILABLE",
+  }).expect(200);
+  const rec = (
+    await api("post", "/api/operations/allocations/recommend", {
+      eventId: event.id,
+      requestId: randomUUID(),
+      useAi: false,
+    }).expect(200)
+  ).body.data.allocation;
+  await api("post", `/api/operations/allocations/${rec.id}/approve`, {}).expect(
+    200,
+  );
+  await api("post", `/api/operations/allocations/${rec.id}/assign`, {}).expect(
+    200,
+  );
+  await signIn(page, op.email, password, "/login?returnTo=/operator");
+  await page.getByRole("button", { name: "Start trip", exact: true }).click();
+  await page.getByRole("button", { name: "Mark arrived", exact: true }).click();
+  await expect(page.getByLabel("Delivery OTP", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await signIn(
+    page,
+    recipient.user.email,
+    recipient.password,
+    "/citizen/login",
+  );
+  await page.goto(`/report/${reportId}`);
+  const panel = page.getByRole("region", {
+    name: "Citizen delivery verification",
+  });
+  await panel
+    .getByRole("button", { name: "Get recipient delivery code", exact: true })
+    .click();
+  await expect(panel.getByRole("status")).toContainText(
+    "Recipient delivery code:",
+  );
+  const code = (await panel.getByRole("status").innerText()).match(
+    /\b\d{6}\b/,
+  )[0];
+  expect(
+    await page.evaluate(() => JSON.stringify(sessionStorage)),
+  ).not.toContain(code);
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await signIn(page, op.email, password, "/login?returnTo=/operator");
+  await page.getByLabel("Delivery OTP", { exact: true }).fill(code);
+  await page
+    .getByRole("button", { name: "Verify delivery OTP", exact: true })
+    .click();
+  await page
+    .getByLabel("Actual litres delivered", { exact: true })
+    .fill("3500");
+  await page
+    .getByRole("button", { name: "Complete delivery", exact: true })
+    .click();
+  await expect(page.getByRole("article", { name: /^Trip / })).toContainText(
+    "DELIVERED",
+  );
+  await page.reload();
+  await expect(page.getByRole("article", { name: /^Trip / })).toContainText(
+    "Actual delivered: 3500 L",
+  );
+  const stored = await Delivery.findOne({ allocationId: rec.id });
+  expect(stored.verificationMethod).toBe("CITIZEN_PORTAL_OTP");
+  expect(recipientCode).not.toBe(code); // External test adapter was never used.
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await signIn(
+    page,
+    recipient.user.email,
+    recipient.password,
+    "/citizen/login",
+  );
+  await page.goto(`/report/${reportId}`);
+  await expect(
+    page.getByText("Water delivery recorded for the shortage area", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(panel).toHaveCount(0);
+});

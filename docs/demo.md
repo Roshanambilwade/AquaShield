@@ -1,6 +1,6 @@
 # AquaShield demo — implemented capabilities and future checkpoints
 
-This guide reflects the revised scope as of 9 October 2026. Phases 1–7, including Phase 6.5 citizen accounts, work locally. Follow the [Phase 6 approval/assignment walkthrough](phase6.md#run-and-demonstrate), then the [Phase 7 trip and fictional OTP walkthrough](phase7.md#exact-local-demo). Four Strands/Gemini roles and key-free demo output remain available; complete live Gemini assessment remains unverified after provider failures. Numerical prediction and AWS deployment remain future work. Real recipient OTP handoff is not configured by default; demo verification is simulated. No Bedrock or AWS resources were added.
+This guide reflects the scope as of 10 October 2026. Phases 1–7, including citizen accounts, work locally. Follow the [fictional OTP walkthrough](phase7.md#exact-local-demo) or [account-owned citizen handoff walkthrough](through-phase7-audit.md#manual-account-owned-delivery-flow). Crisis Detection, Logistics and Early Warning passed authorized live Gemini validation; Resource Allocation returned HTTP 503 and remains unverified. Key-free agent simulation is distinct from these live results. Numerical prediction and AWS deployment remain future work. Citizen portal OTP confirms account participation, not identity or household receipt; demo OTP is simulated. No Bedrock or AWS resources were added.
 
 ## Demonstrate the current Phase 1–4 application
 
@@ -51,4 +51,4 @@ Resolve any isolated simulation environment explicitly during the authorized dep
 
 ## Pre-Phase-7 remediation update
 
-See [the remediation report](remediation.md) for preserved privacy, detection, agent boundaries, allocation recovery and test isolation. Earlier test counts are historical snapshots. [Phase 7](phase7.md) records the current trip/delivery behavior and verification. No live Gemini inference was run in either task; mocked-provider tests are not proof of live execution. Deployment remains outside this phase.
+See [the remediation report](remediation.md) for preserved privacy, detection, agent boundaries, allocation recovery and test isolation. Earlier test counts are historical snapshots. [Phase 7](phase7.md) records trip/delivery behavior. No live Gemini inference was run in those original tasks; later authorized calls and citizen-portal completion checks are recorded in [the through-Phase-7 audit](through-phase7-audit.md). Mocked-provider tests are not proof of live execution. Deployment remains outside this phase.

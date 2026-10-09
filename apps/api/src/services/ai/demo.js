@@ -5,9 +5,11 @@ export function demoAdvice(role, facts) {
     detect: `The selected zone has ${selected.status === "EMERGING" ? "limited emerging" : "current shortage"} evidence requiring municipal assessment.`,
     allocate:
       "Review the highest-ranked area in the backend evidence before making a resource decision.",
-    logistics: facts.fleet?.length
-      ? "Fleet records exist, but routing and assignment evidence is incomplete."
-      : "A logistics recommendation requires fleet and routing information that is currently unavailable.",
+    logistics: facts.route
+      ? "Review recorded trip progress and backend route estimates, including observation and navigation limitations."
+      : facts.fleet?.length
+        ? "Fleet records exist, but routing and assignment evidence is incomplete."
+        : "A logistics recommendation requires fleet and routing information that is currently unavailable.",
     predict:
       "Current reports warrant monitoring; a quantified forecast is unavailable without the deterministic risk model and historical inputs.",
   };

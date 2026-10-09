@@ -29,7 +29,7 @@ These rules override any conflicting instruction later in this document.
 
 # AQUASHIELD — COMPLETE HACKATHON BUILD SPECIFICATION
 
-**Implementation status (9 October 2026):** Phases 1–7, including Phase 6.5 citizen authentication/report ownership, are implemented locally. Phase 7 adds persisted routing/trip/delivery workflows and fictional OTP verification; secure real-recipient handoff remains unconfigured by default. Existing authorization, deterministic calculations, Strands/Gemini integration and allocation recovery are preserved. A complete live Gemini assessment remains unverified after provider failures. See [Phase 7 behavior and limits](docs/phase7.md), [Phase 5](docs/phase5.md), [Phase 6](docs/phase6.md) and [Phase 6.5](docs/phase65.md). The latest Phase 7 prompt authorizes routing/delivery only, not prediction or deployment.
+**Implementation status (10 October 2026):** Phases 1–7, including citizen authentication/report ownership, are implemented locally. Phase 7 includes private citizen-portal OTP handoff, persisted trip/delivery workflows, logistics route evidence and recorded fairness/response analytics. Account participation does not independently verify identity or household receipt. Authorized live Crisis Detection, Logistics and Early Warning tests passed validation; Resource Allocation returned Google HTTP 503 and remains unverified. Existing deterministic calculations and allocation recovery are preserved. See [through-Phase-7 audit](docs/through-phase7-audit.md) and [Phase 7 behavior](docs/phase7.md). Prediction and AWS deployment remain outside this scope; no all-role live acceptance is claimed.
 
 ## 1. ROLE
 
@@ -446,7 +446,7 @@ Recommendations remain read-only in Phase 5. Tanker feasibility/selection and hu
 
 # 16. LOGISTICS AGENT AND BACKEND ROUTING — LATER OPERATIONS
 
-Define the Logistics Strands/Gemini role in Phase 5. Until Phase 6 enables fleet and routing tools, it explicitly reports unavailable operational inputs rather than inventing an assignment, distance or ETA.
+Define the Logistics Strands/Gemini role in Phase 5. Until the operational phases supply recorded fleet/trip/routing facts, it explicitly reports unavailable inputs rather than inventing an assignment, distance or ETA. Phase 7 now supplies persisted selected-trip route evidence to this read-only role.
 
 In Phase 6 the backend checks stored tanker locations, capacities, availability and assignments and selects feasible candidates deterministically. Phase 7 adds distance and estimated ETA using a configured routing source or labeled straight-line/average-speed fallback. All numeric distance/ETA/feasibility calculations stay in the JavaScript backend.
 
@@ -1696,7 +1696,7 @@ Persisted validated tanker management, existing deterministic severity/fairness-
 Public server-assigned CITIZEN registration, shared login/current-user/logout, account-owned reporting/history/status, strict role/owner authorization and ADMIN-only reporter/evidence review. Preserve ownerless legacy/demo records, account/contact verification uncertainty and existing Phases 1–6. Reuse existing password hashing, sessions, rate limits and CORS. No email/SMS verification, AI provider changes, AWS deployment or Phase 7 work. See docs/phase65.md for APIs, setup, tests and limitations.
 
 ## PHASE 7 — Routing, trips and delivery verification (implemented locally)
-Database-backed ASSIGNED → EN_ROUTE → ARRIVED → DELIVERED workflow, deterministic straight-line/average-speed estimates with an optional validated road-routing adapter, owned operator controls, secure hashed/expiring/attempt-limited OTP, isolated non-production demo reveal, recorded actual litres, conditional completion recovery, tanker/allocation updates, municipal metrics/history/audits and private citizen response tracking. No GPS/traffic/SMS or independently verified household delivery is claimed; real recipient handoff must be configured before production verification. See docs/phase7.md. Numerical prediction remains outside this phase.
+Database-backed ASSIGNED → EN_ROUTE → ARRIVED → DELIVERED workflow, deterministic straight-line/average-speed estimates with an optional validated road-routing adapter, owned operator controls, secure hashed/expiring/attempt-limited OTP, private designated-citizen handoff, isolated non-production demo reveal, recorded actual litres, conditional completion recovery, tanker/allocation updates, municipal metrics/history/audits, recorded operational fairness analytics and private citizen response tracking. Logistics advice consumes existing backend route facts. No GPS/traffic/SMS or independently verified identity/household delivery is claimed. External messaging remains optional and requires a configured adapter. See docs/phase7.md and docs/through-phase7-audit.md. Numerical prediction remains outside this phase.
 
 ## PHASE 8 — Full verification, hardening and separate AWS deployment (later)
 Full regressions/security/agent-boundary tests, account authentication/eligibility, runtime/build/network/secret compatibility including any isolated agent service, Amplify plus eligible App Runner or justified AWS alternative, Atlas and public auth/report/dashboard/persistence/agent checks. Gemini remains the selected real provider; Bedrock is optional.
@@ -1739,19 +1739,19 @@ The final complete demo should run from the UI against tested backend/database s
 
 These goals are checked only after the authorized phase is implemented/tested; they do not claim future work is already completed.
 
-[ ] Citizen reporting/history/status persist in MongoDB with private access boundaries.
-[ ] Geographic/time clustering, duplicate handling, confidence/verified counts and approximate population remain correct.
-[ ] Backend severity is deterministic/configurable with all four severity levels; estimates and unknowns are explicit.
-[ ] Admin authorization, dashboard/map and existing public/private APIs continue working.
-[ ] Strands with explicitly configured Google Gemini implements Crisis Detection, Resource Allocation, Logistics and Early Warning roles.
+[x] Citizen reporting/history/status persist in MongoDB with private access boundaries.
+[x] Geographic/time clustering, duplicate handling, confidence/verified counts and approximate population remain correct.
+[x] Backend severity is deterministic/configurable with all four severity levels; estimates and unknowns are explicit.
+[x] Admin authorization, dashboard/map and existing public/private APIs continue working.
+[x] Strands with explicitly configured Google Gemini implements Crisis Detection, Resource Allocation, Logistics and Early Warning roles.
 [ ] Real Gemini calls are verified with actual provider/model/framework provenance, separate from backend numeric facts.
-[ ] DEMO_AI_MODE provides key-free labeled simulations with no provider calls; missing-key real mode and provider errors never silently simulate or use Bedrock.
-[ ] Gemini keys remain server-side and never appear in source control, logs, browser bundles/storage or API responses.
-[ ] Main React/Express/shared app stays JavaScript; any technically required TypeScript is confined to the agent service.
-[ ] Deterministic priority/fairness/reasons/unknown inputs remain inspectable and agent tools are validated/read-only.
-[ ] Later fleet/logistics calculations and human-approved assignments, estimated route/ETA, operator status and verified delivery work.
+[x] DEMO_AI_MODE provides key-free labeled simulations with no provider calls; missing-key real mode and provider errors never silently simulate or use Bedrock.
+[x] Gemini keys remain server-side and never appear in source control, logs, browser bundles/storage or API responses.
+[x] Main React/Express/shared app stays JavaScript; any technically required TypeScript is confined to the agent service.
+[x] Deterministic priority/fairness/reasons/unknown inputs remain inspectable and agent tools are validated/read-only.
+[x] Fleet/logistics calculations and human-approved assignments, estimated route/ETA, operator status and account-participation delivery OTP work; physical household receipt remains unverified.
 [ ] Later deterministic early-warning risk/horizon is explained by the agent without invented numbers.
-[ ] Audit records, repeatable fictional evidence and implemented safe reset preserve private live data.
+[x] Audit records, repeatable fictional evidence and implemented safe reset preserve private live data.
 [ ] Separate actual AWS deployment is verified through public frontend/backend URLs and MongoDB persistence, shown in the final video.
 [ ] README/demo distinguish implemented/planned, simulated/real execution and exact/estimated/unknown values; tests/lint/build pass.
 

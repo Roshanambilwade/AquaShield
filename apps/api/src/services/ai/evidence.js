@@ -144,7 +144,7 @@ export function buildEvidence(
       "Read-only recommendation; human review required.",
       "Emerging evidence is not a forecast.",
       "Approximate population may overlap between zones.",
-      "Authorized tanker approval and assignment exist; this assessment cannot perform either. Trips and verified delivery remain future work.",
+      "Authorized assignment and recorded trips/deliveries exist; this read-only assessment cannot perform operational actions or establish household receipt.",
     ],
   };
   return {
