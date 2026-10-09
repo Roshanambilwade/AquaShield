@@ -4,6 +4,8 @@ An intelligence and decision layer for emergency water management, by **AquaSent
 
 **Phases 1–4 are implemented.** The overrides at the top of [AQUASHIELD_SPEC.md](AQUASHIELD_SPEC.md) and the requested phase scope take precedence over the full MVP requirements. Implementation stops after the Phase 4 admin dashboard and map. See [Phase 4 setup and verification](docs/phase4.md) and [Phase 3 calculations](docs/phase3.md).
 
+**Strategy:** AWS will host the functioning application; it is not a mandatory AI/LLM provider. The next authorized phase builds explainable deterministic decision support. Strands Agents SDK, Amazon Bedrock and real LLM agents are optional future enhancements. No Phase 5 development or AWS deployment has been performed by this documentation update. See the [honest demo guide](docs/demo.md).
+
 ## Completed
 
 - JavaScript npm workspaces: React + Vite in `apps/web`; Node.js + Express in `apps/api`.
@@ -22,7 +24,7 @@ An intelligence and decision layer for emergency water management, by **AquaSent
 - Municipal shortage overview with an offline geographic zone map, LOW/MEDIUM/HIGH/CRITICAL badges, emerging evidence and inspectable calculation tables.
 - Administrator provisioning, password hashing, expiring MongoDB sessions, role authorization and server-side logout.
 - Protected command center with eight KPI cards, OpenStreetMap/Leaflet plus offline map fallback, private report layers, event filters/details, activity and evidence analytics.
-- Explicit unknown operational values and a Phase 5 AI placeholder; no fleet, allocation, dispatch, delivery or forecasting workflow.
+- Explicit unknown operational values and an inactive AI-labeled placeholder in the current UI; no LLM execution, fleet, allocation, dispatch, delivery or forecasting workflow. The next phase will implement deterministic recommendations when explicitly authorized.
 
 ## Running locally
 
@@ -73,6 +75,8 @@ Household size is citizen-provided. Phase 3 derives approximate population, shor
 
 Run `npm run seed:demo`, then open `/admin?demo=true` or `/my-reports?demo=true`. This inserts 66 deterministic fictional reports across Panchavati, Satpur, Indira Nagar, Nashik Road and Adgaon, plus simulated area/environment/incident context and derived shortage events. Panchavati is the critical hero scenario; the other zones demonstrate HIGH, MEDIUM, LOW and emerging evidence. Two repeat submissions and one conflicting-duration submission demonstrate exclusion from scoring. Re-running does not duplicate them or delete citizen submissions; it removes only the obsolete Phase 2 seed with its known fictional reporter key. Demo events use a fixed observation clock and never corroborate real citizen reports. Every displayed score is calculated from evidence. Demo seeding and demo shortage APIs are disabled in production.
 
+The current default seed derives Panchavati's 89.5/100 CRITICAL severity, 97.6% shortage confidence and approximately 588 affected people from 37 eligible household submissions (40 total reports, including exclusions). Its 31 verified reports are simulated field checks. These are a computed snapshot, not fixed values to force into the database. No tanker assignment, future-risk forecast, agent run or AWS-hosted URL is supplied by seeding. Follow [docs/demo.md](docs/demo.md) and show only implemented capabilities.
+
 Browser tests require an installed Microsoft Edge by default and a built frontend (`npm run build` first). They start isolated API/preview servers on **5100/4174**, so those ports must be free. For Chrome, set `$env:PLAYWRIGHT_CHANNEL='chrome'`. For Playwright Chromium, set `$env:PLAYWRIGHT_BROWSERS_PATH` to a directory inside this repository, run `npx playwright install chromium`, then set `$env:PLAYWRIGHT_CHANNEL='chromium'`.
 
 `npm run dev:api` and `npm run dev:web` run either workspace independently. `npm run start` runs the API without a watcher. `npm run build` creates `apps/web/dist`. `npm run preview` serves that build at `http://localhost:4173` with an API proxy; add that exact origin to `CORS_ORIGIN` when using preview. Vite preview is for local verification. Production hosting needs SPA fallback to `index.html` and an API reverse proxy, or an absolute `VITE_API_BASE_URL`.
@@ -107,7 +111,7 @@ Keep `VITE_API_BASE_URL=/api` for the Vite proxy. The proxy preserves the browse
 
 `npm run test:dev-origins` runs real browser submissions from both local origins on port 5173 using the normal development command and root `.env`, without overriding `CORS_ORIGIN`. Locally it reuses an existing development server; otherwise ports 5000/5173 must be free so it can start one. CI requires a fresh server. It checks HTTP 201, MongoDB persistence, confirmation/history, and removes only its own test reports. This supplements the isolated preview-server browser suite.
 
-JWT, Redis, AWS, Bedrock, Strands AI demo mode, and map placeholders in `.env.example` are reserved for later phases. Report seeding works independently of `DEMO_AI_MODE`; no AI integration is enabled.
+Current admin authentication uses opaque MongoDB sessions, not `JWT_SECRET`. Redis and Mapbox placeholders are optional. Legacy `AI_PROVIDER=bedrock`, `BEDROCK_MODEL_ID`, `STRANDS_MODE` and `DEMO_AI_MODE` entries in the unchanged `.env.example` are inactive optional-future configuration; they neither load an SDK nor execute an agent. Report seeding and deterministic logic work without provider credentials or `DEMO_AI_MODE`. Future AWS deployment configuration is separate from optional AI-provider access.
 
 ## Routes
 
@@ -176,6 +180,28 @@ Backend configuration, routes, controllers, and middleware are separate modules.
 
 The Report collection stores citizen-provided location/locality, supply details, household size, description, sanitized optional photo, anonymous owner hash, submission ID, timestamps, pending status, and a demo flag. JavaScript report options are shared between frontend and backend in `packages/shared/reportOptions.js`; there is no TypeScript shared-types package.
 
-Citizen accounts, AI, AWS execution, forecasts, allocation, dispatch and delivery workflows are deferred. Phase 4 adds User/AdminSession collections and protected read-only dashboard services that reuse Phase 3 aggregates. The operator page retains the Phase 1 placeholder. Phase 3 adds Area and ShortageEvent collections and separate deterministic clustering, confidence, population, severity and fairness helper modules. The fairness helpers have no allocation workflow and require supplied delivery evidence. AWS remains mandatory for the eventual MVP; Strands + Bedrock integration is deferred to its requested phase and is not claimed as working here.
+Citizen accounts, recommendations, forecasts, allocation, dispatch and delivery workflows are deferred. Phase 4 adds User/AdminSession collections and protected read-only dashboard services that reuse Phase 3 aggregates. The operator page retains the Phase 1 placeholder. Phase 3 adds Area and ShortageEvent collections and separate deterministic clustering, confidence, population, severity and fairness helper modules. Fairness helpers require supplied delivery evidence, leave unknown history unknown, and expose no allocation workflow. The transparent early-warning model is retained in the specification for a later phase; no prediction engine runs in the current application.
+
+## Planned decision support and later phases
+
+| Phase    | Planned work — not implemented yet                                                                                                                                                          |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 5 (next) | Read-only deterministic recommendations using existing evidence, severity/confidence and fairness helpers, with ranking rules, explanations, provenance and missing inputs; no LLM required |
+| 6        | Tanker feasibility/selection, human-approved allocation, logistics/operator status, delivery OTP/QR verification and audit records                                                          |
+| 7        | Deterministic early-warning risk and operational/fairness analytics                                                                                                                         |
+| 8        | Full regression verification, hardening and actual AWS deployment after compatibility checks                                                                                                |
+| 9        | Reproducible verified demo, final documentation/screenshots and deployment evidence in the video                                                                                            |
+
+Each phase requires an explicit instruction and stops after its verification. Optional future Strands/Bedrock/LLM adapters may provide supplemental summaries; they never replace authoritative numeric calculations or human approval and are not MVP acceptance requirements.
+
+## AWS deployment strategy — planned, not deployed
+
+The AWS requirement is real application hosting with tested public frontend/backend URLs and database persistence, demonstrated in the final video. Prefer **AWS Amplify Hosting** for the existing static React/Vite frontend and **AWS App Runner** for the Express backend, with **MongoDB Atlas** allowed as the external database. Final service/configuration selection remains subject to account eligibility, runtime, build, routing, secrets and network compatibility checks; no cloud resources are provisioned in this task.
+
+App Runner's eligibility is a required check: AWS stopped accepting new customers on April 30, 2026. Check the target account before selecting it; document a compatible AWS backend alternative if needed. [AWS service notice](https://aws.amazon.com/apprunner/)
+
+Verify the existing npm-workspace/root-lockfile build, `apps/web/dist`, Node.js 22.13+, Sharp dependencies, backend start/port/readiness, Atlas connectivity and restricted access. Static hosting must use a tested hosted API base URL or explicit reverse proxy rather than assume Vite's local proxy exists. Preserve exact hosted-origin CORS, admin/citizen-token authorization, production demo restrictions and current tests. Assess in-process rate limits/detection before scaling across backend instances. Section 47–48 of the [specification](AQUASHIELD_SPEC.md) contains service documentation and the deployment acceptance checklist.
+
+Do not claim AWS deployment from configuration placeholders, mock output or local-only screenshots. Publish actual service names, tested URLs and results only after successful public health/auth/report/dashboard/persistence checks. No AWS AI credentials, Strands SDK or Bedrock calls are required for that deployment.
 
 Implementation stops after Phase 4. Later phases require a new instruction.

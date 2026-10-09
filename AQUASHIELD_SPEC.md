@@ -15,88 +15,60 @@ These rules override any conflicting instruction later in this document.
 6. Do not add a TypeScript shared-types package unless it is technically required by a dependency.
 
 7. AWS is a mandatory core requirement for this hackathon project.
+8. **AWS requirement:** Satisfy the hackathon's AWS requirement by deploying the functioning AquaShield application on AWS. The deployment must be real and demonstrated in the final video. Do not make Strands Agents SDK or Amazon Bedrock mandatory for the MVP.
 
-8. Use the Strands Agents SDK + Amazon Bedrock for the real AI layer when AWS credentials are configured.
+9. **AI implementation:** Strands Agents SDK and Amazon Bedrock are optional future enhancements. For the current MVP, use explainable, deterministic backend logic for crisis prioritization, allocation recommendations, and risk scoring. Do not label deterministic outputs as LLM-generated or claim real AI-agent execution.
 
-9. If the currently supported Strands Node SDK technically requires TypeScript for a dedicated AI service, TypeScript may be isolated to that AI service only. Do not convert the main frontend or backend to TypeScript.
+10. **Deployment strategy:** Prefer AWS Amplify Hosting for the React/Vite frontend and AWS App Runner for the Node.js/Express backend, provided these fit the existing repository. MongoDB Atlas may remain the external database. Verify compatibility before selecting the final configuration.
 
-10. The implementation phase order given by the Codex phase prompts is authoritative if it conflicts with the phase order described elsewhere in this specification.
+11. **Implementation order:** Follow the latest phase-specific Codex prompts. Preserve all working functionality, use JavaScript for the main application, and test after each phase.
 
-11. Build and test one phase at a time. Do not attempt to implement the entire project in a single step.
+12. **Phase control:** Implement only the explicitly requested phase. Stop afterward, report changes and test results, and wait for the next instruction. Never claim AWS deployment is complete until the public frontend and backend have been successfully tested.
 
-12. Do not start the next phase automatically. Stop after completing the requested phase, test it, report the result, and wait for the next instruction.
 
 
 # AQUASHIELD — COMPLETE HACKATHON BUILD SPECIFICATION
 
 ## 1. ROLE
 
-You are a senior full-stack engineer, AI engineer, product designer, and hackathon engineering lead.
+You are a senior full-stack engineer, product designer, and hackathon engineering lead.
 
-Build a complete working hackathon MVP called **AquaShield**.
+Build a working, explainable AquaShield MVP with frontend, backend APIs, MongoDB, citizen reporting, geographic/time shortage detection, confidence, deterministic severity, decision support, fairness-aware allocation, tanker operations, delivery verification, deterministic early warning, an admin dashboard, realistic labeled demo evidence, tests and documentation.
 
-Do not create only a UI prototype.
+The AWS requirement is actual application deployment, demonstrated through tested public frontend/backend URLs in the final video. AWS is not a required AI/LLM provider. Strands Agents SDK, Amazon Bedrock and real LLM agents are optional future enhancements, outside MVP acceptance.
 
-Build a functioning end-to-end application with:
-- frontend
-- backend APIs
-- database
-- AI agent layer
-- shortage detection
-- verification/confidence
-- severity scoring
-- fair resource allocation
-- tanker assignment
-- route/ETA
-- delivery verification
-- early-warning prediction
-- admin dashboard
-- citizen interface
-- realistic demo data
-- AWS integration
-- documentation
-- tests
-- Docker support where practical
+Implement one authorized phase at a time. Phase 1–4 application code is already working; this specification describes the completed foundation and planned later phases. Do not infer that later features or AWS deployment are already implemented. Keep the local application runnable with one clear setup process. Reuse working JavaScript modules and do not ask unnecessary clarification questions.
 
-The application must be runnable locally with one clear setup process.
-
-Do not ask unnecessary clarification questions. Make sensible engineering decisions and continue.
+Numeric examples elsewhere are illustrative unless identified as a measured implementation snapshot. Never hardcode example scores or present fictional inputs, simulated verification, approximate population or future forecasts as verified facts.
 
 ---
 
 # 2. PROJECT IDENTITY
 
 ## Product Name
-
 AquaShield
 
 ## Team Name
-
 AquaSentinels
 
 ## Hackathon
-
 Environmental Hacks — Heat & Water Track
 
 ## One-line description
-
-AquaShield is an AI-powered emergency water-management platform that detects and verifies neighborhood-level water shortages, assesses their severity, predicts emerging risks, and coordinates fair allocation of limited emergency water resources.
+AquaShield is an explainable emergency water-management platform that detects neighborhood shortages, assesses evidence and severity, and supports fair, human-approved water response decisions. Deterministic early warning and operational response are built in later authorized phases.
 
 ## Core pitch
-
-AquaShield does not merely let people request water.
-
-It acts as a **water-crisis detection and decision platform**.
-
-Citizen reports + infrastructure signals + environmental conditions
+Citizen reports + available infrastructure/environment signals
 → shortage detection
-→ verification
-→ severity estimation
-→ AI-assisted prioritization
-→ fair resource allocation
+→ verification/confidence
+→ deterministic severity
+→ explainable priority recommendation
+→ human-approved fair allocation
 → tanker dispatch
-→ delivery verification
-→ early warning for future shortages.
+→ verified delivery
+→ deterministic early warning.
+
+Describe implemented modules as deterministic decision support. AI/LLM integration may be offered later but is not claimed as running in the current application.
 
 ---
 
@@ -122,149 +94,71 @@ The key problem is:
 
 # 4. WHAT AQUASHIELD SOLVES
 
-AquaShield creates one workflow:
-
 Citizen Report
 → Location
-→ Local report clustering
+→ Geographic/time report clustering
 → Verification/confidence
-→ Estimated affected population
-→ Severity score
-→ AI priority recommendation
+→ Approximate affected population
+→ Deterministic severity
+→ Explainable priority recommendation
+→ Administrator review
 → Fair tanker allocation
-→ Route/ETA
+→ Estimated route/ETA
 → Delivery verification
-→ Crisis resolved
-→ Continuous monitoring
-→ Early-warning prediction
+→ Recorded response outcome
+→ Monitoring and deterministic early-warning risk.
 
-The system should be designed around a **human-in-the-loop** model.
-
-AI recommends.
-
-The authorized administrator approves.
-
-The system records the decision.
+The recommendation layer supplies evidence, rules, assumptions and missing inputs. An authorized administrator approves operational actions. The system records the decision. No LLM is required for this workflow; allocation, delivery and prediction remain later-phase work.
 
 ---
 
 # 5. IMPORTANT PRODUCT POSITIONING
 
-Do NOT market the project as:
+Position AquaShield as an intelligence and decision layer for emergency water management.
 
-“the first tanker booking system”
+Its value is report-based detection, spatial/time clustering, evidence-based shortage confidence, transparent deterministic severity, explainable prioritization, fairness-aware allocation, early warning, delivery verification and auditability.
 
-Do NOT claim that citizens can know the exact amount of water remaining.
+Do not claim to be the first tanker booking system, to know exact remaining water, or to know exact affected population without verified evidence. Label estimates and simulated inputs. Do not market deterministic modules as LLM agents or describe the current application as running Strands/Bedrock. These integrations are optional future enhancements.
 
-Do NOT claim that the system knows the exact number of affected people unless verified data exists.
-
-Do NOT pretend simulated data is real.
-
-Instead position AquaShield as:
-
-“An intelligence and decision layer for emergency water management.”
-
-The unique value is:
-
-1. detecting emerging shortages from fragmented reports
-2. spatial clustering of reports
-3. evidence-based confidence estimation
-4. transparent severity scoring
-5. AI-assisted prioritization
-6. fairness-aware allocation
-7. early-warning prediction
-8. delivery verification
-9. auditability
-
-Existing tanker/request systems can exist. AquaShield focuses on what happens before and after the request: detection, verification, prioritization, prediction, and transparent allocation.
+Current emerging report evidence and future predictive risk are different concepts. Explain what has been implemented, what remains a placeholder, and which later capabilities are planned.
 
 ---
 
 # 6. USERS
 
-## 6.1 Citizen
+These are target capabilities, delivered only in their authorized phases.
 
-Can:
-- report water shortage
-- provide location
-- report last time water was available
-- report approximate household water availability
-- report household size
-- view report status
-- see whether shortage has been verified
-- see emergency response status
+## 6.1 Citizen
+- Report a water problem, location, household size, last supply time and approximate household water level.
+- View their own report and recorded verification/response status.
+- Never provide total neighborhood population or client-supplied severity/confidence.
 
 ## 6.2 Administrator / Municipal Operator
-
-Can:
-- view all reports
-- see active shortage zones
-- inspect evidence
-- approve/reject/merge shortage events
-- view severity scores
-- view estimated affected population
-- request AI recommendation
-- approve tanker allocation
-- view tankers
-- monitor delivery
-- see predictions
-- see analytics
-- view audit history
+- Sign in, inspect reports and shortage evidence, severity, confidence and approximate affected population.
+- Request an explainable deterministic priority recommendation in Phase 5.
+- Review event verification/merging and approve/reject resource allocations when those workflows are implemented.
+- Monitor available fleet records, delivery, predictions, analytics and audit history in later phases.
+- Optional future LLM summaries are supplementary and never authorize dispatch.
 
 ## 6.3 Tanker Operator
+- In the later operational phase, view assignments and estimated route/ETA, start a trip, record arrival, verify delivery with OTP/QR and record delivered litres.
 
-Can:
-- see assigned tanker job
-- see destination
-- see route
-- start trip
-- mark arrival
-- verify delivery using OTP/QR
-- mark delivery completed
-- record litres delivered
+Phase 4's tanker-operator page is a placeholder, not a working trip or authentication workflow.
 
 ---
 
 # 7. CORE FEATURE SET
 
-Implement these features in this order.
+Implement the MVP in the phase order in section 74 and the latest authorized Codex prompt. Deterministic decision support is required; real LLM agents are optional future enhancements and not a prerequisite for any MVP phase.
 
-## MUST HAVE
+## MUST HAVE — Citizen Water Shortage Reporting
+A citizen submits location, area/locality, problem type, last supply time, approximate shortage duration, household water category, household size and timestamp, with optional description/photo. Identity/contact fields may be optional when a later account workflow is implemented; preserve the existing anonymous browser-owned reporting.
 
-### 1. Citizen Water Shortage Reporting
+Problem types: NO_WATER, LOW_PRESSURE, PIPELINE_FAILURE, TANK_EMPTY, WATER_QUALITY, OTHER.
 
-A citizen submits:
+Water categories: EMPTY, LESS_THAN_25, BETWEEN_25_50, ABOVE_50, UNKNOWN.
 
-- name or optional anonymous identifier
-- phone/email optional
-- location
-- area/locality
-- problem type
-- last supply time
-- approximate household water level
-- household size
-- optional description
-- optional photo
-- timestamp
-
-Problem types:
-
-- NO_WATER
-- LOW_PRESSURE
-- PIPELINE_FAILURE
-- TANK_EMPTY
-- WATER_QUALITY
-- OTHER
-
-Water level options:
-
-- EMPTY
-- LESS_THAN_25
-- BETWEEN_25_50
-- ABOVE_50
-- UNKNOWN
-
-Do not force users to provide information they realistically cannot know.
+Do not force citizens to provide neighborhood-wide population, exact water quantity or information they cannot know. Unknown times/durations remain unknown. All subsequent evidence and severity come from backend business logic.
 
 ---
 
@@ -510,262 +404,86 @@ Example:
 
 ---
 
-# 13. AI AGENTS
+# 13. DETERMINISTIC DECISION SUPPORT AND OPTIONAL FUTURE AGENTS
 
-Use a small number of meaningful agents.
+The MVP uses small, modular JavaScript services for crisis evidence, priority recommendations, logistics and risk. These are deterministic business services, not LLM agents. Reuse severityEngine, confidenceEngine, reportClusteringService and fairnessEngine rather than recreating their calculations.
 
-Do NOT create 10+ meaningless agents.
+Strands Agents SDK, Amazon Bedrock and real LLM-based crisis/allocation/logistics/prediction agents are optional future enhancements. They are not startup dependencies, default providers, required phase deliverables or acceptance criteria. A future adapter may summarize validated evidence but must leave deterministic scores, factual inputs and authorization authoritative.
 
-Use 3 primary agents.
-
-Optional fourth prediction agent may be separate.
+Do not create a separate agent service or require an AI credential just to run the MVP. Missing information stays unknown, and output provenance must identify the method actually executed.
 
 ---
 
-# 14. AGENT 1 — CRISIS DETECTION AGENT
+# 14. CRISIS EVIDENCE SERVICE
 
-Name:
+Reuse the existing geographic/time clustering, duplicate/suspicious handling, shortage event creation and confidence calculations.
 
-Crisis Detection Agent
+Inputs: structured reports, locations, timestamps, problem types, verified infrastructure incidents and environmental data where available.
 
-Responsibility:
+Outputs: event summary, shortage confidence, evidence, affected zone, severity inputs, report exclusions and recommended verification action. Summaries and verification guidance are generated from backend rules/templates, not an LLM. Automated corroboration does not become field verification.
 
-Analyze structured reports and available signals and identify meaningful shortage events.
-
-Inputs:
-
-- reports
-- locations
-- timestamps
-- problem types
-- infrastructure incidents
-- weather/environment data if available
-
-Outputs:
-
-- shortage event summary
-- confidence
-- evidence
-- affected zone
-- severity input summary
-- suspicious/duplicate report detection
-- recommended verification action
-
-Example output:
-
-{
-  "eventDetected": true,
-  "confidence": 0.94,
-  "summary": "High-confidence localized water shortage detected in Panchavati.",
-  "evidence": [
-    "31 verified reports",
-    "37 total reports",
-    "reports concentrated within 0.8 km",
-    "18-hour shortage duration"
-  ],
-  "recommendedAction": "Prioritize emergency assessment"
-}
-
-The output must be structured JSON.
+Return structured data with source references, observation time, method and unknown inputs. Confidence always means confidence that a genuine shortage exists. An optional future crisis-summary agent may explain these authoritative results without recalculating them or inventing evidence.
 
 ---
 
-# 15. AGENT 2 — PRIORITY AND ALLOCATION AGENT
+# 15. EXPLAINABLE PRIORITY AND RECOMMENDATION SERVICE
 
-Name:
+Phase 5 builds an explainable decision-support layer without requiring an LLM, AWS AI credentials or a provider SDK.
 
-Resource Allocation Agent
+Inputs: existing shortage events, deterministic severity/confidence, approximate population, duration, known environmental/vulnerability data and verified delivery history when available. Fleet/capacity/location information may be read where records exist; actual tanker selection/assignment belongs to the later allocation phase.
 
-Responsibility:
+Use configurable deterministic rules and the existing fairnessEngine. Document ranking and stable tie-breakers. Unknown delivery history is not zero deliveries; retain null/partial priority where required by the existing fairness helpers and explain any evidence-only ordering. Do not invent a fairness benefit from missing records.
 
-Recommend which areas should receive emergency water first and which tanker should be assigned.
+Return structured recommendations containing method DETERMINISTIC, rule version, source event references, ranked attention areas, evidence-based reasons, known score components, assumptions, excluded/unknown inputs and recommended assessment actions. Reuse the event's shortage confidence; do not invent a separate numeric recommendation confidence or label it as water remaining.
 
-Inputs:
-
-- shortage zones
-- deterministic severity scores
-- estimated affected population
-- duration
-- temperature
-- vulnerable population
-- confidence
-- previous delivery history
-- tanker availability
-- tanker capacity
-- tanker locations
-- distances/ETA
-
-Important:
-
-The deterministic backend score is authoritative.
-
-The AI agent reasons over the already-calculated structured values.
-
-The AI does NOT replace the scoring engine.
-
-Output:
-
-{
-  "recommendedAreaId": "AREA_01",
-  "recommendedTankerId": "TANKER_04",
-  "reasoning": [
-    "Highest severity score",
-    "Long shortage duration",
-    "High estimated affected population",
-    "No recent emergency delivery"
-  ],
-  "fairnessConsideration": "Area received no emergency tanker allocation in the last 24 hours",
-  "confidence": 0.91
-}
+Recommendations are read-only. No allocation, dispatch or delivery state changes occur in Phase 5. Human approval becomes actionable in the later operations phase. A future optional LLM allocation agent can summarize the validated recommendation but cannot replace numeric ranking or authorization.
 
 ---
 
-# 16. AGENT 3 — LOGISTICS AGENT
+# 16. DETERMINISTIC LOGISTICS SUPPORT — LATER OPERATIONS PHASE
 
-Name:
+When tanker operations are authorized, select feasible tankers using stored locations, capacities, availability, existing assignments and deterministic distance/ETA calculations. Do not invent coordinates, fleet availability, traffic or exact arrival times.
 
-Logistics Agent
+Return the candidate tanker/area references, calculated or approximate distance, estimated ETA, capacity checks, selection rules and explanatory reasons. Label assumptions such as straight-line routing or average speed. Missing fleet/location data means no defensible tanker recommendation, not a fabricated assignment.
 
-Responsibility:
-
-Help select the practical tanker and route.
-
-Inputs:
-
-- tanker locations
-- capacities
-- availability
-- target area
-- estimated travel distance
-- ETA
-- current assignments
-
-Output:
-
-{
-  "tankerId": "TANKER_04",
-  "destinationAreaId": "AREA_01",
-  "estimatedDistanceKm": 6.8,
-  "estimatedMinutes": 18,
-  "reason": "Closest available tanker with sufficient capacity"
-}
-
-Do NOT let the LLM hallucinate coordinates.
-
-Coordinates come from the database.
-
-Distance should be calculated deterministically.
-
-AI can explain the selection.
+The optional future Logistics Agent may provide supplementary prose from this structured result. Neither Strands nor Bedrock is required for logistics or human-approved assignment.
 
 ---
 
-# 17. OPTIONAL AGENT 4 — EARLY WARNING AGENT
+# 17. DETERMINISTIC EARLY-WARNING SUPPORT — LATER PREDICTION PHASE
 
-Name:
+Preserve the transparent predictionEngine model in section 58. Use increasing report frequency, supply delay, infrastructure incidents, environmental stress, available rainfall and historical patterns to derive a configurable risk score, level, approximate horizon, reasons and preparation guidance.
 
-Water Crisis Prediction Agent
+No LLM or trained ML model is required. Risk is different from current shortage severity and shortage confidence. In Phase 4, an EMERGING report cluster is limited current evidence, not a forecast. Prediction is not implemented merely because this model is specified.
 
-Responsibility:
-
-Identify areas that may become critical soon.
-
-Use:
-
-- increasing report frequency
-- recent water-supply delays
-- infrastructure incidents
-- temperature
-- rainfall
-- previous shortage patterns
-- current water availability
-
-For hackathon MVP, this does not need complex machine learning.
-
-A transparent risk model is acceptable.
-
-Example:
-
-Area C
-
-Reports:
-
-2 → 5 → 11 → 18
-
-Temperature:
-
-39 → 41 → 43°C
-
-Supply delay:
-
-8h
-
-Prediction:
-
-Risk score:
-87/100
-
-Warning:
-
-“Area C is at high risk of becoming critical within the next 12–24 hours.”
+Risk examples such as 87/100 or 12–24 hours are illustrative. Derive displayed values from actual inputs and label uncertainty/unknown signals. An optional future prediction-summary agent can explain the deterministic model, not substitute invented risk values or certainty.
 
 ---
 
-# 18. AGENT ORCHESTRATION
-
-Implement the AI workflow as:
+# 18. DETERMINISTIC SERVICE ORCHESTRATION
 
 Input reports
-↓
-Crisis Detection Agent
-↓
-Backend severity calculation
-↓
-Resource Allocation Agent
-↓
-Logistics Agent
-↓
-Admin approval
-↓
-Tanker assignment
+→ Existing clustering and confidence services
+→ Backend deterministic severity
+→ Explainable priority/recommendation service
+→ Administrator review
+→ Later-phase deterministic fleet/logistics checks
+→ Explicit human approval
+→ Recorded tanker assignment.
 
-Optional parallel/periodic:
+In the later prediction phase: periodic structured signals → predictionEngine → labeled early-warning risk alerts.
 
-Early Warning Agent
-↓
-Risk alerts
-
-Use a simple orchestration layer.
-
-Do not over-engineer a distributed microservices architecture.
-
-The hackathon needs a working system, not enterprise complexity.
+Keep orchestration simple and modular. The MVP does not require an agent runtime or a distributed agent architecture. Optional future Strands/Bedrock adapters must be isolated extensions whose absence does not disable deterministic core services.
 
 ---
 
 # 19. HUMAN-IN-THE-LOOP
 
-AI must recommend rather than silently dispatch real-world resources.
+The deterministic recommendation layer proposes assessment/priority actions. Administrators review evidence, assumptions and missing inputs. Only the later allocation workflow may create an assignment after an authorized approval and fresh availability checks.
 
-Dashboard actions:
+Planned operational actions: Approve Allocation, Reject and Recalculate. Record the actor, recommendation provenance, rule version, evidence and outcome. Phase 5 recommendations alone must not dispatch resources.
 
-AI recommendation generated
-↓
-Admin reviews reasoning
-↓
-Approve
-↓
-Tanker assignment created
-
-Buttons:
-
-Approve Allocation
-
-Reject
-
-Recalculate
-
-This provides responsible human oversight.
+Any optional future LLM recommendation has the same human-approval and audit requirements, with its supplementary provenance clearly identified.
 
 ---
 
@@ -865,40 +583,15 @@ Recommended action
 
 ---
 
-# 22. AI RECOMMENDATION PANEL
+# 22. EXPLAINABLE RECOMMENDATION PANEL
 
-Create a highly visible dashboard panel:
+In Phase 5, build a visible AquaShield Recommendation / Decision Support panel using deterministic backend output. Show recommended assessment or priority action, existing severity and shortage confidence, approximate affected population, evidence, fairness context where verified, missing inputs and rule version.
 
-## AquaShield AI Recommendation
+Use language such as "Deterministic recommendation — human review required." A tanker proposal may appear only when real or clearly labeled simulated fleet data and a tested logistics/selection rule exist in the later operations phase. Unknown delivery history must be shown as unknown, not "no recent delivery."
 
-Recommended action:
+Approve Allocation is available only once the later authorization/allocation workflow exists. No recommendation may be labeled LLM-generated unless an optional future provider actually executed.
 
-Deploy Tanker T04 → Panchavati
-
-Severity:
-91/100
-
-Confidence:
-94%
-
-Estimated affected population:
-~620
-
-Reason:
-
-- 24-hour water shortage
-- high report density
-- 43°C temperature
-- no recent emergency delivery
-- high affected population
-
-Button:
-
-Approve Allocation
-
-Also display:
-
-“AI-assisted recommendation — human approval required.”
+The working Phase 4 application currently contains an inactive AI-labeled placeholder. Keep its current code untouched during this documentation task; its text/functionality can be aligned when Phase 5 is explicitly authorized.
 
 ---
 
@@ -1222,19 +915,26 @@ OFFLINE
 
 ---
 
-# 36. ALLOCATION MODEL
+# 36. ALLOCATION MODEL — LATER OPERATIONS PHASE
+
+Illustrative future record; this is not the current database implementation:
 
 {
   "_id": "...",
   "areaId": "AREA_01",
   "tankerId": "TANKER_04",
   "severityScore": 91,
-  "aiRecommendation": true,
+  "recommendationMethod": "DETERMINISTIC",
+  "recommendationRuleVersion": "...",
+  "sourceRecommendationId": "...",
   "reasoning": [],
+  "unknownInputs": [],
   "approvedBy": "...",
   "status": "APPROVED",
   "createdAt": "..."
 }
+
+Do not default aiRecommendation to true. Optional future LLM involvement must have explicit execution provenance; human approval and backend scores remain authoritative.
 
 ---
 
@@ -1269,154 +969,75 @@ OFFLINE
 
 ---
 
-# 39. AUDIT LOG
+# 39. AUDIT LOG — IMPLEMENT IN THE AUTHORIZED PHASE
 
-Record important decisions.
+Record decisions with actor, action, entity, entityId, timestamp and metadata.
 
-Examples:
+Events: REPORT_CREATED, REPORT_VERIFIED, SHORTAGE_DETECTED, RECOMMENDATION_GENERATED, ALLOCATION_APPROVED, TANKER_ASSIGNED, TANKER_ARRIVED, DELIVERY_VERIFIED and PREDICTION_GENERATED.
 
-REPORT_CREATED
-
-REPORT_VERIFIED
-
-SHORTAGE_DETECTED
-
-AI_RECOMMENDATION_GENERATED
-
-ALLOCATION_APPROVED
-
-TANKER_ASSIGNED
-
-TANKER_ARRIVED
-
-DELIVERY_VERIFIED
-
-PREDICTION_GENERATED
-
-Store:
-
-- actor
-- action
-- entity
-- entityId
-- timestamp
-- metadata
+Recommendation metadata includes method DETERMINISTIC, rule version, source evidence, assumptions and missing inputs. A future optional provider may record actual LLM execution separately; never emit an agent-executed event for deterministic code or a mock.
 
 ---
 
 # 40. API DESIGN
 
-Create REST APIs.
+Preserve existing REST routes and authorization. Routes below are phase-scoped targets, not claims that all endpoints already exist. README must identify the actually implemented API subset.
 
 ## Authentication
-
-POST /api/auth/register
-
 POST /api/auth/login
-
 GET /api/auth/me
-
 POST /api/auth/logout
-
----
+Public registration is not implemented in Phase 4 and is not needed for decision support.
 
 ## Reports
-
 POST /api/reports
-
 GET /api/reports
-
 GET /api/reports/:id
+PATCH /api/reports/:id is a future authorized feature, not a current endpoint.
 
-PATCH /api/reports/:id
-
----
-
-## Shortage Events
-
+## Shortage Events and Severity
 GET /api/shortages
-
 GET /api/shortages/:id
-
-POST /api/shortages/detect
-
-POST /api/shortages/:id/verify
-
----
-
-## Severity
-
-POST /api/shortages/:id/calculate-severity
-
+POST /api/shortages/detect — admin only
 GET /api/shortages/:id/severity
+POST /api/shortages/:id/calculate-severity — admin only
+POST /api/shortages/:id/verify — later verification workflow
 
----
+## Deterministic Decision Support — planned Phase 5
+POST /api/recommendations/prioritize
+GET /api/recommendations/:id
+Use structured evidence, deterministic rules, source/method metadata and admin authorization. These planned routes require no LLM provider and must not allocate or dispatch resources.
 
-## AI
+## Optional Future AI Adapters
+/api/ai/detect, /api/ai/allocate, /api/ai/logistics, /api/ai/predict and /api/ai/recommend-allocation are optional future integration proposals. They are not mandatory MVP endpoints, are not currently implemented and are not aliases that disguise deterministic services as agents.
 
-POST /api/ai/detect
-
-POST /api/ai/allocate
-
-POST /api/ai/logistics
-
-POST /api/ai/predict
-
-POST /api/ai/recommend-allocation
-
----
-
-## Tankers
-
+## Tankers — later operations phase
 GET /api/tankers
-
 GET /api/tankers/:id
-
 POST /api/tankers/:id/assign
-
 PATCH /api/tankers/:id/status
 
----
-
-## Allocations
-
+## Allocations — later operations phase
 GET /api/allocations
-
 POST /api/allocations/recommend
-
 POST /api/allocations/:id/approve
-
 POST /api/allocations/:id/reject
 
----
-
-## Deliveries
-
+## Deliveries — later operations phase
 POST /api/deliveries/:id/start
-
 POST /api/deliveries/:id/arrive
-
 POST /api/deliveries/:id/verify
-
 POST /api/deliveries/:id/complete
 
----
-
-## Predictions
-
+## Deterministic Predictions — later prediction phase
 GET /api/predictions
-
 POST /api/predictions/generate
 
----
-
-## Dashboard
-
+## Dashboard — existing Phase 4
 GET /api/dashboard/summary
-
 GET /api/dashboard/map
-
 GET /api/dashboard/analytics
+GET /api/dashboard/shortages/:id
 
 ---
 
@@ -1484,453 +1105,118 @@ Current assignment
 
 # 42. FRONTEND DESIGN
 
-Modern professional dashboard.
+Preserve the working React + JavaScript + Vite application and existing CSS/component system. Do not convert to TypeScript or introduce a styling/state library solely to satisfy an outdated stack example.
 
-Design style:
+Keep a clean environmental dashboard with high readability, reusable components, mobile-first citizen reporting and a desktop-first responsive admin command center.
 
-- clean
-- minimal
-- environmental
-- high readability
-- modern SaaS dashboard
-- responsive
-- mobile-first citizen interface
-- desktop-first admin interface
+Components include MetricCard, SeverityBadge, ConfidenceBadge, ShortageCard, ReportCard, MapView, TankerCard, DecisionSupportPanel, PredictionCard, Timeline, AllocationModal, DeliveryVerificationModal, LoadingState, EmptyState, ErrorState and Toast, implemented only when needed in their authorized phase.
 
-Use:
-
-React
-TypeScript
-Tailwind CSS
-
-Use reusable components.
-
-Important components:
-
-MetricCard
-
-SeverityBadge
-
-ConfidenceBadge
-
-ShortageCard
-
-ReportCard
-
-MapView
-
-TankerCard
-
-AIPriorityPanel
-
-PredictionCard
-
-Timeline
-
-AllocationModal
-
-DeliveryVerificationModal
-
-LoadingState
-
-EmptyState
-
-ErrorState
-
-Toast
+Optional future AI UI must disclose actual execution and remain supplemental to deterministic evidence.
 
 ---
 
 # 43. DASHBOARD INFORMATION HIERARCHY
 
-Top:
+AquaShield command-center heading
+→ Honest KPIs
+→ Map and active shortage evidence
+→ Explainable deterministic recommendation, when Phase 5 is implemented
+→ Current emerging evidence / separately labeled predictive risks
+→ Recorded tanker operations, when implemented
+→ Recent activity and evidence analytics.
 
-AquaShield
-Live Water Crisis Command Center
-
-Then KPIs.
-
-Then:
-
-Map + active shortages
-
-Then:
-
-AI recommendation
-
-Then:
-
-Emerging risks
-
-Then:
-
-Active tanker operations
-
-Then:
-
-Recent activity
+Unavailable data stays unknown. Inactive extension points are visibly identified; no fake tanker, delivery, prediction or AI output fills them.
 
 ---
 
 # 44. DEMO DATA
 
-Create a deterministic seed script.
+Use deterministic seed inputs and fictional data with explicit simulation labels. Current Phase 3/4 data contains five areas and 66 reports, plus simulated environmental/incident context and derived shortage events. Do not expand or change these working seeds in this documentation task.
 
-Use fictional/demo data.
+Later authorized operations/prediction phases may add more areas, simulated tankers, supply history, allocations, deliveries and historical trend inputs. Their outputs must be calculated by the implemented business rules, not seeded as final severity/confidence/risk/recommendation values.
 
-Create approximately:
-
-10 areas
-
-50–100 citizen reports
-
-10 tankers
-
-several infrastructure incidents
-
-water supply history
-
-predictions
-
-allocations
-
-deliveries
-
-Do NOT use real private citizen data.
-
-Clearly label demo environment.
-
-Areas can be fictional or based on publicly known locality names, but make it clear that the data is simulated.
+Do not use private citizen data in demos. Publicly known locality names do not make their fictional reports, verification or weather real. Document which seed collections exist, which commands actually work and which future datasets remain planned.
 
 ---
 
 # 45. HERO DEMO SCENARIO
 
-The application must be seeded with one extremely strong demo scenario.
+Keep Panchavati as the primary simulated scenario, alongside Satpur, Indira Nagar, Nashik Road and emerging Adgaon. Preserve the current seed inputs and existing calculation logic.
 
-Primary area:
+At the current default configuration and fixed seed observation clock, Panchavati has 40 submitted reports, 37 eligible households, 31 simulated verified reports, approximately 588 affected people, 97.6% shortage confidence and 89.5/100 CRITICAL severity. Heat/incident inputs are simulated. These are a calculated implementation snapshot, not hardcoded expected outputs; recompute if evidence/configuration changes.
 
-Panchavati
+Other seeded zones derive HIGH, MEDIUM and LOW classifications. Adgaon has limited current report evidence (EMERGING), not a validated forecast. The future prediction demo must use time-series inputs and the deterministic risk model.
 
-Scenario:
-
-Extreme heat:
-43°C
-
-Pipeline disruption:
-
-YES
-
-No water duration:
-
-24 hours
-
-Reports:
-
-37
-
-Verified reports:
-
-31
-
-Estimated affected population:
-
-~620
-
-Water level:
-
-Less than 25%
-
-Confidence:
-
-94%
-
-Severity:
-
-91/100
-
-Severity:
-
-CRITICAL
-
-Available tankers:
-
-3
-
-Recommended:
-
-Tanker T04
-
-Estimated distance:
-
-6.8 km
-
-ETA:
-
-18 minutes
-
-Allocation reason:
-
-- highest severity
-- long shortage duration
-- high affected population
-- extreme heat
-- no recent emergency allocation
-
-Second area:
-
-High but non-critical.
-
-Third area:
-
-Emerging risk.
-
-The demo should allow judges to immediately understand the difference between:
-
-CURRENT CRISIS
-
-and
-
-EMERGING CRISIS
+Available tankers, assignment, route/ETA, previous delivery and predicted risk remain unknown or unimplemented in Phase 4. Do not claim T04 is available or recommended until the later workflow and labeled records genuinely support it. Earlier examples such as 91/100, 94% and ~620 are illustrative, not requirements to force this seed to a fake output.
 
 ---
 
 # 46. END-TO-END DEMO FLOW
 
-The complete demo must work like this:
+## Currently working Phase 1–4 walkthrough
+1. Citizen submits a household report; the API stores it in MongoDB.
+2. Existing clustering, exclusion handling and confidence calculations update a shortage event.
+3. Backend calculates deterministic severity and approximate population from evidence.
+4. Administrator signs in, inspects map/table, confidence, severity breakdown, report counts, unknown inputs, activity and analytics.
+5. Show labeled seeded scenarios separately from live citizen evidence. The current recommendation placeholder, fleet/delivery values and forecast values must be described as inactive/unknown where applicable.
 
-1. Citizen opens AquaShield.
+## Planned later-phase complete flow
+6. Phase 5 generates a deterministic, explained priority recommendation with assumptions and source evidence. No LLM is required and no dispatch occurs here.
+7. The later operations phase checks actual or explicitly simulated fleet feasibility, administrator approval and audit records before assigning a tanker.
+8. Operator progresses ASSIGNED → EN_ROUTE → ARRIVED, with calculated distance and clearly estimated ETA.
+9. OTP/QR verification and recorded delivered litres update delivery/operational metrics. People served is approximate unless separately verified; do not infer exact people served from tanker capacity.
+10. The later prediction phase calculates early-warning risk, uncertainty and preparation guidance from trend/environment inputs. Do not substitute current emerging evidence for a forecast.
+11. The deployment phase demonstrates tested public AWS frontend/backend URLs and MongoDB persistence in the final video.
 
-2. Citizen selects:
-   Panchavati
-
-3. Reports:
-   No water
-
-4. Enters:
-   no water for 18+ hours
-
-5. Household size:
-   5
-
-6. Current water:
-   <25%
-
-7. Submits.
-
-8. System stores report.
-
-9. Multiple existing seeded reports are already nearby.
-
-10. Dashboard updates.
-
-11. Crisis Detection Agent analyzes them.
-
-12. A shortage event is created.
-
-13. Confidence becomes:
-
-94%
-
-14. Backend calculates:
-
-91/100
-
-15. Dashboard labels:
-
-CRITICAL
-
-16. Estimated affected population:
-
-~620
-
-17. Admin opens AI recommendation.
-
-18. Allocation Agent recommends:
-
-Tanker T04 → Panchavati
-
-19. AI explains why.
-
-20. Admin approves.
-
-21. Tanker status:
-
-ASSIGNED
-
-22. Operator sees assignment.
-
-23. Operator starts trip.
-
-24. Status:
-
-EN_ROUTE
-
-25. Route/ETA appears.
-
-26. Operator reaches destination.
-
-27. Status:
-
-ARRIVED
-
-28. System generates delivery OTP.
-
-29. Operator verifies OTP.
-
-30. Enters:
-
-10,000 litres
-
-31. Delivery:
-
-VERIFIED
-
-32. Dashboard updates:
-
-10,000 L delivered
-
-620 estimated people served
-
-33. Meanwhile, prediction panel shows:
-
-Area C
-Risk 87/100
-High risk within 12–24 hours
-
-34. Admin gets recommendation:
-
-Prepare emergency capacity.
-
-This entire flow must be stable.
+Only show steps whose phases have actually been implemented and tested. Future allocation/prediction/AWS screenshots or simulated provider responses are not proof of execution. Do not manually force demonstration scores into MongoDB.
 
 ---
 
-# 47. AWS INTEGRATION
+# 47. AWS REQUIREMENT — ACTUAL APPLICATION DEPLOYMENT
 
-The project must meaningfully use AWS technology.
+Satisfy the AWS requirement through real hosting of the functioning application, with public frontend/backend tests and evidence in the final video. Merely naming an AWS product, setting AWS environment variables or using a mock does not satisfy it. Deployment is not completed by this documentation task.
 
-Primary AWS open-source technology:
+Preferred frontend: AWS Amplify Hosting for the existing React/JavaScript/Vite static build. Preferred backend: AWS App Runner for Node.js/Express, conditional on target-account eligibility and compatibility. MongoDB Atlas may remain external; a database migration is not required.
 
-**Strands Agents SDK**
+**Availability gate (checked 9 October 2026):** App Runner stopped accepting new customers on 30 April 2026. Existing services continue; verify the target account can provision the needed service before selecting it. If unavailable, assess an AWS container-hosting alternative such as ECS Express Mode in the authorized deployment phase. This does not make AWS AI mandatory. [AWS service notice](https://aws.amazon.com/apprunner/)
 
-Use it for the AI agent layer.
+Compatibility checks before a final deployment configuration:
+- Amplify: verify npm-workspace/root-lockfile install, Node.js 22.13+ support, root build command, apps/web/dist artifacts, apps/web monorepo app root and SPA refresh/fallback without masking asset/API failures. [Monorepo settings](https://docs.aws.amazon.com/amplify/latest/userguide/monorepo-configuration.html), [SPA rewrites](https://docs.aws.amazon.com/amplify/latest/userguide/redirect-rewrite-examples.html)
+- Backend: verify a supported Node.js runtime, root workspace install/start command, Sharp's native dependencies, bind address, service port and readiness/startup timing. App Runner supports Node.js 22 but runtime/package compatibility still needs a real build. [Node.js runtime](https://docs.aws.amazon.com/apprunner/latest/dg/service-source-code-nodejs.html)
+- App Runner reserves PORT: configure the service's port and verify the existing API receives it; do not add a conflicting user-defined PORT variable. Store database credentials in server-side secret references with appropriate roles, never VITE_* variables. [Environment/secrets](https://docs.aws.amazon.com/apprunner/latest/dg/env-variable.html)
+- Atlas: verify DNS/TLS connectivity, credentials, region/latency and restricted network access/egress. Do not default to an unrestricted database allowlist.
+- Browser/API integration: static hosting does not run Vite's local proxy. Configure a tested hosted API base URL or explicitly verified reverse proxy; preserve the exact frontend CORS allowlist and check bearer/citizen-token preflights, auth and report/photo persistence.
+- Assess in-process rate limits and serialized detection before enabling multiple backend instances. Preserve production demo restrictions; resolve any isolated demo environment explicitly rather than silently enabling fictional production data.
 
-Prefer integration with:
-
-Amazon Bedrock
-
-for the model used by the agents when credentials/configuration are available.
-
-The system must make the AI provider configurable.
-
-Example environment:
-
-AI_PROVIDER=bedrock
-
-AWS_REGION=...
-
-BEDROCK_MODEL_ID=...
-
-STRANDS_MODE=true
-
-If the local environment does not have AWS credentials:
-
-support DEMO_AI_MODE=true
-
-In DEMO_AI_MODE:
-- preserve the same agent interfaces
-- use deterministic/mock responses
-- clearly separate demo fallback from real agent execution
-
-The production/default architecture should be prepared for real Strands + Bedrock execution.
-
-Do not fake AWS integration.
-
-The README must explain:
-
-1. Which AWS technology is used
-2. Why it is used
-3. Where it is used
-4. How to run it
-5. How AWS credentials are configured
-6. How demo mode works
-7. Which parts can be deployed to AWS
+Strands Agents SDK, Amazon Bedrock, AI_PROVIDER, BEDROCK_MODEL_ID and agent credentials are optional future enhancements, not hosting requirements. Deterministic decision support must run without them. README must report chosen services, compatibility outcomes, actual deployment status, public URLs, verification results and limitations; never claim deployment before public tests pass.
 
 ---
 
-# 48. OPTIONAL AWS DEPLOYMENT
+# 48. AWS DEPLOYMENT PLAN AND VERIFICATION — LATER PHASE
 
-Prepare deployment support but do not allow deployment work to break the local MVP.
+Prefer one compatible architecture: Amplify Hosting → tested Express API on eligible App Runner → MongoDB Atlas. Service eligibility, runtime/build compatibility and networking must be checked as described in section 47; document any justified AWS-hosting alternative. No cloud resources are created by this specification update.
 
-Potential architecture:
+The authorized deployment phase will configure build/start commands, HTTPS endpoints, exact CORS, SPA/API routing, server-side secrets, database connectivity, health checks and deployment logs. Use Secrets Manager or Parameter Store where needed; use roles instead of committed access keys. Docker/image deployment is an option if managed-source builds do not fit, not a requirement to introduce an AI service.
 
-Frontend:
-AWS Amplify or CloudFront/S3
+Before declaring AWS deployment complete, test public frontend direct navigation/refresh, public API health with MongoDB connected, admin login/authorization/logout, citizen report submission and persistence after reload/reconnect, derived shortage data and dashboard retrieval. Verify unavailable integrations remain honestly unknown. Record service names, URLs, region, commit/configuration, test outcomes and any limits in docs/aws.md and the final video.
 
-Backend:
-ECS/Fargate, App Runner, or Lambda/API Gateway
-
-AI:
-Strands + Amazon Bedrock
-
-Secrets:
-AWS Secrets Manager
-
-Logs:
-CloudWatch
-
-Do not implement all of these unless they are needed.
-
-Prefer one simple deployable architecture.
+Planning notes or local tests are not deployment proof. Keep public live-app evidence and labeled local/isolated seed demonstrations distinguishable. Optional future Bedrock/Strands execution is not needed for deployment acceptance.
 
 ---
 
-# 49. DOCKER
+# 49. DOCKER — WHERE PRACTICAL
 
-Create Docker support.
+Keep local npm commands working. In the authorized deployment phase, create a backend container if required by the selected AWS hosting approach; a frontend container is optional because Amplify can host static build artifacts.
 
-At minimum:
-
-Frontend container if useful
-
-Backend container
-
-Optional AI container
-
-docker-compose.yml
-
-Services:
-
-web
-
-api
-
-mongodb
-
-redis (optional)
-
-ai (only if separated)
-
-Do not make Redis mandatory unless the application actually benefits from it.
+Optional local docker-compose services: web, api, mongodb and redis only if useful. A separate AI container/service is an optional future enhancement and never a prerequisite for the deterministic MVP or AWS deployment.
 
 ---
 
 # 50. REDIS
 
-Redis is optional.
+Redis is optional. Consider it only for measured needs such as dashboard/recommendation caching, duplicate-processing coordination, short-lived OTP storage or shared rate limiting. The core application and deterministic recommendation layer must work without Redis.
 
-Use it for:
-
-- caching dashboard summary
-- caching AI recommendations
-- preventing duplicate processing
-- short-lived OTPs
-- rate limiting
-
-Do not introduce Redis merely because it is available.
-
-The core system must work without Redis.
+Do not introduce Redis merely because it is available. A cache of deterministic recommendations is not an AI provider or proof of LLM execution.
 
 ---
 
@@ -2001,50 +1287,23 @@ Do not expose stack traces to users.
 
 ---
 
-# 54. AI SAFETY / RELIABILITY
+# 54. DECISION-SUPPORT SAFETY / RELIABILITY
 
-AI must not:
+Deterministic recommendations must not invent coordinates, population, tanker availability, water quantities, delivery history or evidence, and must never silently approve allocations.
 
-- invent coordinates
-- invent population data
-- invent tanker availability
-- invent water quantities
-- fabricate evidence
-- silently approve allocations
+Operate on validated structured backend facts. Preserve exact verified values, approximate/estimated values and unknown values distinctly. Return structured output with method, rule version, source evidence, reasons, assumptions and missing inputs.
 
-The AI may reason only over structured information supplied by the backend.
-
-Any missing information should be stated as unknown.
-
-The AI should return structured JSON wherever possible.
+These same constraints apply to an optional future LLM integration. Supplemental prose must not alter authoritative severity/confidence/fairness/risk scores or claim agent execution when no provider ran.
 
 ---
 
-# 55. AI PROMPTING PRINCIPLE
+# 55. STRUCTURED DECISION INPUTS AND OPTIONAL FUTURE PROMPTING
 
-Do not give an LLM raw unstructured database dumps.
+For deterministic decision support, preprocess existing event evidence rather than duplicating calculations. Supply event/area references, authoritative severity, shortage confidence, approximate population, duration, environmental inputs, verified previous-delivery records when available and valid fleet records only when the relevant phase is implemented.
 
-Preprocess the data.
+For example, unknown previousDeliveryLitres must be null, not zero. A missing fleet feed is unknown, not a list of invented tankers. Preserve observation timestamps and simulation labels. Generate reasons from tested rules/templates and return structured output.
 
-Give agents:
-
-{
-  "area": {...},
-  "severity": 91,
-  "confidence": 94,
-  "estimatedAffectedPopulation": 620,
-  "durationHours": 24,
-  "temperature": 43,
-  "previousDeliveryLitres": 0,
-  "availableTankers": [...]
-}
-
-Then ask the agent to:
-
-- reason
-- explain
-- recommend
-- return structured output
+Only if a future LLM enhancement is explicitly authorized: do not send raw unstructured database dumps or private report data unnecessarily. Give a bounded validated evidence object, request supplemental explanation/summary, validate the result and disclose the actual provider execution. Prompts and provider responses are not required for the MVP.
 
 ---
 
@@ -2212,250 +1471,97 @@ This demonstrates that AquaShield is trying to distribute scarce resources fairl
 
 # 62. TECH STACK
 
-Preferred:
+Main application: React + JavaScript + Vite + React Router on the frontend; Node.js + Express + JavaScript + Mongoose + Zod on the backend; MongoDB/MongoDB Atlas; existing secure session authentication and CSS components. Keep .js/.jsx files and shared JavaScript constants; no TypeScript application migration or shared-types package.
 
-Frontend:
-React
-TypeScript
-Vite
-Tailwind CSS
-React Router
-React Leaflet
-Axios
-TanStack Query if useful
-Recharts
+Map: React Leaflet/OpenStreetMap with the existing offline coordinate fallback. Add chart/state/style libraries only when needed; do not replace working components unnecessarily.
 
-Backend:
-Node.js
-TypeScript
-Express
-Mongoose
-Zod
-JWT/session authentication
+Decision support: existing deterministic severity, confidence, clustering and fairness modules; explainable recommendation services next; deterministic predictionEngine in its later authorized phase.
 
-Database:
-MongoDB
+Deployment: prefer AWS Amplify Hosting and eligible AWS App Runner after section 47's compatibility checks, with Atlas allowed. Docker/Redis are optional where justified.
 
-AI:
-Strands Agents SDK
-Amazon Bedrock
-
-Optional:
-Redis
-
-Infrastructure:
-Docker
-AWS
+Optional future AI/LLM enhancements: Strands Agents SDK, Amazon Bedrock or another explicitly selected provider. None is required for local use, recommendations, risk scoring, deployment or MVP acceptance.
 
 ---
 
 # 63. REPOSITORY STRUCTURE
 
-Use a clean monorepo:
+Preserve the existing JavaScript npm workspaces and module separation. Proposed future documentation/modules do not imply they already exist:
 
 aquashield/
-│
 ├── apps/
-│   ├── web/
-│   ├── api/
-│   └── agents/
-│
+│   ├── web/                 # React/Vite .jsx/.js
+│   └── api/                 # Express .js routes/services/models
 ├── packages/
-│   ├── shared/
-│   ├── validation/
-│   └── types/
-│
-├── scripts/
-│   ├── seed.ts
-│   ├── reset-demo.ts
-│   └── generate-demo-data.ts
-│
+│   └── shared/              # JavaScript constants/options
+├── scripts/                 # .js scripts if needed; existing API scripts may remain in place
 ├── docs/
-│   ├── architecture.md
-│   ├── api.md
-│   ├── ai-agents.md
-│   └── aws.md
-│
-├── docker-compose.yml
+│   ├── phase3.md
+│   ├── phase4.md
+│   ├── demo.md
+│   ├── decision-support.md  # planned with the authorized recommendation phase
+│   └── aws.md               # planned with actual deployment
 ├── README.md
 ├── .env.example
 └── package.json
 
-If a separate agents service adds unnecessary complexity, it is acceptable to integrate it into the backend while keeping the agent layer clearly separated.
+Do not require apps/agents, packages/types, .ts/.tsx scripts or a standalone agent service. Optional future provider adapters can be isolated inside backend modules without changing the main application's language or core services.
 
 ---
 
 # 64. ENVIRONMENT VARIABLES
 
-Create:
+Keep the existing working .env.example and active validation until a configuration change is explicitly authorized. Main settings include NODE_ENV, PORT, MONGODB_URI, connection timeouts, CORS_ORIGIN, VITE_API_BASE_URL, ADMIN_SESSION_HOURS and the existing configurable clustering/confidence/severity weights and thresholds. Provisioning uses ADMIN_EMAIL/ADMIN_PASSWORD; current sessions do not require JWT_SECRET.
 
-.env.example
+Only VITE_* values are public build-time frontend settings. Database credentials and any deployment secrets stay server-side. Hosted API URLs and frontend-origin allowlists must be set to the actual deployed endpoints; App Runner's service port uses its reserved PORT as covered in section 47.
 
-Include placeholders like:
+Legacy AI_PROVIDER=bedrock, BEDROCK_MODEL_ID, STRANDS_MODE and DEMO_AI_MODE placeholders are inactive optional future configuration. Their presence in the current file does not enable AI, establish an AWS dependency for local startup, or make deterministic outputs mocks. They must not become required settings for Phase 5. AWS deployment identity/roles are separate from optional AI-provider access.
 
-NODE_ENV=development
-
-PORT=5000
-
-MONGODB_URI=
-
-JWT_SECRET=
-
-REDIS_URL=
-
-AI_PROVIDER=bedrock
-
-AWS_REGION=
-
-AWS_ACCESS_KEY_ID=
-
-AWS_SECRET_ACCESS_KEY=
-
-BEDROCK_MODEL_ID=
-
-MAPBOX_TOKEN=
-
-DEMO_AI_MODE=true
-
-Do not include real credentials.
+REDIS_URL and MAPBOX_TOKEN remain optional. Never include real credentials in examples or commit .env files. This documentation task does not edit environment/configuration code.
 
 ---
 
 # 65. DEMO MODE
 
-The project must have a reliable demo mode.
+The working npm run seed:demo inserts deterministic fictional reports/areas/context and derived shortage events for the current Phase 3/4 walkthrough. It does not create a fleet, allocations, deliveries, predictions, citizen accounts or agent responses. It works without AWS/LLM credentials or DEMO_AI_MODE, and production demo restrictions remain in force.
 
-Command:
+Later authorized phases may extend clearly labeled seeds for tanker operations, delivery and trend-based risk, plus a safe reset:demo equivalent scoped to fictional records. Do not document an unimplemented reset command as currently working. Never delete live reports/accounts or seed final computed scores/recommendations as fake outputs.
 
-npm run seed:demo
-
-or equivalent.
-
-This should create:
-
-- areas
-- citizens
-- reports
-- shortage events
-- tankers
-- incidents
-- predictions
-- allocations
-- deliveries
-
-It should produce the primary demo scenario automatically.
-
-Also create:
-
-npm run reset:demo
-
-to return to the initial scenario.
+See docs/demo.md for current capabilities, future checkpoints and the evidence required before filming an AWS-hosted final demonstration.
 
 ---
 
 # 66. TESTING
 
-Add tests for the most important business logic.
+Preserve all existing Phase 1–4 tests. Add tests only as the corresponding phase is implemented: severity/confidence/clustering, fairness adjustments and unknown history, recommendation ranking/tie-breakers/reasons/provenance, authorization, feasible tanker selection and human approvals, OTP/delivery persistence, deterministic risk and uncertainty, public AWS frontend/backend integration.
 
-At minimum:
+Phase 5's full tests must pass with no AI provider credentials/SDK or network model calls. Changing unknown inputs must not cause fabricated exact values, scores or deliveries. Deterministic score/risk tests check the configured rule calculations, not a canned LLM response.
 
-severity calculation
-
-confidence calculation
-
-report clustering
-
-fairness adjustment
-
-tanker selection
-
-allocation recommendation
-
-delivery OTP verification
-
-authorization
-
-Example:
-
-Input:
-24 hours
-620 people
-<25% water
-43°C
-94% confidence
-
-Expected:
-severity >= 80
-
-Expected:
-CRITICAL
+Strands/Bedrock adapter tests are optional future work and not MVP gates. Run relevant regressions, lint/build and browser flows after each authorized implementation phase. For documentation-only edits, verify section consistency, override preservation, links and an application-code-unchanged diff; do not claim newly run application tests that were not executed.
 
 ---
 
-# 67. README
+# 67. README AND DEMO DOCUMENTATION
 
-README must include:
+Document the problem, solution, implemented features, architecture, actual JavaScript stack, data models, local setup, authentication, current demo commands, environment configuration, implemented APIs, screenshots, demo flow, tests, limitations, future scope and team.
 
-# AquaShield
+Use a Decision Support section describing the deterministic method. Put Strands, Bedrock and real LLM agents under Optional Future Enhancements. State clearly that the recommendation layer, operational workflows and risk model are planned until their phases are completed. Do not imply that the current Phase 4 AI placeholder executes a provider.
 
-## Problem
+The AWS section must distinguish preferred deployment targets, compatibility/account-eligibility checks, resources actually deployed, tested public URLs and verification status. Cite current service documentation where availability affects the plan. Do not claim completed deployment or AWS AI usage merely from environment placeholders.
 
-## Solution
-
-## Why this matters
-
-## Features
-
-## Architecture
-
-## AI Agents
-
-## AWS Integration
-
-## Tech Stack
-
-## Data Model
-
-## Running Locally
-
-## Demo Mode
-
-## Environment Variables
-
-## API Overview
-
-## Screenshots
-
-## Demo Flow
-
-## Limitations
-
-## Future Scope
-
-## Team
-
-Do not make unsupported claims.
+Future demo documentation/video must reflect the currently tested implementation, derive scores from evidence, label simulations/estimates/unknowns and show real AWS deployment when complete. Preserve historical test reports with their phase/date context instead of inventing new verification results.
 
 ---
 
-# 68. FUTURE SCOPE
+# 68. OPTIONAL FUTURE ENHANCEMENTS
 
-Mention these as future improvements, not required for MVP:
+Not required for MVP:
+- Strands Agents SDK orchestration and real LLM-based crisis/allocation/logistics/prediction-summary agents.
+- Amazon Bedrock or other explicitly selected LLM providers.
+- Municipal APIs, IoT water-level sensors, groundwater/satellite monitoring and real-time weather feeds.
+- SMS/WhatsApp reporting, multilingual support and advanced ML forecasting.
+- Satellite drought analysis, predictive tanker positioning, automated infrastructure fault detection and statewide expansion.
 
-- municipal API integrations
-- IoT water-level sensors
-- groundwater monitoring
-- satellite data
-- real-time weather feeds
-- SMS/WhatsApp reporting
-- multilingual support
-- advanced ML forecasting
-- satellite-based drought analysis
-- predictive tanker positioning
-- automated infrastructure fault detection
-- statewide deployment
-
-Do not implement these unless core MVP is complete.
+The deterministic recommendation layer, fairness rules and transparent early-warning model remain core planned MVP capabilities, not optional LLM substitutes. AWS application deployment remains mandatory for the final hackathon demonstration, subject to compatible service selection. Optional enhancements require a separate explicit instruction and must not delay the functioning deterministic MVP.
 
 ---
 
@@ -2500,85 +1606,23 @@ The admin dashboard should immediately answer:
 
 # 71. THREE-MINUTE DEMO STORY
 
-Build the application so this exact story can be demonstrated.
+Prepare a truthful story for the implementation actually completed at recording time. See docs/demo.md. Do not present the full future flow as current functionality.
 
-### 0:00–0:20
+0:00–0:20: Show the problem and citizen/report map. Identify any fictional heat/incident scenario.
 
-Problem.
+0:20–0:50: Submit reports and show persistence, clustering, eligible/verified counts and computed shortage confidence. Seed field checks are simulated, not real verification.
 
-“During a 43°C heatwave, a pipeline disruption leaves hundreds of people without water.”
+0:50–1:15: Inspect Panchavati and other zones, actual backend severity, approximate population and unknown inputs. Use current calculated values rather than requiring 91/100, 94% or ~620.
 
-Show citizen/report map.
+1:15–1:45: After Phase 5 is implemented, show deterministic recommendation reasons, fairness assumptions and human review. Before then, explicitly show the inactive placeholder.
 
-### 0:20–0:50
+1:45–2:10: After operations are implemented, show administrator approval, feasible assignment, status progression and estimated route/ETA. Otherwise label this as future work.
 
-Multiple citizens report no water.
+2:10–2:35: After delivery verification exists, show OTP/QR verification and recorded litres. Estimated people served must not be presented as exact.
 
-Show:
+2:35–2:50: After prediction is implemented, show derived risk, assumptions and approximate horizon. Emerging report clusters alone are not forecasts.
 
-37 reports
-
-31 verified
-
-94% confidence
-
-### 0:50–1:15
-
-Dashboard calculates:
-
-Severity:
-91/100
-
-Critical
-
-Estimated affected:
-~620
-
-### 1:15–1:45
-
-AI recommendation:
-
-Deploy Tanker T04
-
-Show explanation.
-
-### 1:45–2:10
-
-Admin approves.
-
-Tanker moves:
-
-ASSIGNED
-→ EN_ROUTE
-→ ARRIVED
-
-Show route/ETA.
-
-### 2:10–2:35
-
-Delivery:
-
-10,000 L
-
-OTP verified
-
-620 estimated people served
-
-### 2:35–2:50
-
-Prediction.
-
-Area C:
-
-Risk 87/100
-
-High risk within 12–24 hours.
-
-### 2:50–3:00
-
-Closing statement:
-
-“AquaShield doesn't just respond to water crises. It helps communities detect them earlier and decide where limited water should go first.”
+2:50–3:00: Demonstrate the public AWS-hosted frontend/API and persistence evidence, or allocate this evidence earlier in the final recording. State verified deployment status and explain remaining limitations. Close with AquaShield's evidence-based decision-support value. The final AWS requirement cannot be satisfied by local-only footage or a Strands/Bedrock logo.
 
 ---
 
@@ -2614,326 +1658,119 @@ This should be reflected in both the UI and README architecture diagram.
 
 # 73. IMPORTANT PRODUCT LANGUAGE
 
-Prefer:
+Prefer: estimated/approximate affected population, shortage confidence, deterministic severity, explainable recommendation, recommended allocation, human approval, deterministic early-warning risk, simulated evidence and unknown input.
 
-“estimated affected population”
+Use "AI/LLM-assisted" only for an optional future feature whose real provider execution is verified and clearly distinguished from deterministic rules. Do not use that label for the current placeholder, recommendations, ranking, fairness penalties or risk calculations.
 
-“confidence”
-
-“severity”
-
-“recommended allocation”
-
-“AI-assisted recommendation”
-
-“human approval”
-
-“early-warning risk”
-
-Avoid:
-
-“exactly affected population”
-
-“AI automatically controls water distribution”
-
-“100% accurate prediction”
-
-“exact amount of water remaining”
+Avoid unsupported claims of exact affected population, exact remaining water, perfect prediction, autonomous water distribution, real agent execution or completed AWS deployment. Identify the actual method and current phase honestly.
 
 ---
 
 # 74. IMPLEMENTATION ORDER
 
-Build in this order.
+The latest phase-specific Codex prompts are authoritative. Phase 1–4 are complete; preserve their working functionality. This task only aligns documentation and starts no development phase.
 
-PHASE 1
+## PHASE 1 — Foundation (complete)
+React/JavaScript/Vite, Node.js/Express/JavaScript, MongoDB/Mongoose, environment configuration, base routing/layout, health and errors.
 
-Project setup
+## PHASE 2 — Citizen reporting and database (complete)
+Location/locality and household reporting, validated report API, private report history/status, photo support, MongoDB persistence, labeled seeds and local-origin CORS.
 
-Frontend
+## PHASE 3 — Shortage detection, confidence and severity (complete)
+Geographic/time clustering, duplicate/suspicious handling, persisted events, verification counts, confidence, approximate population, duration, deterministic configurable severity and fairness helpers. Preserve these modules.
 
-Backend
+## PHASE 4 — Admin dashboard and map (complete)
+Admin authentication/authorization, KPIs, map/table/details, evidence analytics/activity, responsive/error states and inactive recommendation extension point.
 
-MongoDB
+## PHASE 5 — Explainable deterministic decision support (NEXT, not started)
+Modular recommendation service using existing severity/confidence/fairness evidence; configurable priority rules and stable tie-breakers; reasons, provenance, uncertainty/unknown inputs and read-only admin recommendations. No LLM, Strands or Bedrock requirement; no tanker assignment, dispatch, delivery or new prediction workflow. Preserve existing tests and test this phase before stopping.
 
-Authentication
+## PHASE 6 — Tanker allocation and verified delivery (later)
+Fleet management/feasibility, deterministic tanker/logistics selection, human-approved allocation, audit trail, operator UI, estimated route/ETA, trip status, OTP/QR verification and recorded litres. Do not silently dispatch from recommendations.
 
-Base layout
+## PHASE 7 — Deterministic early warning and operational analytics (later)
+Implement the retained predictionEngine risk model with configurable trend/supply/environment/incident/history inputs, uncertainty and preparation guidance. Add fairness/delivery/prediction analytics based on real or clearly labeled simulated records. No LLM required.
 
-PHASE 2
+## PHASE 8 — Full verification, hardening and AWS deployment (later)
+Full unit/integration/browser regressions, security/error/empty/loading states, compatibility/account-eligibility checks, Amplify frontend plus eligible App Runner backend (or justified AWS alternative), Atlas connectivity, public auth/report/persistence tests and honest AWS documentation. No mandatory Bedrock adapter or Strands configuration.
 
-Citizen report
+## PHASE 9 — Verified demo and final documentation (later)
+Reproducible labeled scenario/reset where implemented, README/screenshots, final video demonstrating the real AWS deployment and completed end-to-end features, with explicit remaining limitations.
 
-Reports API
-
-Database models
-
-Seed data
-
-PHASE 3
-
-Map
-
-Clustering
-
-Confidence calculation
-
-Severity engine
-
-Admin dashboard
-
-PHASE 4
-
-Strands Agents
-
-Crisis Detection Agent
-
-Allocation Agent
-
-Logistics Agent
-
-Prediction Agent
-
-PHASE 5
-
-Tanker management
-
-Allocation workflow
-
-Operator UI
-
-Delivery verification
-
-PHASE 6
-
-AWS integration
-
-Bedrock adapter
-
-Strands configuration
-
-AWS documentation
-
-PHASE 7
-
-Analytics
-
-Testing
-
-Error states
-
-Polish
-
-PHASE 8
-
-Demo scenario
-
-README
-
-Screenshots
-
-Demo recording preparation
+## Optional future enhancement — outside the required MVP phases
+Strands Agents SDK / Amazon Bedrock / real LLM agents may be added only when explicitly requested. They remain supplemental to deterministic calculations and human authorization, and are not a condition for phase completion or AWS deployment.
 
 ---
 
 # 75. IMPORTANT CODING RULE
 
-Do not generate everything blindly in one giant uncontrolled file.
+Use reusable JavaScript modules, services, controllers, routes, validation schemas, hooks, components and utilities. Keep business logic separate from HTTP handlers and models separate from controllers. Preserve working components and tests.
 
-Use:
-
-- reusable modules
-- services
-- controllers
-- routes
-- schemas
-- types
-- hooks
-- components
-- utilities
-
-Keep business logic separate from HTTP handlers.
-
-Keep AI logic separate from deterministic scoring.
-
-Keep database models separate from controllers.
+Keep recommendation explanations separate from numeric calculations while consuming their authoritative results. Optional future LLM adapters remain isolated extensions. Do not require a TypeScript conversion or shared-types package. Implement only the currently authorized phase.
 
 ---
 
-# 76. IMPORTANT AI RULE
+# 76. AUTHORITATIVE BACKEND FACTS AND EXPLANATIONS
 
-The AI should never be responsible for facts that the backend can calculate.
+Backend deterministic logic calculates distance, duration, severity, shortage confidence, recorded capacity/delivery context, approximate population, fairness adjustments and later early-warning risk.
 
-Backend calculates:
+Recommendation reasons and summaries come from explicit tested rules/templates using those values, source evidence, observation times and known missing inputs. Document rule versions and stable priority ordering. Unknown delivery history remains unknown; estimates do not become verified measurements.
 
-- distance
-- duration
-- severity
-- confidence
-- available tanker capacity
-- previous delivery
-- population estimates
-
-AI handles:
-
-- reasoning
-- prioritization explanation
-- recommendation
-- summarization
-- prediction explanation
-
-This makes the system more reliable and easier to demonstrate.
+Optional future LLMs may supplement summaries/explanations only. They must not invent facts, calculate authoritative numeric scores, override deterministic ranking or approve resources. The required MVP executes and remains explainable without an LLM provider.
 
 ---
 
 # 77. IMPORTANT DEMO RELIABILITY RULE
 
-All important demo operations must work without requiring the team to manually edit MongoDB.
+Implemented demo operations must work without manual MongoDB edits. Preserve current citizen submission, seed:demo, detection, severity inspection, admin map/detail and history workflows.
 
-Create buttons/actions for:
+As later phases are authorized, add tested UI actions for generating deterministic recommendations, approving feasible allocations, assigning tankers, progressing trips, verifying/completing delivery and generating deterministic risk. A safe fictional-data reset belongs to a later implemented demo workflow, not a falsely documented current command.
 
-- generate crisis
-- run detection
-- calculate severity
-- generate AI recommendation
-- approve allocation
-- assign tanker
-- start trip
-- arrive
-- verify delivery
-- complete delivery
-- generate prediction
-
-The complete demo should run from the UI.
+The final complete demo should run from the UI against tested backend/database services. Show the actual method and label fictional/approximate/unknown inputs. No agent call, provider credential or canned LLM response is needed to demonstrate deterministic decisions.
 
 ---
 
-# 78. ACCEPTANCE CRITERIA
+# 78. MVP ACCEPTANCE CRITERIA
 
-The project is complete when:
+These are final MVP goals, checked only after their authorized phase is implemented and tested. They do not authorize starting a new phase or claim the current Phase 4 app already meets future goals.
 
-[ ] Citizen can submit a water shortage report
+[ ] Citizen can submit a report and retrieve its persisted MongoDB history/status.
+[ ] Location, geographic/time grouping and duplicate/suspicious handling work.
+[ ] Shortage confidence and verified report counts are explained correctly.
+[ ] Approximate affected population remains visibly estimated; unknowns remain unknown.
+[ ] Backend severity is deterministic/configurable with LOW/MEDIUM/HIGH/CRITICAL display.
+[ ] Admin authorization, dashboard/map/data retrieval and public/private boundaries work.
+[ ] Deterministic priority/recommendation service works without LLM credentials or SDKs.
+[ ] Recommendation reasons, fairness assumptions, rule version and source evidence are inspectable.
+[ ] Feasible tanker selection/logistics and human approval work in the operations phase.
+[ ] Assignment, estimated route/ETA and operator trip status are recorded.
+[ ] Delivery OTP/QR verification and recorded litres update dashboard metrics.
+[ ] Deterministic early-warning risk includes reasons, uncertainty and labeled horizon.
+[ ] Audit records, repeatable fictional seeds and a safely implemented reset are available.
+[ ] Real AWS frontend/backend deployment is verified through public URLs and MongoDB persistence, shown in the final video.
+[ ] README/demo/AWS documentation accurately distinguishes implemented, simulated and future capabilities.
+[ ] Environment examples contain no secrets; the application runs locally and core tests/lint/build pass.
 
-[ ] Report is saved in MongoDB
-
-[ ] Location is displayed
-
-[ ] Reports can be grouped geographically
-
-[ ] Shortage confidence is calculated
-
-[ ] Estimated affected population is displayed
-
-[ ] Severity score is calculated deterministically
-
-[ ] Critical/High/Medium/Low states are visible
-
-[ ] Admin can see shortage zones on a map
-
-[ ] AI Crisis Detection Agent works
-
-[ ] AI Allocation Agent works
-
-[ ] AI Logistics Agent works
-
-[ ] Early-warning prediction works
-
-[ ] AI recommendation contains reasoning
-
-[ ] Admin can approve allocation
-
-[ ] Tanker can be assigned
-
-[ ] Route/ETA is displayed
-
-[ ] Operator can update trip status
-
-[ ] Delivery OTP/QR verification works
-
-[ ] Delivery updates dashboard
-
-[ ] Water delivered is tracked
-
-[ ] Audit logs are stored
-
-[ ] Demo seed data exists
-
-[ ] Demo reset exists
-
-[ ] AWS/Strands integration exists
-
-[ ] README is complete
-
-[ ] .env.example exists
-
-[ ] No secrets are committed
-
-[ ] Application runs locally
-
-[ ] Core tests pass
+Optional future acceptance, not required for MVP: actual Strands orchestration, Amazon Bedrock calls, LLM agents and provider-specific UI/tests. No check above depends on them.
 
 ---
 
 # 79. WHAT TO DO FIRST
 
-Start by inspecting the existing repository.
+Inspect the repository and current authorized phase. Phase 1–4 code already exists and must not be rewritten for this strategy change. Do not execute an old whole-project initialization plan.
 
-If the repository is empty:
+For a genuinely empty repository, initialize JavaScript workspaces, React/Vite, Express, MongoDB, shared JavaScript constants, environment validation and a basic citizen → report → dashboard flow before later modules. Never require shared TypeScript types or a mandatory agents service.
 
-initialize the project structure.
-
-If code already exists:
-
-do not rewrite working components unnecessarily.
-
-First create:
-
-1. monorepo structure
-2. frontend
-3. backend
-4. MongoDB connection
-5. shared types
-6. environment configuration
-7. seed data
-8. basic citizen → report → dashboard flow
-
-Then continue feature-by-feature.
-
-After each major feature:
-
-- run the application
-- test the feature
-- fix errors
-- keep the project runnable
-
-Do not wait until the end to discover integration failures.
+For subsequent explicitly authorized implementation: reuse working services, build only that phase, run relevant application/tests, fix regressions, report actual results and stop. This documentation update does not authorize Phase 5 implementation or deployment.
 
 ---
 
 # 80. FINAL ENGINEERING PRINCIPLE
 
-Build a **working, explainable, visually strong hackathon MVP**.
+Build a working, explainable, visually strong hackathon MVP around real need, a clear user story, functioning execution, transparent deterministic decisions, human oversight, actual AWS application deployment and a truthful demonstration.
 
-Do not optimize for maximum code.
+The judge should see where a crisis is reported, how evidence supports severity/confidence, which action deserves attention, why a resource decision was approved and whether delivery was verified. Optional LLM enhancements may improve presentation later; they are not prerequisites or claimed core execution.
 
-Optimize for:
+Implement only the requested phase, preserve JavaScript and working Phase 1–4 functionality, and never claim deployment or future operations before they are tested.
 
-real problem
-+
-clear user story
-+
-working execution
-+
-meaningful AI
-+
-meaningful AWS usage
-+
-transparent decisions
-+
-strong demo
-
-The final application should make a judge think:
-
-“This system can actually help an authority understand where a water crisis is happening, how severe it is, what action should happen first, and whether the response was completed.”
-
-Build AquaShield around that idea.
+---
