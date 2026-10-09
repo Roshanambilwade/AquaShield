@@ -1,8 +1,13 @@
 import mongoose from "mongoose";
+import { tankerEligibility } from "./allocationEngine.js";
 import { z } from "zod";
 import Report from "../models/Report.js";
 import ShortageEvent from "../models/ShortageEvent.js";
 import { listShortages, getShortage } from "./shortageService.js";
+import { aiStatus } from "../config/ai.js";
+import User from "../models/User.js";
+import { serializeReport } from "./reportService.js";
+import { ApiError } from "../middleware/errors.js";
 
 const coordinates = z.object({
   lat: z.number().min(-90).max(90),
@@ -10,9 +15,20 @@ const coordinates = z.object({
 });
 const tankerSchema = z.object({
   _id: z.any(),
-  status: z.enum(["AVAILABLE", "ASSIGNED", "EN_ROUTE", "ARRIVED", "OFFLINE"]),
+  status: z.enum([
+    "AVAILABLE",
+    "ASSIGNED",
+    "UNAVAILABLE",
+    "EN_ROUTE",
+    "ARRIVED",
+    "OFFLINE",
+  ]),
   currentLocation: coordinates.nullable().optional(),
   capacityLitres: z.number().positive().optional(),
+  availableLitres: z.number().nullable().optional(),
+  operatorId: z.any().optional(),
+  activeAllocationId: z.any().optional(),
+  observedAt: z.date().nullable().optional(),
 });
 const deliverySchema = z.object({
   _id: z.any(),
@@ -23,8 +39,11 @@ const deliverySchema = z.object({
   deliveredAt: z.date(),
   requestedAt: z.date().optional(),
 });
-// Read-only integration point: no fleet, delivery or forecast workflow is enabled.
-async function operations(demo) {
+// Read-only dashboard integration; fleet mutations belong to the operations service.
+export async function operations(
+  demo,
+  config = { OPERATIONS_STALE_HOURS: 12 },
+) {
   const database = mongoose.connection.db;
   const names = new Set(
     (await database.listCollections({}, { nameOnly: true }).toArray()).map(
@@ -52,7 +71,35 @@ async function operations(demo) {
     read("tankers", tankerSchema),
     read("deliveries", deliverySchema),
   ]);
-  return { tankers, deliveries };
+  const operators = await User.find({ role: "OPERATOR", disabled: false })
+    .select("_id")
+    .lean();
+  const valid = new Set(operators.map((o) => String(o._id)));
+  const now = new Date();
+  return {
+    tankers:
+      tankers?.map((t) => ({
+        ...t,
+        eligibility: tankerEligibility(
+          {
+            ...t,
+            operatorId: valid.has(String(t.operatorId)) ? t.operatorId : null,
+          },
+          config,
+          now,
+        ),
+        observationAgeHours: t.observedAt
+          ? (now - t.observedAt) / 3600000
+          : null,
+        observationStatus: !t.observedAt
+          ? "UNKNOWN"
+          : t.observedAt > now ||
+              now - t.observedAt > config.OPERATIONS_STALE_HOURS * 3600000
+            ? "STALE"
+            : "RECENT",
+      })) ?? null,
+    deliveries,
+  };
 }
 const metric = (value, unit, estimated = false, note = "") => ({
   value,
@@ -75,7 +122,7 @@ function recommendedAction(event) {
 export async function dashboardSummary(config, demo) {
   const [shortages, ops] = await Promise.all([
     listShortages(config, demo),
-    operations(demo),
+    operations(demo, config),
   ]);
   const times =
     ops.deliveries
@@ -91,10 +138,10 @@ export async function dashboardSummary(config, demo) {
       "Approximate sum of non-historical events; households may overlap across time windows.",
     ),
     availableTankers: metric(
-      ops.tankers?.filter((t) => t.status === "AVAILABLE").length ?? null,
+      ops.tankers?.filter((t) => t.eligibility.eligible).length ?? null,
       "tankers",
       false,
-      "Read-only fleet records; no fleet feed is configured when unknown.",
+      "Eligible for allocation: positive water quantity, recent observation, active operator and no reservation.",
     ),
     tankersEnRoute: metric(
       ops.tankers?.filter((t) => t.status === "EN_ROUTE").length ?? null,
@@ -137,22 +184,20 @@ export async function dashboardSummary(config, demo) {
   }));
   return {
     metrics,
+    recordedAvailableTankers:
+      ops.tankers?.filter((t) => t.status === "AVAILABLE").length ?? null,
     emergingAreas: shortages.summary.emergingAreas,
     activity,
     isDemo: demo,
     generatedAt: new Date(),
-    ai: {
-      status: "NOT_CONFIGURED",
-      message:
-        "AI recommendations will be added in Phase 5. No recommendation has been generated.",
-    },
+    ai: aiStatus(config),
   };
 }
 
 export async function dashboardMap(config, demo) {
   const [shortages, ops, reports] = await Promise.all([
     listShortages(config, demo),
-    operations(demo),
+    operations(demo, config),
     Report.find({ isDemo: demo })
       .sort({ createdAt: -1, _id: -1 })
       .limit(501)
@@ -182,6 +227,10 @@ export async function dashboardMap(config, demo) {
           location: t.currentLocation,
           status: t.status,
           capacityLitres: t.capacityLitres ?? null,
+          observedAt: t.observedAt ?? null,
+          observationAgeHours: t.observationAgeHours,
+          observationStatus: t.observationStatus,
+          eligibility: t.eligibility,
         })) ?? [],
     tankerDataAvailable: ops.tankers != null,
     highRiskAreas: [],
@@ -250,7 +299,7 @@ export async function dashboardAnalytics(config, demo) {
 export async function dashboardDetail(id, config, demo) {
   const [event, ops] = await Promise.all([
     getShortage(id, config, demo),
-    operations(demo),
+    operations(demo, config),
   ]);
   const stored = await ShortageEvent.findById(id).select("reportIds");
   const records = await Report.find({
@@ -288,4 +337,70 @@ export async function dashboardDetail(id, config, demo) {
       text: recommendedAction(event),
     },
   };
+}
+
+async function reporterSources(records) {
+  const owners = await User.find({
+    _id: { $in: records.filter((r) => r.ownerId).map((r) => r.ownerId) },
+  })
+    .select("name email emailVerifiedAt")
+    .lean();
+  const byId = new Map(owners.map((u) => [String(u._id), u]));
+  return records.map((report) => {
+    const owner = byId.get(String(report.ownerId));
+    return {
+      ...serializeReport(report, true),
+      reporter: owner
+        ? {
+            name: owner.name,
+            email: owner.email,
+            emailVerified: owner.emailVerifiedAt != null,
+            identityVerified: false,
+            residencyVerified: false,
+            source: "CITIZEN_ACCOUNT",
+            note: "Name and email are account-provided. Residence and identity have not been verified.",
+          }
+        : {
+            name: null,
+            email: null,
+            emailVerified: false,
+            identityVerified: false,
+            residencyVerified: false,
+            source: report.isDemo ? "SIMULATED_DEMO" : "LEGACY_OR_IMPORTED",
+            note: report.isDemo
+              ? "Fictional report; no real citizen account is associated."
+              : "No citizen account is associated. Legacy ownership was preserved without assigning an owner.",
+          },
+    };
+  });
+}
+export async function dashboardReports(query, demo) {
+  const filter = { isDemo: demo };
+  const [records, total] = await Promise.all([
+    Report.find(filter)
+      .sort({ createdAt: -1, _id: -1 })
+      .skip((query.page - 1) * query.limit)
+      .limit(query.limit),
+    Report.countDocuments(filter),
+  ]);
+  return {
+    reports: await reporterSources(records),
+    pagination: {
+      page: query.page,
+      pages: Math.ceil(total / query.limit),
+      total,
+    },
+  };
+}
+export async function dashboardReport(id, demo) {
+  const report = await Report.findOne({ _id: id, isDemo: demo }).select(
+    "+photo",
+  );
+  if (!report)
+    throw new ApiError(
+      404,
+      "REPORT_NOT_FOUND",
+      "This report is not available.",
+    );
+  return (await reporterSources([report]))[0];
 }

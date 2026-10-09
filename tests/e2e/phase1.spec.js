@@ -33,7 +33,7 @@ test("overview has no browser errors or horizontal overflow", async ({
     "A coordinated response.",
   );
   await expect(page.getByLabel("Project availability")).toContainText(
-    "Phase 4",
+    "Phases 1–6.5",
   );
   await expect(page.getByRole("navigation")).toBeVisible();
   expect(
@@ -63,13 +63,23 @@ test("basic routes support navigation and direct refresh", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Water crisis overview",
   );
-  await page
-    .getByRole("navigation", { name: "Main navigation" })
-    .getByRole("link", { name: "Operator", exact: true })
-    .click();
+  await expect(
+    page
+      .getByRole("navigation", { name: "Main navigation" })
+      .getByRole("link", { name: "Operator", exact: true }),
+  ).toHaveCount(0);
+  await page.goto("/operator");
   await expect(page).toHaveURL("/operator");
   await expect(
-    page.getByText("Tanker operator", { exact: true }),
+    page.getByRole("heading", {
+      name: "Operator access required",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "Return to your portal" }).click();
+  await expect(page).toHaveURL("/admin");
+  await expect(
+    page.getByRole("heading", { name: "Water crisis overview", exact: true }),
   ).toBeVisible();
 });
 

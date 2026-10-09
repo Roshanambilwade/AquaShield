@@ -14,6 +14,7 @@ import { runAgent } from "../src/services/ai/agentService.js";
 import { invokeGemini } from "../src/services/ai/provider.js";
 import { sanitizeProviderError } from "../src/services/ai/providerErrors.js";
 import { directDiagnostic } from "../src/services/ai/directDiagnostic.js";
+import { observeGoogleStream } from "../src/services/ai/streamDiagnostics.js";
 
 const config = parseEnv({ NODE_ENV: "test", DEMO_AI_MODE: "true" });
 const events = buildShortageEvents(
@@ -418,29 +419,159 @@ test("successful injected provider retains backend facts and records real-mode p
   assert.deepEqual(result.facts, facts);
 });
 
-test("official Strands Agent + GoogleModel parses Google function-call responses (mock transport, not live Gemini)", async () => {
+for (const role of Object.keys(roles))
+  test(`official Strands Agent + GoogleModel parses ${role} function-call responses (mock transport, not live Gemini)`, async () => {
+    let calls = 0;
+    const output = demoAdvice(role, facts);
+    const client = {
+      models: {
+        async *generateContentStream(request) {
+          calls++;
+          assert.equal(request.model, "test-model");
+          assert.ok(
+            request.config.tools[0].functionDeclarations.some(
+              (t) => t.name === "get_shortage_evidence",
+            ),
+          );
+          yield {
+            candidates: [
+              {
+                content: {
+                  parts: [
+                    {
+                      functionCall: {
+                        name: "strands_structured_output",
+                        args: output,
+                      },
+                    },
+                  ],
+                },
+                finishReason: "STOP",
+              },
+            ],
+            usageMetadata: {
+              promptTokenCount: 10,
+              candidatesTokenCount: 10,
+              totalTokenCount: 20,
+            },
+          };
+        },
+      },
+    };
+    const result = await invokeGemini({
+      config: real,
+      role,
+      facts,
+      signal: new AbortController().signal,
+      client,
+    });
+    assert.deepEqual(result, output);
+    assert.equal(calls, 1);
+  });
+
+for (const withTool of [false, true])
+  test(`Google MAX_TOKENS rejects ${withTool ? "parseable tool arguments" : "truncated text"} without retries or demo fallback`, async () => {
+    let calls = 0;
+    const diagnostics = [];
+    const client = {
+      models: {
+        async *generateContentStream(request) {
+          calls++;
+          assert.equal(request.config.maxOutputTokens, 3000);
+          yield {
+            candidates: [
+              {
+                content: {
+                  parts: withTool
+                    ? [
+                        {
+                          functionCall: {
+                            name: "strands_structured_output",
+                            args: demoAdvice("detect", facts),
+                          },
+                        },
+                      ]
+                    : [{ text: '{"summary":"unfinished' }],
+                },
+                finishReason: "MAX_TOKENS",
+              },
+            ],
+            usageMetadata: {
+              promptTokenCount: 120,
+              candidatesTokenCount: 600,
+              thoughtsTokenCount: 2400,
+              totalTokenCount: 3120,
+              secret: "PRIVATE",
+            },
+          };
+        },
+      },
+    };
+    const error = await runAgent(
+      "detect",
+      real,
+      {},
+      {
+        evidenceLoader,
+        invoke: (args) =>
+          invokeGemini({
+            ...args,
+            client,
+            progress: (event) => diagnostics.push(event),
+          }),
+      },
+    ).catch((e) => e);
+    assert.equal(error.code, "AI_INVALID_OUTPUT");
+    assert.equal(error.details.category, "MODEL_OUTPUT_LIMIT");
+    assert.equal(error.details.providerFinishReason, "MAX_TOKENS");
+    assert.equal(error.details.usage.thoughtsTokenCount, 2400);
+    assert.equal(calls, 1);
+    assert.equal(diagnostics.at(-1).finishReason, "MAX_TOKENS");
+    assert.equal(
+      JSON.stringify({ error, diagnostics }).includes("PRIVATE"),
+      false,
+    );
+    assert.equal(JSON.stringify(diagnostics).includes("unfinished"), false);
+  });
+
+test("unfinished Google streams are distinct from provider token exhaustion", async () => {
+  const client = {
+    models: {
+      async *generateContentStream() {
+        yield {
+          candidates: [{ content: { parts: [{ text: "unfinished" }] } }],
+        };
+      },
+    },
+  };
+  const error = await runAgent(
+    "detect",
+    real,
+    {},
+    { evidenceLoader, invoke: (args) => invokeGemini({ ...args, client }) },
+  ).catch((e) => e);
+  assert.equal(error.code, "AI_INVALID_OUTPUT");
+  assert.equal(error.details.category, "PROVIDER_STREAM_INCOMPLETE");
+});
+
+test("two Google generations distinguish evidence retrieval from structured completion", async () => {
   let calls = 0;
+  const diagnostics = [];
   const output = demoAdvice("detect", facts);
   const client = {
     models: {
-      async *generateContentStream(request) {
+      async *generateContentStream() {
         calls++;
-        assert.equal(request.model, "test-model");
-        assert.ok(
-          request.config.tools[0].functionDeclarations.some(
-            (t) => t.name === "get_shortage_evidence",
-          ),
-        );
         yield {
           candidates: [
             {
               content: {
                 parts: [
                   {
-                    functionCall: {
-                      name: "strands_structured_output",
-                      args: output,
-                    },
+                    functionCall:
+                      calls === 1
+                        ? { name: "get_shortage_evidence", args: {} }
+                        : { name: "strands_structured_output", args: output },
                   },
                 ],
               },
@@ -456,15 +587,79 @@ test("official Strands Agent + GoogleModel parses Google function-call responses
       },
     },
   };
-  const result = await invokeGemini({
-    config: real,
-    role: "detect",
-    facts,
-    signal: new AbortController().signal,
-    client,
-  });
-  assert.deepEqual(result, output);
-  assert.equal(calls, 1);
+  const result = await runAgent(
+    "detect",
+    real,
+    {},
+    {
+      evidenceLoader,
+      invoke: (args) =>
+        invokeGemini({
+          ...args,
+          client,
+          progress: (event) => diagnostics.push(event),
+        }),
+    },
+  );
+  assert.equal(result.execution.mode, "REAL_GEMINI");
+  assert.equal(calls, 2);
+  const finished = diagnostics.filter(
+    (e) => e.progress === "GOOGLE_GENERATION_FINISHED",
+  );
+  assert.deepEqual(
+    finished.map((e) => e.toolCalls),
+    [["EVIDENCE_READ"], ["STRUCTURED_OUTPUT"]],
+  );
+  assert.deepEqual(
+    finished.map((e) => e.requestNumber),
+    [1, 2],
+  );
+});
+
+test("stream diagnostics omit unknown tool names and nonnumeric usage", async () => {
+  const diagnostics = [];
+  const client = {
+    models: {
+      async *generateContentStream() {
+        yield {
+          candidates: [
+            {
+              content: {
+                parts: [
+                  {
+                    functionCall: { name: "PRIVATE", args: { key: "PRIVATE" } },
+                  },
+                ],
+              },
+              finishReason: "PRIVATE",
+            },
+          ],
+          usageMetadata: { totalTokenCount: "PRIVATE", thoughtsTokenCount: -1 },
+        };
+      },
+    },
+  };
+  for await (const chunk of observeGoogleStream(client, (e) =>
+    diagnostics.push(e),
+  ).models.generateContentStream({ contents: "PRIVATE", config: {} }))
+    assert.ok(chunk);
+  assert.equal(diagnostics.at(-1).finishReason, "UNKNOWN");
+  assert.deepEqual(diagnostics.at(-1).usage, {});
+  assert.equal(JSON.stringify(diagnostics).includes("PRIVATE"), false);
+});
+
+test("concise output bounds retain strict advice validation", () => {
+  const output = demoAdvice("detect", facts);
+  for (const changes of [
+    { summary: "x".repeat(321) },
+    { reasons: Array(4).fill("Evidence available.") },
+    { missingInformation: Array(7).fill("Unknown delivery.") },
+  ]) {
+    assert.throws(
+      () => validateAdvice({ ...output, ...changes }, "detect", facts),
+      { code: "AI_INVALID_OUTPUT" },
+    );
+  }
 });
 
 test("official Google HTTP transport preserves quota errors with one request and bounded cancellation", async () => {

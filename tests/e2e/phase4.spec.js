@@ -1,3 +1,5 @@
+import ShortageEvent from "../../apps/api/src/models/ShortageEvent.js";
+import Report from "../../apps/api/src/models/Report.js";
 import { test, expect } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 import { prepareBrowserAdmin } from "../helpers/admin.js";
@@ -92,9 +94,9 @@ test("command center shows eight honest KPIs, Panchavati, activity, analytics an
     page.getByRole("region", { name: "Shortage evidence for Panchavati" }),
   ).toBeVisible();
   await expect(page.getByLabel("Recent activity")).toContainText("simulated");
-  await expect(
-    page.getByLabel("AI recommendation extension point"),
-  ).toContainText("No AI recommendation has been generated");
+  await expect(page.getByLabel("AquaShield AI recommendation")).toContainText(
+    "No AI recommendation has been generated",
+  );
   await expect(page.getByLabel("Shortage analytics")).toContainText("42");
   expect(
     await page.evaluate(
@@ -236,7 +238,7 @@ test("dashboard service failures have safe retry states and recover", async ({
   await expect(page.getByRole("alert")).toHaveCount(0);
 });
 
-test("expired browser session loses admin access and public citizen routing stays available", async ({
+test("expired browser session loses admin access, reporting requires sign-in and public alerts stay available", async ({
   page,
 }) => {
   await page.addInitScript(() =>
@@ -253,6 +255,64 @@ test("expired browser session loses admin access and public citizen routing stay
   ).toBeNull();
   await page.goto("/report");
   await expect(
-    page.getByRole("button", { name: "Submit report", exact: true }),
+    page.getByRole("heading", { name: "Citizen sign in" }),
   ).toBeVisible();
+  expect((await page.request.post("/api/reports", { data: {} })).status()).toBe(
+    401,
+  );
+  await page.goto("/alerts?demo=true");
+  await expect(
+    page.getByRole("heading", { name: "Water crisis overview", exact: true }),
+  ).toBeVisible();
+});
+
+test("F8 detection refreshes the selected event context without changing its ID", async ({
+  page,
+}) => {
+  await admin.signIn(page);
+  await page.goto("/admin?demo=true");
+  const context = page.getByLabel("Municipal assessment context");
+  const hero = await ShortageEvent.findOne({ isDemo: true, areaId: "AREA_01" });
+  const count = await Report.countDocuments({
+    _id: { $in: hero.reportIds },
+    waterLevel: "EMPTY",
+  });
+  await expect(
+    context.getByText(`EMPTY: ${count} reports`, { exact: true }),
+  ).toBeVisible();
+  const report = await Report.findOne({
+    _id: { $in: hero.reportIds },
+    waterLevel: "EMPTY",
+  });
+  expect(report).not.toBeNull();
+  await Report.updateOne(
+    { _id: report._id },
+    { $set: { waterLevel: "ABOVE_50" } },
+  );
+  try {
+    const refreshed = page.waitForResponse(
+      (r) =>
+        r.url().includes("/api/dashboard/shortages/") && r.status() === 200,
+    );
+    await page.getByRole("button", { name: "Run detection" }).click();
+    const response = await refreshed;
+    const payload = (await response.json()).data;
+    expect(payload.event.id).toBe(hero.id);
+    expect(payload.waterLevels.EMPTY).toBe(count - 1);
+    await expect(
+      context.getByText(`EMPTY: ${count - 1} reports`, { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("region", { name: "Shortage evidence for Panchavati" }),
+    ).toContainText(String(payload.event.reportCount));
+  } finally {
+    await Report.updateOne(
+      { _id: report._id },
+      { $set: { waterLevel: "EMPTY" } },
+    );
+    await page.getByRole("button", { name: "Run detection" }).click();
+    await expect(
+      context.getByText(`EMPTY: ${count} reports`, { exact: true }),
+    ).toBeVisible();
+  }
 });

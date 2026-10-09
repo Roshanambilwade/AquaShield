@@ -1,3 +1,4 @@
+import { reportResponses } from "./reportResponseService.js";
 import { createHash } from "node:crypto";
 import Report, { initializeReportStorage } from "../models/Report.js";
 import { ApiError } from "../middleware/errors.js";
@@ -32,10 +33,17 @@ export function serializeReport(report, includePhoto = false) {
   return result;
 }
 
-export async function createReport(input, token) {
+export async function createReport(input, citizen) {
+  if (citizen?.role !== "CITIZEN" || !/^[a-f0-9]{24}$/i.test(citizen.id || ""))
+    throw new ApiError(
+      401,
+      "AUTH_REQUIRED",
+      "Sign in with a citizen account to submit a report.",
+    );
   await initializeReportStorage();
   const identity = {
-    reporterKeyHash: hashCitizenToken(token),
+    ownerId: citizen.id,
+    reporterKeyHash: hashCitizenToken(`citizen:${citizen.id}`),
     submissionId: input.submissionId,
   };
   const existing = await Report.findOne(identity);
@@ -58,11 +66,11 @@ export async function createReport(input, token) {
   }
 }
 
-export async function listReports(query, token) {
+export async function listReports(query, citizen) {
   const filter =
     query.demo === "true"
       ? { isDemo: true }
-      : { reporterKeyHash: hashCitizenToken(token), isDemo: false };
+      : { ownerId: citizen.id, isDemo: false };
   const [reports, total] = await Promise.all([
     Report.find(filter)
       .sort({ createdAt: -1, _id: -1 })
@@ -70,8 +78,12 @@ export async function listReports(query, token) {
       .limit(query.limit),
     Report.countDocuments(filter),
   ]);
+  const responses = await reportResponses(reports);
   return {
-    reports: reports.map((report) => serializeReport(report)),
+    reports: reports.map((report) => ({
+      ...serializeReport(report),
+      responseStatus: responses.get(report.id) ?? null,
+    })),
     pagination: {
       page: query.page,
       limit: query.limit,
@@ -81,9 +93,15 @@ export async function listReports(query, token) {
   };
 }
 
-export async function getReport(id, token) {
-  const allowed = [{ isDemo: true }];
-  if (token) allowed.push({ reporterKeyHash: hashCitizenToken(token) });
+export async function getReport(id, citizen, allowDemo = true) {
+  const allowed = allowDemo ? [{ isDemo: true }] : [];
+  if (citizen) allowed.push({ ownerId: citizen.id, isDemo: false });
+  if (!allowed.length)
+    throw new ApiError(
+      404,
+      "REPORT_NOT_FOUND",
+      "This report is not available.",
+    );
   const report = await Report.findOne({ _id: id, $or: allowed }).select(
     "+photo",
   );
@@ -91,7 +109,7 @@ export async function getReport(id, token) {
     throw new ApiError(
       404,
       "REPORT_NOT_FOUND",
-      "This report was not found or is not available in this browser.",
+      "This report was not found or is not available to your account.",
     );
   return serializeReport(report, true);
 }

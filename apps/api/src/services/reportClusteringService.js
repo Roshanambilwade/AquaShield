@@ -47,7 +47,7 @@ export function detectDuplicatesAndSuspicious(
         reportId: id(r),
         duplicateOf: id(duplicate),
         reason:
-          "Repeated browser key near the same location within the duplicate window.",
+          "Repeated reporter key near the same location within the duplicate window.",
       });
       continue;
     }
@@ -73,7 +73,8 @@ export function detectDuplicatesAndSuspicious(
         );
       })
     )
-      reason = "Same browser key moved an implausible distance; review needed.";
+      reason =
+        "Same reporter key moved an implausible distance; review needed.";
     if (reason) {
       suspicious.push({ reportId: id(r), reason });
       continue;
@@ -241,7 +242,7 @@ export function buildShortageEvents(
       lastReportAt: latest,
       calculatedAt: clock,
       evidence: [
-        `${contributors.length} independent browser keys; these are not verified identities.`,
+        `${contributors.length} independent reporter keys (citizen accounts or legacy browser keys); these are not verified identities.`,
         `${verifiedReportCount} explicitly verified reports${isDemo ? " (simulated verification)" : ""}.`,
         `Geographic diameter approximately ${confidence.diameterKm} km; report span ${confidence.timeSpanHours} hours.`,
         `${excludedDuplicateIds.length + members.length - contributors.length} repeats and ${suspiciousIds.length} suspicious reports excluded from scores.`,

@@ -1,6 +1,6 @@
 import { authenticate, bearerToken } from "../services/authService.js";
 import { ApiError } from "./errors.js";
-export function requireAdmin(databaseStatus) {
+export function requireAdmin(databaseStatus, roles = ["ADMIN"]) {
   return async (req, _res, next) => {
     const token = bearerToken(req);
     if ((await databaseStatus()) !== "connected")
@@ -9,7 +9,7 @@ export function requireAdmin(databaseStatus) {
         "DATABASE_UNAVAILABLE",
         "Administrator services are temporarily unavailable.",
       );
-    req.admin = await authenticate(token);
+    req.admin = await authenticate(token, roles);
     next();
   };
 }

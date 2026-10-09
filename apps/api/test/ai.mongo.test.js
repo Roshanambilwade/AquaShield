@@ -60,15 +60,21 @@ test("five endpoints use persisted evidence without creating fleet, allocations 
       data.facts.zones.find((z) => z.area === "Panchavati").severity,
       hero.severityScore,
     );
-    assert.equal(data.facts.zones.length, 5);
+    const allocationRole = ["allocate", "recommend-allocation"].includes(
+      endpoint,
+    );
+    assert.equal(data.facts.zones.length, allocationRole ? 4 : 5);
     assert.equal(data.facts.risk, null);
-    assert.equal(data.facts.fleet, null);
+    if (allocationRole) assert.deepEqual(data.facts.fleet, []);
+    else assert.equal(data.facts.fleet, null);
     assert.equal(
       data.facts.reportsByHour.reduce((n, r) => n + r.count, 0),
-      66,
+      allocationRole ? 0 : 66,
     );
     assert.ok(
-      data.advice.missingInformation.includes("Available fleet records"),
+      data.advice.missingInformation.includes(
+        allocationRole ? "Verified demand quantity" : "Available fleet records",
+      ),
     );
     assert.equal(data.approved, false);
     assert.equal(JSON.stringify(data).includes("reporterKeyHash"), false);

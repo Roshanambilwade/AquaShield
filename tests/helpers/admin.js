@@ -1,4 +1,5 @@
 import { randomBytes, randomUUID } from "node:crypto";
+import { assertTestDatabase } from "./safety.js";
 import mongoose from "mongoose";
 import {
   createAdmin,
@@ -15,6 +16,7 @@ import {
 export async function prepareBrowserAdmin() {
   const ownsConnection = mongoose.connection.readyState !== 1;
   if (ownsConnection) await connectDatabase(loadEnv());
+  assertTestDatabase();
   const email = `browser-admin-${randomUUID()}@example.test`;
   const password = randomBytes(24).toString("hex");
   const user = await createAdmin({
@@ -34,6 +36,7 @@ export async function prepareBrowserAdmin() {
       );
     },
     async cleanup() {
+      assertTestDatabase();
       await AdminSession.deleteMany({ userId: user._id });
       await User.deleteOne({ _id: user._id });
       if (ownsConnection) await disconnectDatabase();

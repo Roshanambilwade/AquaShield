@@ -1,4 +1,5 @@
 import useAdminData from "../hooks/useAdminData.js";
+import AiRecommendationPanel from "./AiRecommendationPanel.jsx";
 
 export function AdminMetrics({ state }) {
   const labels = {
@@ -63,25 +64,15 @@ export function DataFeedback({ state, label }) {
   return null;
 }
 
-export function AdminPanels({ summary, analytics }) {
+export function AdminPanels({ summary, analytics, demo, event }) {
   return (
     <div className="admin-panels">
-      <section
-        className="admin-panel ai-extension"
-        aria-label="AI recommendation extension point"
-      >
-        <p className="eyebrow">Decision support · Phase 5 extension</p>
-        <h2>AquaShield AI recommendation</h2>
-        <span className="phase-badge">Not configured</span>
-        <p>
-          No AI recommendation has been generated. Current severity and
-          confidence come from the deterministic backend.
-        </p>
-        <p className="evidence-note">
-          Future recommendations will require administrator review. No
-          allocation or dispatch action is available.
-        </p>
-      </section>
+      <AiRecommendationPanel
+        key={`${demo}:${event?.id}:${event?.calculatedAt}`}
+        demo={demo}
+        event={event}
+        configuration={summary.data?.ai}
+      />
       <section className="admin-panel">
         <h2>Areas requiring attention</h2>
         <p>
@@ -208,8 +199,11 @@ export function AnalyticsPanel({ state }) {
   );
 }
 
-export function OperationalDetails({ id, demo }) {
-  const state = useAdminData(`/dashboard/shortages/${id}?demo=${demo}`);
+export function OperationalDetails({ id, demo, revision = 0 }) {
+  const state = useAdminData(
+    `/dashboard/shortages/${id}?demo=${demo}`,
+    revision,
+  );
   return (
     <section
       className="operational-detail"

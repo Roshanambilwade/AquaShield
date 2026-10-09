@@ -3,6 +3,11 @@ import mongoose from "mongoose";
 mongoose.set("bufferCommands", false);
 
 export async function connectDatabase(config, { dbName } = {}) {
+  if (config.MONGODB_TEST_DB_NAME && config.NODE_ENV !== "test")
+    throw new Error("Test database override requires NODE_ENV=test.");
+  dbName = dbName || config.MONGODB_TEST_DB_NAME;
+  if (dbName && !/^aquashield_[a-z0-9_]+_[a-f0-9]{32}$/.test(dbName))
+    throw new Error("Refusing an unsafe test database name.");
   await mongoose.connect(config.MONGODB_URI, {
     serverSelectionTimeoutMS: config.MONGODB_CONNECT_TIMEOUT_MS,
     connectTimeoutMS: config.MONGODB_CONNECT_TIMEOUT_MS,

@@ -119,13 +119,17 @@ export default function ShortageDetails({ event, compact = false }) {
             components={event.severity.components}
           />
           <h3>Population estimate</h3>
-          <p>
-            {event.population.reportedHouseholdPopulation} citizen-reported
-            household members across {event.population.householdCount} eligible
-            browser keys. Average household size{" "}
-            {event.population.averageHouseholdSize}; assumed reporting coverage{" "}
-            {Math.round(event.population.assumedReportCoverage * 100)}%.
-          </p>
+          {!event.privacy && (
+            <p>
+              {event.population.reportedHouseholdPopulation} citizen-reported
+              household members across {event.population.householdCount}{" "}
+              eligible reporter keys (accounts or legacy browser keys). Average
+              household size {event.population.averageHouseholdSize}; assumed
+              reporting coverage{" "}
+              {Math.round(event.population.assumedReportCoverage * 100)}
+              %.
+            </p>
+          )}
           <p className="evidence-note">
             {event.population.method} Anonymous keys may represent the same
             household across devices.
@@ -145,7 +149,7 @@ export default function ShortageDetails({ event, compact = false }) {
 const labels = {
   consistency: "Problem consistency",
   geographic: "Geographic concentration",
-  independent: "Independent browser keys",
+  independent: "Independent reporter keys",
   infrastructure: "Incident correlation",
   time: "Time concentration",
   duration: "Shortage duration",

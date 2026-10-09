@@ -9,6 +9,37 @@ export function sanitizeProviderError(error) {
   let network = false;
   for (let i = 0; current && i < 6 && !seen.has(current); i++) {
     seen.add(current);
+    // Strands wraps stream errors in ModelError. Preserve our bounded stream
+    // classifications through that cause chain, rebuilding only safe fields.
+    if (
+      current instanceof ApiError &&
+      current.code === "AI_INVALID_OUTPUT" &&
+      ["MODEL_OUTPUT_LIMIT", "PROVIDER_STREAM_INCOMPLETE"].includes(
+        current.details?.category,
+      )
+    ) {
+      const safe = failure(
+        "AI_INVALID_OUTPUT",
+        "The provider did not complete the required assessment.",
+        current.details.category,
+      );
+      if (current.details.providerFinishReason === "MAX_TOKENS")
+        safe.details.providerFinishReason = "MAX_TOKENS";
+      const usage = {};
+      for (const field of [
+        "promptTokenCount",
+        "candidatesTokenCount",
+        "thoughtsTokenCount",
+        "totalTokenCount",
+        "toolUsePromptTokenCount",
+        "cachedContentTokenCount",
+      ]) {
+        const value = current.details.usage?.[field];
+        if (Number.isSafeInteger(value) && value >= 0) usage[field] = value;
+      }
+      if (Object.keys(usage).length) safe.details.usage = usage;
+      return safe;
+    }
     let payload;
     try {
       payload = JSON.parse(current.message)?.error;

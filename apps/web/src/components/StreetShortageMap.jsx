@@ -195,6 +195,16 @@ export default function StreetShortageMap({
           >
             <Popup>
               <strong>Tanker {t.id}</strong>
+              <p>
+                Observation: {t.observationStatus ?? "UNKNOWN"}
+                {t.observedAt
+                  ? ` · ${new Date(t.observedAt).toLocaleString()}`
+                  : ""}
+                .{" "}
+                {t.eligibility?.eligible
+                  ? "Eligible for allocation"
+                  : "Not eligible for allocation"}
+              </p>
               <p>{t.status}</p>
               <p>
                 {t.capacityLitres == null

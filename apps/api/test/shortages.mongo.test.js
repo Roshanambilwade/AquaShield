@@ -14,6 +14,7 @@ import { demoReports } from "../src/demo/reports.js";
 import { demoAreas } from "../src/demo/areas.js";
 import { detectShortages } from "../src/services/shortageService.js";
 import { createAdmin, loginAdmin } from "../src/services/authService.js";
+import { citizenSession } from "./helpers/citizen.js";
 
 const databaseName = `aquashield_phase3_test_${randomUUID().replaceAll("-", "")}`;
 let config, app, firstId, firstToken, eventId, adminToken;
@@ -32,7 +33,7 @@ const input = (overrides = {}) => ({
   ...overrides,
 });
 before(async () => {
-  config = { ...loadEnv(), NODE_ENV: "test" };
+  config = { ...loadEnv(), NODE_ENV: "test", PUBLIC_MIN_HOUSEHOLDS: 3 };
   config.MONGODB_URI = process.env.MONGODB_TEST_URI || config.MONGODB_URI;
   await connectDatabase(config, { dbName: databaseName });
   app = createApp(config);
@@ -49,10 +50,10 @@ after(async () => {
 
 test("three independent citizen submissions persist and create one updated ACTIVE event", async () => {
   for (let i = 0; i < 3; i += 1) {
-    const token = randomBytes(32).toString("hex");
+    const token = (await citizenSession(config)).token;
     const response = await request(app)
       .post("/api/reports")
-      .set("X-Citizen-Token", token)
+      .set("Authorization", `Bearer ${token}`)
       .send(input())
       .expect(201);
     assert.equal(response.body.data.detectionStatus, "COMPLETE");
@@ -79,13 +80,13 @@ test("three independent citizen submissions persist and create one updated ACTIV
   );
   const detail = await request(app)
     .get(`/api/reports/${firstId}`)
-    .set("X-Citizen-Token", firstToken)
+    .set("Authorization", `Bearer ${firstToken}`)
     .expect(200);
   assert.equal(detail.body.data.shortageEvent.id, eventId);
   assert.equal(detail.body.data.shortageEvent.reportHandling, "ELIGIBLE");
   await request(app)
     .get(`/api/reports/${firstId}`)
-    .set("X-Citizen-Token", randomBytes(32).toString("hex"))
+    .set("Authorization", `Bearer ${(await citizenSession(config)).token}`)
     .expect(404);
 });
 
@@ -93,7 +94,7 @@ test("repeated submissions do not inflate population, confidence or verified cou
   const before = await ShortageEvent.findById(eventId);
   const response = await request(app)
     .post("/api/reports")
-    .set("X-Citizen-Token", firstToken)
+    .set("Authorization", `Bearer ${firstToken}`)
     .send(input())
     .expect(201);
   const event = await ShortageEvent.findById(eventId);
@@ -107,7 +108,7 @@ test("repeated submissions do not inflate population, confidence or verified cou
   assert.equal(event.confidenceScore, before.confidenceScore);
   const detail = await request(app)
     .get(`/api/reports/${response.body.data.id}`)
-    .set("X-Citizen-Token", firstToken)
+    .set("Authorization", `Bearer ${firstToken}`)
     .expect(200);
   assert.equal(detail.body.data.shortageEvent.reportHandling, "DUPLICATE");
 });
@@ -115,7 +116,7 @@ test("repeated submissions do not inflate population, confidence or verified cou
 test("suspicious report is saved privately but excluded from event calculations", async () => {
   const response = await request(app)
     .post("/api/reports")
-    .set("X-Citizen-Token", randomBytes(32).toString("hex"))
+    .set("Authorization", `Bearer ${(await citizenSession(config)).token}`)
     .send(input({ reportedDurationHours: 1 }))
     .expect(201);
   assert.equal(await Report.countDocuments({ _id: response.body.data.id }), 1);
@@ -182,7 +183,7 @@ test("new geographic and time clusters create separate events; deleted evidence 
   const payload = input({ location: { lat: 22, lng: 73.8 } });
   const response = await request(app)
     .post("/api/reports")
-    .set("X-Citizen-Token", randomBytes(32).toString("hex"))
+    .set("Authorization", `Bearer ${(await citizenSession(config)).token}`)
     .send(payload)
     .expect(201);
   // Backdate this test-owned record through the native collection: createdAt is
@@ -212,7 +213,7 @@ test("new geographic and time clusters create separate events; deleted evidence 
 });
 
 test("a derived persistence failure acknowledges the saved report and an unchanged retry recovers", async () => {
-  const token = randomBytes(32).toString("hex");
+  const token = (await citizenSession(config)).token;
   const payload = input({ location: { lat: 24, lng: 73.8 } });
   const originalUpdate = ShortageEvent.updateOne;
   let saved;
@@ -222,7 +223,7 @@ test("a derived persistence failure acknowledges the saved report and an unchang
     };
     saved = await request(app)
       .post("/api/reports")
-      .set("X-Citizen-Token", token)
+      .set("Authorization", `Bearer ${token}`)
       .send(payload)
       .expect(201);
     assert.equal(saved.body.data.detectionStatus, "DEFERRED");
@@ -232,7 +233,7 @@ test("a derived persistence failure acknowledges the saved report and an unchang
   }
   const retry = await request(app)
     .post("/api/reports")
-    .set("X-Citizen-Token", token)
+    .set("Authorization", `Bearer ${token}`)
     .send(payload)
     .expect(200);
   assert.equal(retry.body.data.id, saved.body.data.id);
@@ -243,9 +244,14 @@ test("a derived persistence failure acknowledges the saved report and an unchang
   );
   const detail = await request(app)
     .get(`/api/reports/${saved.body.data.id}`)
-    .set("X-Citizen-Token", token)
+    .set("Authorization", `Bearer ${token}`)
     .expect(200);
-  assert.equal(detail.body.data.shortageEvent.status, "EMERGING");
+  assert.equal(detail.body.data.shortageEvent, null);
+  const persisted = await ShortageEvent.findOne({
+    reportIds: detail.body.data.id,
+  });
+  assert.equal(persisted.status, "EMERGING");
+  await request(app).get(`/api/shortages/${persisted.id}`).expect(404);
 });
 
 test("invalid, unavailable and later-phase mutation endpoints remain safe", async () => {

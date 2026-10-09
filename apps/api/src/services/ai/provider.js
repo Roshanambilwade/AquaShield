@@ -4,17 +4,33 @@ import { z } from "zod";
 import { roles, adviceSchema, invalidOutput } from "./contracts.js";
 import { agentPrompt } from "./prompts.js";
 import { modelEvidence } from "./evidence.js";
+import { GoogleGenAI } from "@google/genai";
+import { observeGoogleStream } from "./streamDiagnostics.js";
 
 // SDK diagnostics can contain prompts/provider errors. Expose only sanitized
 // service errors; never print raw SDK messages, tools or model output.
 configureLogging({ debug() {}, info() {}, warn() {}, error() {} });
 
-export function createGeminiAgent(config, role, facts, signal, client) {
+export function createGeminiAgent(
+  config,
+  role,
+  facts,
+  signal,
+  client,
+  progress,
+) {
   const snapshot = JSON.stringify(modelEvidence(facts));
   const model = new GoogleModel({
     apiKey: config.GEMINI_API_KEY,
     modelId: config.GEMINI_MODEL_ID,
-    ...(client ? { client } : {}),
+    client: observeGoogleStream(
+      client ||
+        new GoogleGenAI({
+          apiKey: config.GEMINI_API_KEY,
+          httpOptions: { timeout: config.AI_TIMEOUT_MS },
+        }),
+      progress,
+    ),
     clientConfig: {
       httpOptions: {
         timeout: config.AI_TIMEOUT_MS,
@@ -49,8 +65,22 @@ export function createGeminiAgent(config, role, facts, signal, client) {
   });
 }
 
-export async function invokeGemini({ config, role, facts, signal, client }) {
-  const agent = createGeminiAgent(config, role, facts, signal, client);
+export async function invokeGemini({
+  config,
+  role,
+  facts,
+  signal,
+  client,
+  progress,
+}) {
+  const agent = createGeminiAgent(
+    config,
+    role,
+    facts,
+    signal,
+    client,
+    progress,
+  );
   try {
     const result = await agent.invoke(
       `Assess this backend snapshot, also available from get_shortage_evidence: ${JSON.stringify(modelEvidence(facts))}`,

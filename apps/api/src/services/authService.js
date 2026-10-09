@@ -28,6 +28,7 @@ const publicUser = (user) => ({
   name: user.name,
   email: user.email,
   role: user.role,
+  emailVerified: user.emailVerifiedAt != null,
 });
 const initialized = new WeakMap();
 export async function initializeAuthStorage() {
@@ -59,7 +60,7 @@ export async function createAdmin({
     role: "ADMIN",
   });
 }
-export async function loginAdmin(email, password, config) {
+export async function loginAdmin(email, password, config, roles = ["ADMIN"]) {
   await initializeAuthStorage();
   const user = await User.findOne({ email: email.toLowerCase() }).select(
     "+passwordHash",
@@ -67,7 +68,7 @@ export async function loginAdmin(email, password, config) {
   // Always perform the expensive hash, including for unknown accounts.
   const dummy = `scrypt:${"0".repeat(32)}:${"0".repeat(128)}`;
   const valid = await verifyPassword(password, user?.passwordHash || dummy);
-  if (!valid || !user || user.disabled || user.role !== "ADMIN")
+  if (!valid || !user || user.disabled || !roles.includes(user.role))
     throw new ApiError(
       401,
       "INVALID_CREDENTIALS",
@@ -84,15 +85,10 @@ export async function loginAdmin(email, password, config) {
 }
 export function bearerToken(req) {
   const match = /^Bearer ([a-f0-9]{64})$/.exec(req.get("Authorization") || "");
-  if (!match)
-    throw new ApiError(
-      401,
-      "AUTH_REQUIRED",
-      "Sign in with an administrator account.",
-    );
+  if (!match) throw new ApiError(401, "AUTH_REQUIRED", "Sign in to continue.");
   return match[1];
 }
-export async function authenticate(token) {
+export async function authenticate(token, roles = ["ADMIN"]) {
   const session = await AdminSession.findOne({
     tokenHash: tokenHash(token),
     expiresAt: { $gt: new Date() },
@@ -110,14 +106,46 @@ export async function authenticate(token) {
       "SESSION_EXPIRED",
       "Your session has expired. Please sign in again.",
     );
-  if (user.role !== "ADMIN")
+  if (!roles.includes(user.role))
     throw new ApiError(
       403,
-      "ADMIN_REQUIRED",
-      "Administrator access is required.",
+      roles.length === 1 && roles[0] === "CITIZEN"
+        ? "CITIZEN_REQUIRED"
+        : "ADMIN_REQUIRED",
+      roles.length === 1 && roles[0] === "CITIZEN"
+        ? "Sign in with a citizen account to access personal reports."
+        : "This account does not have the required access.",
     );
   return publicUser(user);
 }
+export async function createOperator({ email, password, name }) {
+  await initializeAuthStorage();
+  return User.create({
+    email: email.toLowerCase(),
+    name,
+    passwordHash: await hashPassword(password),
+    role: "OPERATOR",
+  });
+}
 export async function logoutAdmin(token) {
   await AdminSession.deleteOne({ tokenHash: tokenHash(token) });
+}
+export async function createCitizen({ email, password, name }) {
+  await initializeAuthStorage();
+  try {
+    const user = await User.create({
+      email: email.toLowerCase(),
+      name,
+      passwordHash: await hashPassword(password),
+      role: "CITIZEN",
+    });
+    return publicUser(user);
+  } catch (error) {
+    if (error.code !== 11000) throw error;
+    throw new ApiError(
+      409,
+      "REGISTRATION_UNAVAILABLE",
+      "Unable to create an account with these details. Try signing in or use different details.",
+    );
+  }
 }

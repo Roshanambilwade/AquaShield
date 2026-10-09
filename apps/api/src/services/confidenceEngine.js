@@ -1,7 +1,7 @@
 import { detectionConfig } from "../config/detection.js";
 import { distanceKm, clamp, round } from "./geography.js";
 
-// Different browser keys are independent submissions, not verified identities.
+// Account-derived or legacy browser keys represent submissions, not verified identities.
 export function calculateEventConfidence(
   reports,
   { infrastructureCorrelated = false } = {},

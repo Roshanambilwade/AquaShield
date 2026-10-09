@@ -14,7 +14,9 @@ import { demoAreas } from "../../apps/api/src/demo/areas.js";
 import Report from "../../apps/api/src/models/Report.js";
 import ShortageEvent from "../../apps/api/src/models/ShortageEvent.js";
 import { prepareBrowserAdmin } from "../helpers/admin.js";
+import { prepareBrowserCitizen } from "../helpers/citizen.js";
 let admin;
+const citizens = [];
 
 const createdIds = [];
 test.beforeAll(async () => {
@@ -30,6 +32,7 @@ test.afterAll(async () => {
     await Report.deleteMany({ _id: { $in: createdIds }, isDemo: false });
   await detectShortages(loadEnv());
   await admin.cleanup();
+  for (const citizen of citizens) await citizen.cleanup();
   await disconnectDatabase();
 });
 
@@ -128,6 +131,9 @@ test("real browser submissions create a MongoDB event and retain citizen privacy
       });
       contexts.push(context);
       const citizen = await context.newPage();
+      const account = await prepareBrowserCitizen();
+      citizens.push(account);
+      await account.signIn(citizen);
       await citizen.goto("/report");
       await citizen.getByLabel("Latitude", { exact: true }).fill(testLatitude);
       await citizen
@@ -177,7 +183,9 @@ test("real browser submissions create a MongoDB event and retain citizen privacy
       firstReport.page.getByRole("region", {
         name: `Shortage evidence for ${testLocality}`,
       }),
-    ).toBeVisible();
+    ).toHaveCount(0);
+    const publicResponse = await page.request.get(`/api/shortages/${event.id}`);
+    expect(publicResponse.status()).toBe(404);
     await page.goto("/admin");
     await page
       .getByLabel("Shortage zones")
@@ -193,9 +201,7 @@ test("real browser submissions create a MongoDB event and retain citizen privacy
     await expect(panel.getByText("~48", { exact: true })).toBeVisible();
     await expect(panel.getByText(/Partial severity/)).toBeVisible();
     await page.goto(`/report/${firstReport.id}`);
-    await expect(page.getByRole("alert")).toContainText(
-      "not available in this browser",
-    );
+    await expect(page.getByRole("alert")).toContainText("citizen account");
   } finally {
     if (testIds.length)
       await Report.deleteMany({ _id: { $in: testIds }, isDemo: false });
@@ -207,7 +213,7 @@ test("shortage loading, service error and retry recover to an empty state", asyn
   page,
 }) => {
   let recovered = false;
-  await page.route("**/api/shortages?demo=false", async (route) => {
+  await page.route("**/api/dashboard/shortages?demo=false", async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 300));
     await route.fulfill(
       recovered

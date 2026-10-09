@@ -72,7 +72,11 @@ export const reportQuerySchema = z
   })
   .strict();
 
-export function validate(schema, input) {
+export function validate(
+  schema,
+  input,
+  message = "Please check the report details.",
+) {
   const result = schema.safeParse(input);
   if (!result.success) {
     const fields = {};
@@ -80,12 +84,7 @@ export function validate(schema, input) {
       const field = issue.path.join(".") || "form";
       fields[field] ||= issue.message;
     }
-    throw new ApiError(
-      422,
-      "VALIDATION_ERROR",
-      "Please check the report details.",
-      { fields },
-    );
+    throw new ApiError(422, "VALIDATION_ERROR", message, { fields });
   }
   return result.data;
 }

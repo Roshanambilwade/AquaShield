@@ -14,6 +14,12 @@ const photoSchema = new mongoose.Schema(
 
 const reportSchema = new mongoose.Schema(
   {
+    ownerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+      immutable: true,
+    },
     reporterKeyHash: { type: String, required: true, select: false },
     submissionId: { type: String, required: true, select: false },
     location: {
@@ -71,6 +77,7 @@ const reportSchema = new mongoose.Schema(
 reportSchema.index({ reporterKeyHash: 1, submissionId: 1 }, { unique: true });
 reportSchema.index({ reporterKeyHash: 1, createdAt: -1, _id: -1 });
 reportSchema.index({ isDemo: 1, createdAt: -1, _id: -1 });
+reportSchema.index({ ownerId: 1, createdAt: -1, _id: -1 });
 
 const Report = mongoose.model("Report", reportSchema);
 const initializedDatabases = new WeakMap();

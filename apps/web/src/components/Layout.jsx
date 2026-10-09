@@ -1,7 +1,12 @@
-import { useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
+import { AuthContext } from "../lib/authContext.js";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { PORTALS } from "../lib/portalAccess.js";
 
 export default function Layout() {
+  const auth = useContext(AuthContext);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
   const { pathname } = useLocation();
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -24,15 +29,60 @@ export default function Layout() {
           <NavLink to="/" end>
             Overview
           </NavLink>
-          <NavLink to="/report" end>
-            Report water shortage
-          </NavLink>
-          <NavLink to="/my-reports">My reports</NavLink>
-          <NavLink to="/admin">Municipal team</NavLink>
-          <NavLink to="/operator">Operator</NavLink>
+          {!auth.loading && (!auth.user || auth.user.role === "CITIZEN") && (
+            <>
+              <NavLink to="/report" end>
+                Report water shortage
+              </NavLink>
+              <NavLink to="/my-reports">My reports</NavLink>
+            </>
+          )}
+          {!auth.loading && (!auth.user || auth.user.role === "ADMIN") && (
+            <NavLink to="/admin">Municipal team</NavLink>
+          )}
+          {!auth.loading && (!auth.user || auth.user.role === "OPERATOR") && (
+            <NavLink to="/operator">Operator</NavLink>
+          )}
+          <NavLink to="/alerts">Local alerts</NavLink>
           <NavLink to="/status">System status</NavLink>
+          {!auth.loading && !auth.user && (
+            <NavLink to="/citizen/login">Citizen sign in</NavLink>
+          )}
+          {!auth.loading && !auth.user && (
+            <NavLink to="/register">Register</NavLink>
+          )}
         </nav>
       </header>
+      {auth.user && (
+        <div className="page citizen-session">
+          <span>
+            {PORTALS[auth.user.role]?.label} · Signed in as {auth.user.name}
+            {auth.user.role === "CITIZEN" && (
+              <>
+                {" "}
+                · Email {auth.user.emailVerified ? "verified" : "unverified"}
+              </>
+            )}
+          </span>
+          <button
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              setError("");
+              try {
+                await auth.logout();
+              } catch (e) {
+                setError(e.message);
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            {busy ? "Signing out…" : "Sign out"}
+          </button>
+          {error && <p role="alert">{error}</p>}
+        </div>
+      )}
       <main id="main-content" tabIndex={-1}>
         <Outlet />
       </main>

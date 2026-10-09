@@ -14,6 +14,7 @@ import {
 import User from "../src/models/User.js";
 import AdminSession from "../src/models/AdminSession.js";
 import { seedDemoReports } from "../src/demo/seedReports.js";
+import { detectShortages } from "../src/services/shortageService.js";
 import Report from "../src/models/Report.js";
 
 const databaseName = `aquashield_phase4_test_${randomUUID().replaceAll("-", "")}`;
@@ -23,7 +24,12 @@ let app, config, user, token;
 const get = (path) =>
   request(app).get(path).set("Authorization", `Bearer ${token}`);
 before(async () => {
-  config = { ...loadEnv(), NODE_ENV: "test" };
+  config = {
+    ...loadEnv(),
+    NODE_ENV: "test",
+    DEMO_AI_MODE: false,
+    GEMINI_API_KEY: "",
+  };
   config.MONGODB_URI = process.env.MONGODB_TEST_URI || config.MONGODB_URI;
   await connectDatabase(config, { dbName: databaseName });
   app = createApp(config);
@@ -125,10 +131,15 @@ test("expiry, disabled accounts and changed non-admin roles are enforced on ever
     role: "CITIZEN",
     passwordHash: await hashPassword(password),
   });
-  await request(app)
+  const citizenLogin = await request(app)
     .post("/api/auth/login")
     .send({ email: citizen.email, password })
-    .expect(401);
+    .expect(200);
+  assert.equal(citizenLogin.body.data.user.role, "CITIZEN");
+  await request(app)
+    .get("/api/dashboard/map")
+    .set("Authorization", `Bearer ${citizenLogin.body.data.token}`)
+    .expect(403);
 });
 test("dashboard metrics reuse existing event counts and leave unavailable operational data unknown", async () => {
   const response = await get("/api/dashboard/summary?demo=true").expect(200);
@@ -183,12 +194,13 @@ test("authorized map retrieves demo zones and sanitized report layers while citi
     householdSize: 4,
     description: "Private description",
   });
+  await detectShortages(config);
   const real = await get("/api/dashboard/map").expect(200);
   assert.equal(real.body.data.reports.length, 1);
   assert.equal(real.body.data.reports[0].id, String(report._id));
-  await request(app).get(`/api/reports/${report._id}`).expect(404);
+  await request(app).get(`/api/reports/${report._id}`).expect(401);
   const publicZones = await request(app).get("/api/shortages").expect(200);
-  assert.equal(publicZones.body.data.events[0].reportIds, undefined);
+  assert.deepEqual(publicZones.body.data.events, []);
 });
 test("analytics and detail expose evidence counts, unknown deliveries and non-AI assessment guidance", async () => {
   const { body } = await get("/api/dashboard/analytics?demo=true").expect(200);
@@ -266,7 +278,8 @@ test("read-only fleet and verified delivery records populate KPIs and layers wit
     },
   ]);
   const response = await get("/api/dashboard/summary").expect(200);
-  assert.equal(response.body.data.metrics.availableTankers.value, 1);
+  assert.equal(response.body.data.metrics.availableTankers.value, 0);
+  assert.equal(response.body.data.recordedAvailableTankers, 1);
   assert.equal(response.body.data.metrics.tankersEnRoute.value, 1);
   assert.equal(response.body.data.metrics.waterDelivered.value, 8000);
   assert.equal(response.body.data.metrics.averageResponseTime.value, 30);

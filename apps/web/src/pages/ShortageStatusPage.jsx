@@ -7,7 +7,7 @@ export default function ShortageStatusPage({ admin = false }) {
   const { id } = useParams();
   const [params] = useSearchParams();
   const demo = params.get("demo") === "true";
-  const state = useShortages(demo, id);
+  const state = useShortages(demo, id, admin);
   return (
     <div className="page shortage-page">
       <p className="eyebrow">Shortage event</p>

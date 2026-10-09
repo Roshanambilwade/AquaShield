@@ -300,7 +300,8 @@ export default function ShortageMap({
                 stroke="white"
               >
                 <title>
-                  Tanker {t.id} · {t.status}
+                  Tanker {t.id} · {t.status} · observation{" "}
+                  {t.observationStatus ?? "UNKNOWN"}
                 </title>
               </rect>
             ))}
@@ -367,7 +368,7 @@ export default function ShortageMap({
         no street tiles
         {admin
           ? "; report locations are visible only to signed-in administrators when the layer is enabled."
-          : " and does not show household locations."}
+          : "; public coordinates are generalized and small live clusters are withheld."}
       </p>
       <div className="map-legend">
         {Object.entries(colors).map(([level, color]) => (

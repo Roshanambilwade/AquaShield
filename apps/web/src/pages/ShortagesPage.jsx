@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { AuthContext } from "../lib/authContext.js";
+import { portalHome } from "../lib/portalAccess.js";
 import { Link, useSearchParams } from "react-router-dom";
 import useShortages from "../hooks/useShortages.js";
 import ShortageMap from "../components/ShortageMap.jsx";
@@ -16,9 +18,10 @@ import {
 import ShortageTable from "../components/ShortageTable.jsx";
 
 export default function ShortagesPage({ admin = false }) {
+  const auth = useContext(AuthContext);
   const [params] = useSearchParams();
   const demo = params.get("demo") === "true";
-  const state = useShortages(demo);
+  const state = useShortages(demo, undefined, admin);
   const [revision, setRevision] = useState(0);
   const summary = useAdminData(
     admin ? `/dashboard/summary?demo=${demo}` : null,
@@ -90,8 +93,10 @@ export default function ShortagesPage({ admin = false }) {
         </p>
       )}
       <p className="evidence-note">
-        Aggregate evidence is visible here. Field verification and authorized
-        response operations will be added in later phases.
+        Public evidence protects small household groups. Authorized municipal
+        staff can review private evidence and manage approved tanker
+        assignments. An assignment does not confirm delivery or field
+        verification.
       </p>
       {admin && <AdminMetrics state={summary} />}
       {state.loading && (
@@ -140,8 +145,21 @@ export default function ShortagesPage({ admin = false }) {
                 Submit household reports to build a local evidence cluster, or
                 seed the simulated scenarios with npm run seed:demo.
               </p>
-              <Link className="button button-secondary" to="/report">
-                Report water shortage
+              <Link
+                className="button button-secondary"
+                to={
+                  admin
+                    ? `/admin/reports${demo ? "?demo=true" : ""}`
+                    : auth.user && auth.user.role !== "CITIZEN"
+                      ? portalHome(auth.user.role)
+                      : "/report"
+                }
+              >
+                {admin
+                  ? "Review citizen reports"
+                  : auth.user && auth.user.role !== "CITIZEN"
+                    ? "Return to your portal"
+                    : "Report water shortage"}
               </Link>
               {admin &&
                 map.data &&
@@ -200,7 +218,13 @@ export default function ShortagesPage({ admin = false }) {
               {selected && (
                 <div className="event-panel">
                   <ShortageDetails event={selected} />
-                  {admin && <OperationalDetails id={selected.id} demo={demo} />}
+                  {admin && (
+                    <OperationalDetails
+                      id={selected.id}
+                      demo={demo}
+                      revision={revision}
+                    />
+                  )}
                   <Link
                     className="button button-secondary"
                     to={`/${admin ? "admin/shortages" : "alerts"}/${selected.id}?demo=${demo}`}
@@ -225,7 +249,14 @@ export default function ShortagesPage({ admin = false }) {
           </p>
         </>
       )}
-      {admin && <AdminPanels summary={summary} analytics={analytics} />}
+      {admin && (
+        <AdminPanels
+          summary={summary}
+          analytics={analytics}
+          demo={demo}
+          event={selected}
+        />
+      )}
     </div>
   );
 }

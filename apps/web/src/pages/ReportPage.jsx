@@ -7,6 +7,7 @@ import {
   MAX_PHOTO_BYTES,
 } from "../../../../packages/shared/reportOptions.js";
 import { submitReport } from "../lib/api.js";
+import CitizenAccess from "../components/CitizenAccess.jsx";
 
 const initial = {
   locality: "",
@@ -30,6 +31,13 @@ function localDateTime(date) {
 }
 
 export default function ReportPage() {
+  return (
+    <CitizenAccess>
+      <ReportForm />
+    </CitizenAccess>
+  );
+}
+function ReportForm() {
   const navigate = useNavigate();
   const [form, setForm] = useState(initial);
   const [photo, setPhoto] = useState(undefined);

@@ -35,7 +35,7 @@ export function createShortageRouter(config, databaseStatus) {
   router.get("/", async (req, res) =>
     res.json({
       success: true,
-      data: await listShortages(config, req.shortageDemo),
+      data: await listShortages(config, req.shortageDemo, true),
     }),
   );
   router.post(
@@ -54,7 +54,7 @@ export function createShortageRouter(config, databaseStatus) {
     const id = validate(reportIdSchema, req.params.id);
     res.json({
       success: true,
-      data: await getShortage(id, config, req.shortageDemo),
+      data: await getShortage(id, config, req.shortageDemo, true),
     });
   });
   router.get("/:id/severity", async (req, res) => {
@@ -62,6 +62,7 @@ export function createShortageRouter(config, databaseStatus) {
       validate(reportIdSchema, req.params.id),
       config,
       req.shortageDemo,
+      true,
     );
     res.json({ success: true, data: event.severity });
   });

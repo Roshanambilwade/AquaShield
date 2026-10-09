@@ -11,13 +11,16 @@ test("backend root and API index expose the completed phase metadata", async () 
   const root = await request(app).get("/").expect(200);
   assert.equal(root.body.data.api, "/api");
   const api = await request(app).get("/api").expect(200);
-  assert.equal(api.body.data.phase, 4);
+  assert.equal(api.body.data.phase, 6.5);
   assert.deepEqual(api.body.data.endpoints, {
     health: "/api/health",
     reports: "/api/reports",
     shortages: "/api/shortages",
     auth: "/api/auth",
     dashboard: "/api/dashboard",
+    ai: "/api/ai",
+    operations: "/api/operations",
+    operator: "/api/operator",
   });
 });
 
@@ -128,25 +131,24 @@ for (const origin of ["http://localhost:5173", "http://127.0.0.1:5173"]) {
       .options("/api/reports")
       .set("Origin", origin)
       .set("Access-Control-Request-Method", "POST")
-      .set("Access-Control-Request-Headers", "content-type,x-citizen-token")
+      .set("Access-Control-Request-Headers", "content-type,authorization")
       .expect(204);
     assert.equal(preflight.headers["access-control-allow-origin"], origin);
     assert.match(
       preflight.headers["access-control-allow-headers"],
-      /x-citizen-token/,
+      /authorization/,
     );
     assert.equal(
       preflight.headers["access-control-allow-credentials"],
       undefined,
     );
-    // Missing report data should reach validation, not be rejected by CORS.
+    // Missing authentication reaches the protected endpoint, not CORS rejection.
     const response = await request(devApp)
       .post("/api/reports")
       .set("Origin", origin)
-      .set("X-Citizen-Token", "a".repeat(64))
       .send({})
-      .expect(422);
-    assert.equal(response.body.code, "VALIDATION_ERROR");
+      .expect(401);
+    assert.equal(response.body.code, "AUTH_REQUIRED");
     assert.equal(response.headers["access-control-allow-origin"], origin);
   });
 }

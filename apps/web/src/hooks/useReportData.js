@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { AuthContext } from "../lib/authContext.js";
 import { getReport, getReports } from "../lib/api.js";
 
 export default function useReportData({ id, page = 1, demo = false }) {
+  const auth = useContext(AuthContext);
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState({ data: null, error: "", loading: true });
-  const key = `${id || "list"}:${page}:${demo}:${attempt}`;
+  const key = `${id || "list"}:${page}:${demo}:${attempt}:${auth.user?.id || "public"}`;
   useEffect(() => {
     const controller = new AbortController();
     let active = true;
@@ -17,7 +19,13 @@ export default function useReportData({ id, page = 1, demo = false }) {
       })
       .catch((error) => {
         if (active && error.name !== "AbortError")
-          setState({ key, data: null, error: error.message, loading: false });
+          setState({
+            key,
+            data: null,
+            error: error.message,
+            code: error.code,
+            loading: false,
+          });
       });
     return () => {
       active = false;

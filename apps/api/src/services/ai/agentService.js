@@ -16,7 +16,15 @@ export async function runAgent(
   if (!roles[role])
     throw new ApiError(422, "VALIDATION_ERROR", "Unknown agent role.");
   requireAiConfiguration(config);
-  const facts = await evidenceLoader(config, input);
+  const facts =
+    role === "allocate" && evidenceLoader === loadEvidence
+      ? (await import("./allocationEvidence.js")).buildAllocationEvidence(
+          await (
+            await import("../operationsService.js")
+          ).allocationSnapshot(config, input.demo),
+          config,
+        )
+      : await evidenceLoader(config, input);
   if (signal?.aborted)
     throw new ApiError(499, "AI_CANCELLED", "The assessment was cancelled.");
   let raw;

@@ -23,8 +23,12 @@ export default function ReportDetails({ report }) {
       <div className="report-status" role="status">
         <span className="status-badge degraded">
           {report.verificationStatus === "VERIFIED"
-            ? "Verified (simulated)"
-            : "Pending verification"}
+            ? report.isDemo
+              ? "Verified (simulated)"
+              : "Verified"
+            : report.verificationStatus === "REJECTED"
+              ? "Rejected"
+              : "Pending verification"}
         </span>
         <p>
           Your report is saved. Local shortage evidence is calculated separately
@@ -39,6 +43,20 @@ export default function ReportDetails({ report }) {
       )}
       {report.shortageEvent && (
         <ShortageDetails event={report.shortageEvent} compact />
+      )}
+      {report.responseStatus && (
+        <section className="demo-note" aria-label="Municipal response status">
+          <h2>Municipal response</h2>
+          <p>
+            {report.responseStatus.status === "ASSIGNED"
+              ? "Tanker assigned to the shortage area"
+              : "Allocation approved; assignment pending"}
+          </p>
+          <p>
+            This is an area response. Delivery to your household has not been
+            verified.
+          </p>
+        </section>
       )}
       <dl className="report-details">
         <div>
@@ -121,13 +139,17 @@ export default function ReportDetails({ report }) {
         <li>
           <strong>
             {report.verificationStatus === "VERIFIED"
-              ? "Simulated field verification"
+              ? report.isDemo
+                ? "Simulated field verification"
+                : "Report verified"
               : "Verification pending"}
           </strong>
           <span>
-            {report.shortageEvent
-              ? "Local evidence has been analyzed. No emergency response is assigned."
-              : "No local event analysis or emergency response is available yet."}
+            {report.responseStatus
+              ? "See the recorded municipal response above. Assignment does not verify this report or delivery."
+              : report.shortageEvent
+                ? "Local evidence has been analyzed. No approved or assigned response is recorded."
+                : "No public local evidence is available; small household clusters are withheld for privacy."}
           </span>
         </li>
       </ol>

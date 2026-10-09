@@ -1,6 +1,6 @@
 import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
-import { randomBytes, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import request from "supertest";
 import mongoose from "mongoose";
 import sharp from "sharp";
@@ -9,10 +9,10 @@ import { connectDatabase, disconnectDatabase } from "../src/config/database.js";
 import { createApp } from "../src/app.js";
 import Report, { initializeReportStorage } from "../src/models/Report.js";
 import { demoReports } from "../src/demo/reports.js";
+import { citizenSession } from "./helpers/citizen.js";
 
 const databaseName = `aquashield_phase2_test_${randomUUID().replaceAll("-", "")}`;
-const token = randomBytes(32).toString("hex");
-const otherToken = randomBytes(32).toString("hex");
+let token, otherToken;
 const input = () => ({
   submissionId: randomUUID(),
   location: { lat: 20.011, lng: 73.79 },
@@ -36,6 +36,8 @@ before(async () => {
   await connectDatabase(config, { dbName: databaseName });
   await initializeReportStorage();
   app = createApp(config);
+  token = (await citizenSession(config)).token;
+  otherToken = (await citizenSession(config)).token;
 });
 after(async () => {
   // Only remove the unique database created by this test, never the app database.
@@ -48,7 +50,7 @@ test("submission persists through a new MongoDB connection and HTTP history/deta
   const payload = input();
   const { body } = await request(app)
     .post("/api/reports")
-    .set("X-Citizen-Token", token)
+    .set("Authorization", `Bearer ${token}`)
     .send(payload)
     .expect(201);
   const id = body.data.id;
@@ -63,12 +65,12 @@ test("submission persists through a new MongoDB connection and HTTP history/deta
   assert.equal(persisted.householdSize, 5);
   const detail = await request(app)
     .get(`/api/reports/${id}`)
-    .set("X-Citizen-Token", token)
+    .set("Authorization", `Bearer ${token}`)
     .expect(200);
   assert.equal(detail.body.data.reportedDurationHours, 18);
   const history = await request(app)
     .get("/api/reports")
-    .set("X-Citizen-Token", token)
+    .set("Authorization", `Bearer ${token}`)
     .expect(200);
   assert.equal(
     history.body.data.reports.some((report) => report.id === id),
@@ -76,12 +78,12 @@ test("submission persists through a new MongoDB connection and HTTP history/deta
   );
   await request(app)
     .get(`/api/reports/${id}`)
-    .set("X-Citizen-Token", otherToken)
+    .set("Authorization", `Bearer ${otherToken}`)
     .expect(404);
-  await request(app).get(`/api/reports/${id}`).expect(404);
+  await request(app).get(`/api/reports/${id}`).expect(401);
   const stranger = await request(app)
     .get("/api/reports")
-    .set("X-Citizen-Token", otherToken)
+    .set("Authorization", `Bearer ${otherToken}`)
     .expect(200);
   assert.equal(stranger.body.data.pagination.total, 0);
 });
@@ -92,7 +94,7 @@ test("retrying and concurrent requests with the same submission ID create one re
     [0, 1].map(() =>
       request(app)
         .post("/api/reports")
-        .set("X-Citizen-Token", token)
+        .set("Authorization", `Bearer ${token}`)
         .send(payload),
     ),
   );
@@ -115,7 +117,7 @@ test("photos are persisted and returned only on authorized detail", async () => 
     .toBuffer();
   const response = await request(app)
     .post("/api/reports")
-    .set("X-Citizen-Token", token)
+    .set("Authorization", `Bearer ${token}`)
     .send({
       ...input(),
       photo: `data:image/png;base64,${buffer.toString("base64")}`,
@@ -125,7 +127,7 @@ test("photos are persisted and returned only on authorized detail", async () => 
   assert.equal(response.body.data.photo, undefined);
   const detail = await request(app)
     .get(`/api/reports/${response.body.data.id}`)
-    .set("X-Citizen-Token", token)
+    .set("Authorization", `Bearer ${token}`)
     .expect(200);
   assert.equal(
     detail.body.data.photo.startsWith("data:image/jpeg;base64,"),
@@ -159,7 +161,7 @@ test("demo seed is repeatable, public, labeled, and separate from private histor
   await request(app).get(`/api/reports/${body.data.reports[0].id}`).expect(200);
   const mine = await request(app)
     .get("/api/reports")
-    .set("X-Citizen-Token", token)
+    .set("Authorization", `Bearer ${token}`)
     .expect(200);
   assert.equal(
     mine.body.data.reports.every((report) => !report.isDemo),
@@ -171,19 +173,19 @@ test("invalid input is rejected before any record is written", async () => {
   const count = await Report.countDocuments();
   await request(app)
     .post("/api/reports")
-    .set("X-Citizen-Token", token)
+    .set("Authorization", `Bearer ${token}`)
     .send({ ...input(), householdSize: 0 })
     .expect(422);
   await request(app)
     .post("/api/reports")
-    .set("X-Citizen-Token", token)
+    .set("Authorization", `Bearer ${token}`)
     .send({ ...input(), verificationStatus: "VERIFIED" })
     .expect(422);
-  await request(app).post("/api/reports").send(input()).expect(400);
+  await request(app).post("/api/reports").send(input()).expect(401);
   await request(app).get("/api/reports/not-an-id").expect(422);
   await request(app)
     .get("/api/reports?page=0")
-    .set("X-Citizen-Token", token)
+    .set("Authorization", `Bearer ${token}`)
     .expect(422);
   assert.equal(await Report.countDocuments(), count);
 });
@@ -194,7 +196,7 @@ test("unavailable MongoDB returns a safe 503 for submission", async () => {
   });
   const response = await request(unavailable)
     .post("/api/reports")
-    .set("X-Citizen-Token", token)
+    .set("Authorization", `Bearer ${token}`)
     .send(input())
     .expect(503);
   assert.equal(response.body.code, "DATABASE_UNAVAILABLE");

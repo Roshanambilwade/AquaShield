@@ -10,8 +10,15 @@ import Report, {
 } from "../../apps/api/src/models/Report.js";
 import { seedDemoReports } from "../../apps/api/src/demo/seedReports.js";
 import { detectShortages } from "../../apps/api/src/services/shortageService.js";
+import { prepareBrowserCitizen } from "../helpers/citizen.js";
 
 const ownedIds = [];
+const citizens = [];
+test.beforeEach(async ({ page }) => {
+  const citizen = await prepareBrowserCitizen();
+  citizens.push(citizen);
+  await citizen.signIn(page);
+});
 test.beforeAll(async () => {
   await connectDatabase(loadEnv());
   await initializeReportStorage();
@@ -22,6 +29,7 @@ test.afterAll(async () => {
   if (ownedIds.length)
     await Report.deleteMany({ _id: { $in: ownedIds }, isDemo: false });
   await detectShortages(loadEnv());
+  for (const citizen of citizens) await citizen.cleanup();
   await disconnectDatabase();
 });
 
@@ -201,7 +209,7 @@ test("device capture works and denied permission offers manual selection", async
   );
 });
 
-test("new browser history is empty and private report IDs cannot be read", async ({
+test("another citizen's history is empty and private report IDs cannot be read", async ({
   page,
   browser,
 }) => {
@@ -210,13 +218,16 @@ test("new browser history is empty and private report IDs cannot be read", async
   const other = await browser.newContext();
   try {
     const stranger = await other.newPage();
+    const otherCitizen = await prepareBrowserCitizen();
+    citizens.push(otherCitizen);
+    await otherCitizen.signIn(stranger);
     await stranger.goto("http://127.0.0.1:4174/my-reports");
     await expect(
       stranger.getByRole("heading", { name: "No reports here yet." }),
     ).toBeVisible();
     await stranger.goto(`http://127.0.0.1:4174/report/${id}`);
     await expect(stranger.getByRole("alert")).toContainText(
-      "not available in this browser",
+      "not available to your account",
     );
   } finally {
     await other.close();

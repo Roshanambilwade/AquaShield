@@ -6,6 +6,7 @@ export default function AuthProvider({ children }) {
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     const controller = new AbortController();
+    const initialToken = sessionStorage.getItem(ADMIN_TOKEN_KEY);
     const ended = () => setState({ user: null, loading: false, error: "" });
     window.addEventListener("admin-session-ended", ended);
     const load = async () => {
@@ -14,11 +15,18 @@ export default function AuthProvider({ children }) {
     };
     load()
       .then((result) => {
-        if (!controller.signal.aborted)
+        if (
+          !controller.signal.aborted &&
+          sessionStorage.getItem(ADMIN_TOKEN_KEY) === initialToken
+        )
           setState({ user: result.user, loading: false, error: "" });
       })
       .catch((error) => {
-        if (!controller.signal.aborted)
+        if (
+          !controller.signal.aborted &&
+          (sessionStorage.getItem(ADMIN_TOKEN_KEY) === initialToken ||
+            !sessionStorage.getItem(ADMIN_TOKEN_KEY))
+        )
           setState({
             user: null,
             loading: false,
@@ -49,6 +57,8 @@ export default function AuthProvider({ children }) {
         ...state,
         login,
         logout,
+        register: (body) =>
+          adminRequest("/auth/register", { method: "POST", body }),
         retry: () => {
           setState({ user: null, loading: true, error: "" });
           setAttempt((n) => n + 1);

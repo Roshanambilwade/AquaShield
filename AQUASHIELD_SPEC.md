@@ -29,6 +29,8 @@ These rules override any conflicting instruction later in this document.
 
 # AQUASHIELD — COMPLETE HACKATHON BUILD SPECIFICATION
 
+**Implementation status (9 October 2026):** Phases 1–6 and Phase 6.5 citizen authentication/report ownership are implemented locally. Existing admin/operator access, deterministic calculations, Strands/Gemini integration and allocation/assignment are preserved. A complete live Gemini assessment remains unverified after provider failures; see [Phase 5 limits](docs/phase5.md), [Phase 6 operations](docs/phase6.md) and [Phase 6.5 accounts](docs/phase65.md). Requirements below describe the complete target and do not authorize Phase 7 or deployment.
+
 ## 1. ROLE
 
 You are a senior full-stack engineer, product designer, and hackathon engineering lead.
@@ -68,7 +70,7 @@ Citizen reports + available infrastructure/environment signals
 → verified delivery
 → deterministic early warning.
 
-Describe current Phase 1–4 modules as deterministic decision support. Strands/Gemini agents are planned for Phase 5, not running yet. Distinguish real Gemini advice from backend facts and key-free DEMO_AI_MODE simulations.
+Describe current Phase 1–4 modules as deterministic decision support. Phase 5 implements Strands/Gemini roles and demo simulation; real calls require configured credentials and verified execution. Distinguish real Gemini advice from backend facts and key-free DEMO_AI_MODE simulations.
 
 ---
 
@@ -118,7 +120,7 @@ Position AquaShield as an intelligence and decision layer for emergency water ma
 
 Its value is report-based detection, spatial/time clustering, evidence-based shortage confidence, transparent deterministic severity, explainable prioritization, fairness-aware allocation, early warning, delivery verification and auditability.
 
-Do not claim to be the first tanker booking system, to know exact remaining water, or to know exact affected population without verified evidence. Label estimates and simulated inputs. Do not market deterministic modules as LLM agents or describe the current application as running Strands/Bedrock. The planned Strands/Gemini integration is not implemented yet; Bedrock alone remains optional.
+Do not claim to be the first tanker booking system, to know exact remaining water, or to know exact affected population without verified evidence. Label estimates and simulated inputs. Do not market deterministic modules as LLM agents or describe the current application as running Strands/Bedrock. Phase 5 implements Strands/Gemini integration; a complete live assessment remains unverified after Google provider unavailability. Bedrock remains optional.
 
 Current emerging report evidence and future predictive risk are different concepts. Explain what has been implemented, what remains a placeholder, and which later capabilities are planned.
 
@@ -152,7 +154,9 @@ Phase 4's tanker-operator page is a placeholder, not a working trip or authentic
 Implement the MVP in the phase order in section 74 and the latest authorized Codex prompt. Required planned capabilities include deterministic decision support and four Strands/Gemini agent roles. Bedrock is optional; real execution and key-free demo testing are distinct. Implement only the authorized phase.
 
 ## MUST HAVE — Citizen Water Shortage Reporting
-A citizen submits location, area/locality, problem type, last supply time, approximate shortage duration, household water category, household size and timestamp, with optional description/photo. Identity/contact fields may be optional when a later account workflow is implemented; preserve the existing anonymous browser-owned reporting.
+A signed-in CITIZEN submits location, area/locality, problem type, last supply time, approximate shortage duration, household water category and household size, with optional description/photo. The backend records timestamp and immutable account ownership from its verified session; client-supplied ownership is rejected. Public registration collects name, email and password, assigns CITIZEN on the server and reuses the existing secure sessions. Private history/detail are account-owned. Existing anonymous/imported and demo reports remain ownerless without deletion or reassignment; old browser keys no longer authorize live report access.
+
+Only authorized administrators can review reporter name/email and supporting private evidence. Account/contact/locality information is user-provided; email ownership, identity and residency remain explicitly unverified until a real provider/check is integrated. No fake verification, government ID or paid verification service is required. Public shortage/agent evidence must exclude citizen PII. Own report pages may show recorded area approval/assignment without exposing operator/allocation internals or claiming household delivery.
 
 Problem types: NO_WATER, LOW_PRESSURE, PIPELINE_FAILURE, TANK_EMPTY, WATER_QUALITY, OTHER.
 
@@ -412,9 +416,9 @@ Implement four roles: Crisis Detection, Resource Allocation, Logistics and Early
 
 The official Node SDK supports TypeScript/JavaScript and documents a Google provider. Prefer JavaScript integration where the selected supported SDK permits it. If its supported integration requires TypeScript, isolate source, tsconfig, dependencies, build and compiled output to a server-side apps/agents service. Never convert apps/web, apps/api or shared application modules, or introduce a TypeScript shared-types package for convenience.
 
-Verify and pin the supported SDK/provider version during implementation, including runtime, tool calling and structured-output capabilities. Current official documentation uses @strands-agents/sdk, @google/genai and GoogleModel from @strands-agents/sdk/models/google. Explicitly select the Gemini provider; do not instantiate an agent with an implicit Bedrock default. Package/import names can change and must be checked against the pinned version. These are future integration requirements, not installed dependencies. [Official Node SDK](https://github.com/strands-agents/sdk-typescript), [Google provider](https://strandsagents.com/docs/user-guide/sdk/model-providers/google/)
+Verify and pin the supported SDK/provider version during implementation, including runtime, tool calling and structured-output capabilities. Current official documentation uses @strands-agents/sdk, @google/genai and GoogleModel from @strands-agents/sdk/models/google. Explicitly select the Gemini provider; do not instantiate an agent with an implicit Bedrock default. Package/import names can change and must be checked against the pinned version. Phase 5 pins @strands-agents/sdk 1.20.0 and @google/genai 2.6.0 and uses their JavaScript exports; live model execution still needs verification with credentials. [Official Node SDK](https://github.com/strands-agents/sdk-typescript), [Google provider](https://strandsagents.com/docs/user-guide/sdk/model-providers/google/)
 
-Use backend-only GEMINI_API_KEY and a configurable GEMINI_MODEL. Provide explicit DEMO_AI_MODE for key-free testing. Demo responses are simulations, not actual Gemini or Strands execution. The current Phase 1–4 app contains no agent implementation; this task changes documentation only.
+Use backend-only GEMINI_API_KEY and a configurable GEMINI_MODEL_ID. Provide explicit DEMO_AI_MODE for key-free testing. Demo responses are simulations, not actual Gemini or Strands execution. The preserved Phase 1–4 foundation now has the Phase 5 agent integration; live execution is not claimed without a successful provider request.
 
 ---
 
@@ -584,7 +588,7 @@ Clearly distinguish execution states: Gemini-generated advice (actual successful
 
 A tanker proposal appears only when real or clearly labeled simulated records and tested backend selection/routing exist in Phase 6. Unknown delivery history is unknown, not "no recent delivery." Approve Allocation requires the later workflow and authorization.
 
-The working Phase 4 UI has an inactive AI-labeled placeholder. This documentation task leaves its code untouched and starts no Phase 5 development.
+Phase 5 replaces the historical Phase 4 placeholder with the implemented role selector, recommendation, evidence, missing-input and human-review panel.
 
 ---
 
@@ -615,6 +619,8 @@ Recommended:
 # 24. CITIZEN FRONTEND
 
 Create a clean mobile-first citizen experience.
+
+Phase 6.5 adds `/register` and `/citizen/login`, requires a citizen session for report submission and provides account-owned `/my-reports`. Public landing/aggregate alerts and explicit non-production fictional report views remain accessible. Registration collects name/email/password only; contact and identity are unverified.
 
 Home:
 
@@ -808,6 +814,8 @@ auditLogs
 
 # 31. USER MODEL
 
+The current User model stores name, unique normalized email, server-assigned role, private scrypt passwordHash, disabled state and nullable emailVerifiedAt. Public responses omit passwordHash and expose emailVerified. Phone is an optional future field, not collected by Phase 6.5. The illustrative shape below is not a registration request; public registration rejects role and verification fields.
+
 {
   "_id": "...",
   "name": "Demo Citizen",
@@ -829,9 +837,11 @@ OPERATOR
 
 # 32. REPORT MODEL
 
+Current ownership uses immutable `ownerId` from authenticated backend identity. It is nullable only for preserved ownerless legacy/imported/demo records. Internal reporterKeyHash and submissionId support existing duplicate/idempotency logic and are never public ownership credentials.
+
 {
   "_id": "...",
-  "userId": "...",
+  "ownerId": "...",
   "location": {
     "lat": 19.9975,
     "lng": 73.7898
@@ -975,10 +985,11 @@ Recommendation metadata separates deterministic rule version/source evidence/ass
 Preserve existing REST routes and authorization. Routes below are phase-scoped targets, not claims that all endpoints already exist. README must identify the actually implemented API subset.
 
 ## Authentication
+POST /api/auth/register — public strict citizen registration; server-assigned CITIZEN
 POST /api/auth/login
 GET /api/auth/me
 POST /api/auth/logout
-Public registration is not implemented in Phase 4 and is not needed for decision support.
+Phase 6.5 reuses existing sessions across CITIZEN, ADMIN and OPERATOR without public administrative/operator registration. New reports require a CITIZEN session; private list/detail use backend-derived ownership. ADMIN-only GET /api/dashboard/reports and GET /api/dashboard/reports/:id provide private source/contact/evidence review with explicit verification uncertainty.
 
 ## Reports
 POST /api/reports
@@ -994,13 +1005,11 @@ GET /api/shortages/:id/severity
 POST /api/shortages/:id/calculate-severity — admin only
 POST /api/shortages/:id/verify — later verification workflow
 
-## Agent-Assisted Decision Support — planned Phase 5
-POST /api/recommendations/prioritize
-GET /api/recommendations/:id
-Use structured evidence, deterministic rules, source/method metadata and admin authorization. These planned routes return backend facts plus separately labeled Strands/Gemini advice or demo simulation and must not allocate or dispatch resources. Provider failures are explicit without breaking deterministic facts.
+## Agent-Assisted Decision Support
+Phase 5 uses the /api/ai/* routes below; there is no persisted recommendation-history API. Future POST /api/recommendations/prioritize or GET /api/recommendations/:id routes require separate authorization and must not duplicate business logic.
 
-## Four-role agent invocation — planned, not current endpoints
-POST /api/ai/detect, POST /api/ai/allocate, POST /api/ai/logistics and POST /api/ai/predict invoke the corresponding read-only assessment roles through protected Express APIs. Route names do not authorize resource allocation, dispatch or prediction generation. Use validated inputs, admin authorization, rate limits and explicit mode/provenance. Later backend tools remain unavailable until their operational/prediction phase. Avoid duplicate implementations when the recommendations API can orchestrate a role.
+## Four-role agent invocation — implemented Phase 5
+POST /api/ai/detect, POST /api/ai/allocate, POST /api/ai/logistics and POST /api/ai/predict invoke the corresponding read-only assessment roles through protected Express APIs. Route names do not authorize resource allocation, dispatch or prediction generation. Use validated inputs, admin authorization, rate limits and explicit mode/provenance. Later backend tools remain unavailable until their operational/prediction phase. POST /api/ai/recommend-allocation aliases the Resource Allocation implementation. Requests accept optional eventId and demo only; callers cannot supply numeric facts or prompts.
 
 ## Tankers — later operations phase
 GET /api/tankers
@@ -1122,7 +1131,7 @@ Unavailable data stays unknown. Inactive extension points are visibly identified
 
 # 44. DEMO DATA
 
-Use deterministic seed inputs and fictional data with explicit simulation labels. Current Phase 3/4 data contains five areas and 66 reports, plus simulated environmental/incident context and derived shortage events. Do not expand or change these working seeds in this documentation task.
+Use deterministic seed inputs and fictional data with explicit simulation labels. Current Phase 3/4 data contains five areas and 66 reports, plus simulated environmental/incident context and derived shortage events. Phase 5 preserves these working seed inputs.
 
 Later authorized operations/prediction phases may add more areas, simulated tankers, supply history, allocations, deliveries and historical trend inputs. Their outputs must be calculated by the implemented business rules, not seeded as final severity/confidence/risk/recommendation values.
 
@@ -1144,15 +1153,16 @@ Available tankers, assignment, route/ETA, previous delivery and predicted risk r
 
 # 46. END-TO-END DEMO FLOW
 
-## Currently working Phase 1–4 walkthrough
+## Currently working Phase 1–5 walkthrough
 1. Citizen submits a household report; the API stores it in MongoDB.
 2. Existing clustering, exclusion handling and confidence calculations update a shortage event.
 3. Backend calculates deterministic severity and approximate population from evidence.
 4. Administrator signs in, inspects map/table, confidence, severity breakdown, report counts, unknown inputs, activity and analytics.
-5. Show labeled seeded scenarios separately from live citizen evidence. The current recommendation placeholder, fleet/delivery values and forecast values must be described as inactive/unknown where applicable.
+5. Show labeled seeded scenarios separately from live citizen evidence. Phase 5 recommendations identify demo simulation versus actual Gemini execution independently of the evidence source. Fleet/delivery and forecast values remain unknown where unavailable.
+
+6. Phase 5 generates backend deterministic priority facts plus Strands/Gemini explanations or explicitly labeled demo simulation, with source evidence and assumptions. Real Gemini execution requires a server-side key, not AWS CLI credentials. No dispatch occurs here.
 
 ## Planned later-phase complete flow
-6. Phase 5 generates backend deterministic priority facts plus Strands/Gemini explanations or explicitly labeled demo simulation, with source evidence and assumptions. Real Gemini execution requires a server-side key, not AWS CLI credentials. No dispatch occurs here.
 7. The later operations phase checks actual or explicitly simulated fleet feasibility, administrator approval and audit records before assigning a tanker.
 8. Operator progresses ASSIGNED → EN_ROUTE → ARRIVED, with calculated distance and clearly estimated ETA.
 9. OTP/QR verification and recorded delivered litres update delivery/operational metrics. People served is approximate unless separately verified; do not infer exact people served from tanker capacity.
@@ -1165,7 +1175,7 @@ Only show steps whose phases have actually been implemented and tested. Future a
 
 # 47. AWS REQUIREMENT — ACTUAL APPLICATION DEPLOYMENT
 
-Satisfy the AWS requirement through real hosting of the functioning application, with public frontend/backend tests and evidence in the final video. Merely naming an AWS product, setting AWS environment variables or using a mock does not satisfy it. Deployment is not completed by this documentation task.
+Satisfy the AWS requirement through real hosting of the functioning application, with public frontend/backend tests and evidence in the final video. Merely naming an AWS product, setting AWS environment variables or using a mock does not satisfy it. Phase 5 does not deploy the application.
 
 Preferred frontend: AWS Amplify Hosting for the existing React/JavaScript/Vite static build. Preferred backend: AWS App Runner for Node.js/Express, conditional on target-account eligibility and compatibility. MongoDB Atlas may remain external; a database migration is not required.
 
@@ -1493,15 +1503,15 @@ aquashield/
 ├── .env.example
 └── package.json
 
-If supported SDK integration requires TypeScript, keep all .ts sources, tsconfig, dependencies and compiled JavaScript output confined to apps/agents. The main .js/.jsx applications consume validated JSON contracts; do not add packages/types or convert application scripts. If JavaScript integration is supported, do not add TypeScript unnecessarily. One isolated service may host all four roles. No new service or dependencies are created in this documentation task.
+If supported SDK integration requires TypeScript, keep all .ts sources, tsconfig, dependencies and compiled JavaScript output confined to apps/agents. The main .js/.jsx applications consume validated JSON contracts; do not add packages/types or convert application scripts. If JavaScript integration is supported, do not add TypeScript unnecessarily. Phase 5 uses the supported JavaScript SDK exports inside apps/api/src/services/ai; no separate service or TypeScript application is needed.
 
 ---
 
 # 64. ENVIRONMENT VARIABLES
 
-Existing active configuration and .env.example remain unchanged during this documentation task. Preserve NODE_ENV, PORT, MONGODB_URI/timeouts, exact CORS_ORIGIN, public VITE_API_BASE_URL, ADMIN_SESSION_HOURS, provisioning and deterministic weights/thresholds. Current sessions do not use JWT_SECRET.
+Phase 5 extends existing configuration and .env.example with backend-only Gemini and demo settings. Preserve NODE_ENV, PORT, MONGODB_URI/timeouts, exact CORS_ORIGIN, public VITE_API_BASE_URL, ADMIN_SESSION_HOURS, provisioning and deterministic weights/thresholds. Current sessions do not use JWT_SECRET.
 
-Future authorized agent implementation adds/validates server-only AI_PROVIDER=gemini, GEMINI_API_KEY (blank in examples), configurable GEMINI_MODEL, DEMO_AI_MODE=false by default, and bounded provider/tool timeout/retry settings. Prefer the explicit Google provider; legacy STRANDS_MODE is not a provider selector. The unchanged template's AI_PROVIDER=bedrock is inactive legacy configuration, not the new intended default. Correct it only in the authorized implementation phase. BEDROCK_MODEL_ID/AWS model credentials are optional and not required for MVP Gemini use.
+Phase 5 validates server-only AI_PROVIDER=gemini, GEMINI_API_KEY (blank in examples), configurable GEMINI_MODEL_ID, DEMO_AI_MODE=false when absent (the local .env.example explicitly uses true), and bounded provider/tool timeout/retry settings. Prefer the explicit Google provider; legacy STRANDS_MODE is not a provider selector. The updated template selects AI_PROVIDER=gemini. Older ignored .env files may still contain AI_PROVIDER=bedrock; update those locally before real execution. BEDROCK_MODEL_ID/AWS model credentials are optional and not required for MVP Gemini use.
 
 With DEMO_AI_MODE=true, allow a missing Gemini key and make no provider calls. With demo mode false, a missing key, incompatible model or failed provider returns an explicit agent-unavailable/error state; do not silently simulate, default to Bedrock or break the existing deterministic application. Live Gemini verification requires a real backend key, but offline tests must not.
 
@@ -1537,11 +1547,11 @@ Later phases test allocation/approval/OTP/delivery, deterministic risk, public A
 
 # 67. README AND DEMO DOCUMENTATION
 
-Document implemented versus planned capabilities honestly: current JavaScript app, existing APIs/auth/setup/tests, deterministic calculations and remaining limitations. Phase 1–4 has an inactive AI placeholder, not Strands/Gemini execution.
+Document implemented versus planned capabilities honestly: current JavaScript app, existing APIs/auth/setup/tests, deterministic calculations and remaining limitations. Phase 5 replaces the Phase 4 placeholder with the four-role panel. Demo and automated integration tests pass; complete live Gemini assessment remains unverified after Google provider unavailability.
 
-Describe the planned Strands/Gemini four-role architecture, server-only key/model configuration, isolated TypeScript exception if required, deterministic ownership of every numeric value, human approval and real versus demo provenance. Bedrock belongs under Optional Future Enhancements, not the MVP setup prerequisites. DEMO_AI_MODE tests without a key; it does not prove real Gemini execution. AWS CLI authentication is a separate later deployment issue.
+Describe the implemented Strands/Gemini four-role architecture, server-only key/model configuration, JavaScript integration, deterministic ownership of every numeric value, human review and real versus demo provenance. Bedrock belongs under Optional Future Enhancements, not the MVP setup prerequisites. DEMO_AI_MODE tests without a key; it does not prove real Gemini execution. AWS CLI authentication is a separate later deployment issue.
 
-Only document installed packages, working commands/routes, tested model/version and live execution after implementation. Explain unchanged legacy .env.example entries without presenting them as the new strategy. Never show secrets or private citizen data in screenshots/prompts.
+Only document installed packages, working commands/routes, tested model/version and live execution supported by evidence. Explain that older ignored .env files may need AI_PROVIDER=gemini; the current .env.example reflects the new strategy. Never show secrets or private citizen data in screenshots/prompts.
 
 AWS documentation records compatibility/account access, chosen services, actual tested URLs and deployment status; local model execution is not AWS deployment proof. Preserve historical test reports and current seed values instead of inventing new verification results.
 
@@ -1608,7 +1618,7 @@ Prepare a truthful story for the implementation actually completed at recording 
 
 0:50–1:15: Inspect Panchavati and other zones, actual backend severity, approximate population and unknown inputs. Use current calculated values rather than requiring 91/100, 94% or ~620.
 
-1:15–1:45: After Phase 5 is implemented, show backend deterministic facts/ranking and separately labeled real Strands/Gemini advice or DEMO_AI_MODE simulation, fairness assumptions and human review. Before then, explicitly show the inactive placeholder.
+1:15–1:45: Show backend deterministic facts/ranking and separately labeled Strands/Gemini advice only after a successful real request, or DEMO_AI_MODE simulation, fairness assumptions and human review. State that live execution is unverified when no successful real request has been recorded.
 
 1:45–2:10: After operations are implemented, show administrator approval, feasible assignment, status progression and estimated route/ETA. Otherwise label this as future work.
 
@@ -1654,7 +1664,7 @@ This should be reflected in both the UI and README architecture diagram.
 
 Prefer: estimated/approximate affected population, shortage confidence, deterministic severity, explainable recommendation, recommended allocation, human approval, deterministic early-warning risk, simulated evidence and unknown input.
 
-Use "Gemini-generated advice via Strands" only after verified actual provider execution. Label DEMO_AI_MODE output "Demo AI simulation — no Gemini execution." The current placeholder is inactive. Ranking, numeric recommendations, fairness penalties and risk calculations remain labeled deterministic backend results.
+Use "Gemini-generated advice via Strands" only after verified actual provider execution. Label DEMO_AI_MODE output "Demo AI simulation — no Gemini execution." The Phase 5 panel shows its execution mode and waits for an explicit assessment request. Ranking and available numeric calculations remain labeled deterministic backend results; missing fairness/risk inputs remain unknown.
 
 Avoid unsupported claims of exact affected population, exact remaining water, perfect prediction, autonomous water distribution, real agent execution or completed AWS deployment. Identify the actual method and current phase honestly.
 
@@ -1662,7 +1672,7 @@ Avoid unsupported claims of exact affected population, exact remaining water, pe
 
 # 74. IMPLEMENTATION ORDER
 
-Latest phase-specific prompts control scope. Phases 1–4 are complete and must be preserved. This task updates documentation only and starts no development/deployment.
+Latest phase-specific prompts control scope. Phases 1–5 are preserved; Phase 6 implements fair allocation and tanker/operator assignment only. The latest Phase 6 request supersedes the older phase grouping below: routing, trip controls and delivery verification belong to Phase 7 and are not implemented. Remaining prediction, verification, documentation and AWS work stays deferred to explicit authorization. Complete live Gemini assessment remains unverified after provider failures. Stop after Phase 6; no deployment.
 
 ## PHASE 1 — Foundation (complete)
 React/JavaScript/Vite, Express/JavaScript, MongoDB/Mongoose, configuration, routing/layout, health and errors.
@@ -1676,14 +1686,17 @@ Geographic/time clustering, duplicate/suspicious handling, events, verification 
 ## PHASE 4 — Admin dashboard and map (complete)
 Authentication/authorization, KPIs/map/table/details, analytics/activity, responsive/error states and inactive AI extension point.
 
-## PHASE 5 — Strands/Gemini agents and explainable recommendations (NEXT, not started)
+## PHASE 5 — Strands/Gemini agents and explainable recommendations (implemented; live verification pending)
 Implement all four role definitions, explicit Google provider, server-only key/configuration, validated read-only tools/contracts, deterministic priority/fairness evidence, agent explanations, provenance, DEMO_AI_MODE and real Gemini smoke verification. Prefer JavaScript; isolate TypeScript to apps/agents only if required by supported SDK integration. Logistics/Early Warning must report unavailable later-phase tools, without inventing outputs. No tanker assignment, dispatch, delivery or new prediction workflow. No AWS CLI/Bedrock prerequisite. Run regressions, test both modes and stop.
 
-## PHASE 6 — Tanker allocation, logistics and verified delivery (later)
-Backend fleet/feasibility/selection, deterministic distance/ETA, Logistics/Resource Allocation explanations, explicit human approval/audit, operator status, OTP/QR and recorded litres. Agents never authorize dispatch.
+## PHASE 6 — Fair allocation and tanker operations (implemented)
+Persisted validated tanker management, existing deterministic severity/fairness-based priority, source-attributed demand/previous-day delivery context, eligible-candidate selection, optional existing Resource Allocation Agent explanation, explicit approval/rejection and atomic assignment, actor/evidence audits and private operator assignment visibility. Unknown values remain unknown; demo operations are explicitly simulated. Separate recommendation, approval and assignment actions revalidate current facts. No routing, trip transitions, delivery completion, OTP/QR, forecast or AWS work. See docs/phase6.md for APIs, reproducible scenarios, tests and limitations.
 
-## PHASE 7 — Deterministic early warning and operational analytics (later)
-Implement predictionEngine with configurable trend/supply/environment/incident/history signals, backend risk/horizon and uncertainty; connect Early Warning explanations and preparation advice. Add evidence-based operational/fairness analytics. No model-calculated risk.
+## PHASE 6.5 — Citizen authentication and report ownership (implemented)
+Public server-assigned CITIZEN registration, shared login/current-user/logout, account-owned reporting/history/status, strict role/owner authorization and ADMIN-only reporter/evidence review. Preserve ownerless legacy/demo records, account/contact verification uncertainty and existing Phases 1–6. Reuse existing password hashing, sessions, rate limits and CORS. No email/SMS verification, AI provider changes, AWS deployment or Phase 7 work. See docs/phase65.md for APIs, setup, tests and limitations.
+
+## PHASE 7 — Routing, trips and delivery verification (not started)
+Reserved by the latest Phase 6 scope for route display, trip controls, arrival, delivery OTP/QR, recorded delivered litres and trip transitions. Implement only after separate authorization. Deterministic early-warning prediction and operational analytics remain later requirements, not Phase 6 functionality; preserve the specified backend risk model and uncertainty without inventing a revised complete phase plan.
 
 ## PHASE 8 — Full verification, hardening and separate AWS deployment (later)
 Full regressions/security/agent-boundary tests, account authentication/eligibility, runtime/build/network/secret compatibility including any isolated agent service, Amplify plus eligible App Runner or justified AWS alternative, Atlas and public auth/report/dashboard/persistence/agent checks. Gemini remains the selected real provider; Bedrock is optional.
@@ -1716,7 +1729,7 @@ Strands/Gemini agents explain those facts, assess missing evidence and propose a
 
 Implemented demo operations must work without manual MongoDB edits. Preserve current citizen submission, seed:demo, detection, severity inspection, admin map/detail and history workflows.
 
-As later phases are authorized, add tested UI actions for requesting Strands/Gemini advice from deterministic recommendations (with explicit real/demo labels), approving feasible allocations, assigning tankers, progressing trips, verifying/completing delivery and generating deterministic risk. A safe fictional-data reset belongs to a later implemented demo workflow, not a falsely documented current command.
+Phase 6 now provides tested admin UI actions for recommendations, explicit approval/rejection and assignment, plus a safe owned-fictional-operations reset and operator visibility. The original report-only seed command is unchanged. Trip progression, delivery verification/completion and deterministic risk generation remain deferred. Follow docs/phase6.md; do not claim a complete allocation-to-delivery workflow.
 
 The final complete demo should run from the UI against tested backend/database services. Show the actual method and label fictional/approximate/unknown inputs. Backend numeric facts can be inspected without a key. Show successful actual Gemini calls before claiming real AI; use DEMO_AI_MODE for clearly labeled key-free simulations, not proof of provider execution.
 
@@ -1752,7 +1765,7 @@ Inspect the repository and current authorized phase. Phase 1–4 code already ex
 
 For a genuinely empty repository, initialize JavaScript workspaces, React/Vite, Express, MongoDB, shared JavaScript constants, environment validation and a basic citizen → report → dashboard flow before later modules. Do not require shared TypeScript types. Any technically required Strands TypeScript integration is isolated to the server-side agent service in its authorized phase.
 
-For subsequent explicitly authorized implementation: reuse working services, build only that phase, run relevant application/tests, fix regressions, report actual results and stop. This documentation update does not authorize Phase 5 implementation or deployment.
+For subsequent explicitly authorized implementation: reuse working services, build only that phase, run relevant application/tests, fix regressions, report actual results and stop. Phase 6 authorization does not authorize Phase 7 or deployment. Preserve all 12 override rules.
 
 ---
 

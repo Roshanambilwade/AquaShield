@@ -23,17 +23,26 @@ export function demoAdvice(role, facts) {
     priorityRef: role === "allocate" ? facts.priorityRef : null,
     evidenceRefs: [role === "allocate" ? facts.priorityRef : facts.selectedRef],
     reasons:
-      role === "allocate"
+      role === "allocate" && facts.allocationContext
         ? [
-            "Backend severity and duration determine the evidence ordering.",
-            "Fairness-adjusted priority remains unknown without verified demand volume.",
+            "The backend has ranked current shortages using severity and available verified fairness evidence.",
+            facts.fleet?.length
+              ? "The recommended fleet candidate passed backend water, availability, freshness and operator checks."
+              : "No eligible fleet candidate is available; collect current operational evidence.",
           ]
-        : [
-            "Only recorded evidence supports this assessment.",
-            "Missing operational or historical inputs require follow-up.",
-          ],
+        : role === "allocate"
+          ? [
+              "Backend severity and duration determine the evidence ordering.",
+              "Fairness-adjusted priority remains unknown without verified demand volume.",
+            ]
+          : [
+              "Only recorded evidence supports this assessment.",
+              "Missing operational or historical inputs require follow-up.",
+            ],
     fairnessConsiderations:
-      "Unknown delivery history cannot be interpreted as no previous delivery. Confirm demand and prior emergency support before allocation.",
+      facts.allocationContext && selected.allocationPriority != null
+        ? "The backend adjusted priority using documented demand and previous delivery quantities. Severity is unchanged; review missing evidence for competing areas before approval."
+        : "Unknown delivery history cannot be interpreted as no previous delivery. Confirm demand and prior emergency support before allocation.",
     missingInformation: [],
   };
 }

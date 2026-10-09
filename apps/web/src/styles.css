@@ -87,6 +87,7 @@ main:focus {
 }
 .site-header nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 28px;
   font-size: 14px;
   color: #536763;

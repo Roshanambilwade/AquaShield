@@ -10,6 +10,7 @@ const schema = new mongoose.Schema(
     },
     passwordHash: { type: String, required: true, select: false },
     disabled: { type: Boolean, default: false },
+    emailVerifiedAt: { type: Date, default: null },
   },
   { timestamps: true, strict: "throw", autoCreate: false, autoIndex: false },
 );

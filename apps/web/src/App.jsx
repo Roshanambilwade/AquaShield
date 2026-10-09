@@ -2,7 +2,8 @@ import { Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import StatusPage from "./pages/StatusPage.jsx";
-import WorkspacePage from "./pages/WorkspacePage.jsx";
+import OperatorPage from "./pages/OperatorPage.jsx";
+import OperationsPage from "./pages/OperationsPage.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
 import ReportPage from "./pages/ReportPage.jsx";
 import ReportHistoryPage from "./pages/ReportHistoryPage.jsx";
@@ -13,6 +14,8 @@ import ShortageStatusPage from "./pages/ShortageStatusPage.jsx";
 import AdminLayout from "./components/AdminLayout.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import AnalyticsPage from "./pages/AnalyticsPage.jsx";
+import RegisterPage from "./pages/RegisterPage.jsx";
+import ReportReviewPage from "./pages/ReportReviewPage.jsx";
 
 export default function App() {
   return (
@@ -25,18 +28,21 @@ export default function App() {
         <Route path="report/:id" element={<ReportStatusPage />} />
         <Route path="my-reports" element={<ReportHistoryPage />} />
         <Route path="login" element={<LoginPage />} />
+        <Route path="citizen/login" element={<LoginPage citizen />} />
+        <Route path="register" element={<RegisterPage />} />
         <Route path="admin" element={<AdminLayout />}>
           <Route index element={<ShortagesPage admin />} />
           <Route path="shortages" element={<ShortagesPage admin />} />
           <Route path="shortages/:id" element={<ShortageStatusPage admin />} />
           <Route path="analytics" element={<AnalyticsPage />} />
+          <Route path="tankers" element={<OperationsPage fleetOnly />} />
+          <Route path="allocations" element={<OperationsPage />} />
+          <Route path="reports" element={<ReportReviewPage />} />
+          <Route path="reports/:id" element={<ReportReviewPage />} />
         </Route>
         <Route path="alerts" element={<ShortagesPage />} />
         <Route path="alerts/:id" element={<ShortageStatusPage />} />
-        <Route
-          path="operator"
-          element={<WorkspacePage audience="Tanker operator" />}
-        />
+        <Route path="operator" element={<OperatorPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

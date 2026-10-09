@@ -305,3 +305,16 @@
     width: 100%;
   }
 }
+.citizen-session {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  padding-block: 1rem;
+}
+.reporter-source {
+  border-left: 3px solid #87b6a4;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  overflow-wrap: anywhere;
+}

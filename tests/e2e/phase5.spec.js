@@ -153,7 +153,7 @@ test("missing configuration and empty evidence are honest; public pages expose n
   const panel = page.getByLabel("AquaShield AI recommendation");
   await panel.getByRole("button", { name: "Generate recommendation" }).click();
   await expect(panel.getByRole("alert")).toContainText("Set backend");
-  await page.route("**/api/shortages?demo=true", (route) =>
+  await page.route("**/api/dashboard/shortages?demo=true", (route) =>
     route.fulfill({
       json: {
         success: true,

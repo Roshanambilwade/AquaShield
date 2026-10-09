@@ -2,9 +2,9 @@
 
 An intelligence and decision layer for emergency water management, by **AquaSentinels** for Environmental Hacks — Heat & Water Track.
 
-**Phases 1–4 are implemented.** The overrides at the top of [AQUASHIELD_SPEC.md](AQUASHIELD_SPEC.md) and the requested phase scope take precedence over the full MVP requirements. Implementation stops after the Phase 4 admin dashboard and map. See [Phase 4 setup and verification](docs/phase4.md) and [Phase 3 calculations](docs/phase3.md).
+**Phases 1–6 and Phase 6.5 are implemented; complete live Gemini execution remains unverified.** Phase 6.5 adds citizen registration/sign-in, account-owned report tracking and officer-only reporter review using existing authentication. It stops before Phase 7. See [Phase 6.5 setup, security, APIs and file inventory](docs/phase65.md), [Phase 6](docs/phase6.md), [Phase 5](docs/phase5.md), [Phase 4](docs/phase4.md) and [Phase 3 calculations](docs/phase3.md).
 
-**Strategy:** AWS will host the functioning application; it is not a mandatory AI/LLM provider. The next authorized phase integrates Strands Agents SDK with Google Gemini for Crisis Detection, Resource Allocation, Logistics and Early Warning. All numeric facts remain deterministic backend calculations. Bedrock is optional; unavailable local AWS CLI authentication does not block Gemini. No Phase 5 development or AWS deployment has been performed by this documentation update. See the [honest demo guide](docs/demo.md).
+**Strategy:** AWS will host the functioning application; it is not a mandatory AI/LLM provider. Phase 5 integrates Strands Agents SDK with Google Gemini for Crisis Detection, Resource Allocation, Logistics and Early Warning. All numeric facts remain deterministic backend calculations. Bedrock is optional; unavailable local AWS CLI authentication does not block Gemini. Demo mode and SDK wiring are tested. A live model-access check succeeded, but generation returned Google HTTP 503; a complete live assessment remains unverified. AWS deployment has not been performed. See the [honest demo guide](docs/demo.md).
 
 ## Completed
 
@@ -16,7 +16,7 @@ An intelligence and decision layer for emergency water management, by **AquaSent
 - API/configuration tests, a read-only real MongoDB integration test, and desktop/mobile browser tests.
 - Citizen reporting with device location capture, manual coordinates, or an explicitly approximate locality center.
 - Household problem type, supply time, approximate shortage duration, water level, household size, and optional description/photo.
-- MongoDB Report model, Zod validation, anonymous browser-owned history, and report confirmation/status pages.
+- MongoDB Report model, Zod validation, citizen account-owned history, and report confirmation/status pages; legacy anonymous records remain preserved.
 - Size-limited JPEG/PNG photos, validated and re-encoded by Sharp with metadata removed; submission rate limiting.
 - Repeatable simulated report seeding and real persistence tests, including reconnects and safe submission retries.
 - Geographic/time clustering, duplicate/suspicious evidence handling, persisted shortage events and independently counted verified reports.
@@ -24,7 +24,9 @@ An intelligence and decision layer for emergency water management, by **AquaSent
 - Municipal shortage overview with an offline geographic zone map, LOW/MEDIUM/HIGH/CRITICAL badges, emerging evidence and inspectable calculation tables.
 - Administrator provisioning, password hashing, expiring MongoDB sessions, role authorization and server-side logout.
 - Protected command center with eight KPI cards, OpenStreetMap/Leaflet plus offline map fallback, private report layers, event filters/details, activity and evidence analytics.
-- Explicit unknown operational values and an inactive AI-labeled placeholder in the current UI; no LLM execution, fleet, allocation, dispatch, delivery or forecasting workflow. The next phase will implement Strands/Gemini explanations around deterministic recommendations when explicitly authorized; no agents execute currently.
+- Four Strands/Gemini agent roles, protected read-only APIs and a responsive recommendation panel with backend numeric evidence, source references, missing inputs and human-review status.
+- Explicit key-free demo simulation, real-provider configuration/errors, bounded calls and validated output. Complete live Google assessment remains unverified after provider unavailability.
+- Persisted tanker management, source-attributed fairness evidence, deterministic eligible-candidate selection, explicit approval/rejection/assignment, audit snapshots, concurrency checks and private operator assignment views. Trip/dispatch controls, delivery and numeric forecasting remain later work.
 
 ## Running locally
 
@@ -46,6 +48,7 @@ The API stays reachable if MongoDB is unavailable; `/api/health` returns **503**
 npm run lint
 npm test
 npm run test:mongo
+npm run test:ai:live
 npm run build
 npm run test:e2e
 npm run test:dev-origins
@@ -53,19 +56,23 @@ npm run seed:demo
 npm run admin:create
 ```
 
-`test:mongo` requires a reachable MongoDB. The Phase 1 health test is read-only; Phase 2 persistence tests use a uniquely named temporary database and remove only that database afterward. Override their server URI with `MONGODB_TEST_URI` if needed. Browser tests use the configured application database, ensure the simulated demo reports exist, and delete only the exact non-demo report IDs they create. The labeled demo records remain available afterward.
+`test:mongo` requires reachable MongoDB. Its health check is read-only; all mutating suites use generated UUID database names and drop only those databases. `MONGODB_TEST_URI` can select the test server. Browser fixtures and the test API share a generated, explicit test-only database; helpers verify it before account/report writes and cleanup. Final teardown verifies the exact database name before dropping it. Ordinary application records and accounts are preserved.
 
-Provision an administrator with `npm run admin:create`. Development generates a random password in the ignored `.local/admin-access.json` when `ADMIN_PASSWORD` is unset. Open `/admin` and sign in using that file. Existing accounts are never overwritten. Production provisioning requires explicit `ADMIN_EMAIL` and `ADMIN_PASSWORD` (at least 12 characters). No public registration or shared default password exists. See [Phase 4](docs/phase4.md) for session/security details and map fallback.
+Provision an administrator with `npm run admin:create`. Development generates a random password in the ignored `.local/admin-access.json` when `ADMIN_PASSWORD` is unset. Open `/admin` and sign in using that file. Existing accounts are never overwritten. Production provisioning requires explicit `ADMIN_EMAIL` and `ADMIN_PASSWORD` (at least 12 characters). No public administrator/operator registration or shared default password exists. See [Phase 4](docs/phase4.md) for session/security details and map fallback.
 
 ## Citizen report workflow
 
-1. Open `/` and choose **Report water shortage**.
+1. Register at `/register` with name, email and a password of at least 12 characters, then sign in at `/citizen/login`. Open `/` and choose **Report water shortage**. The backend assigns CITIZEN; public registration cannot create administrators or operators.
 2. Capture device location, enter coordinates, or select the approximate Panchavati locality center. Enter the actual area/locality separately if necessary. Location permission denial has a manual fallback; no map or geocoding service is required.
 3. Choose the problem, household water level, and household size (1–100). Supply time and approximate duration may remain unknown; unknown values are stored as `null`, not made up.
 4. Optionally add a description (up to 2000 characters) and a JPEG/PNG photo (up to 2 MB and 16 million input pixels). The server verifies the image, resizes it to at most 1280 × 1280, re-encodes as JPEG, and strips metadata.
 5. Submit. The API saves a MongoDB report and the confirmation shows its ID and **Pending verification** status. Open the status page or `/my-reports` to retrieve the saved report. Refreshes read MongoDB, not a frontend mock.
 
-A cryptographically random key is saved in browser local storage and sent in `X-Citizen-Token`. MongoDB stores only its SHA-256 hash. Private reports can be listed/read only with that key; knowing a report ID is insufficient. Clearing browser storage or using another browser loses access. This is anonymous access for this phase, not account authentication or cross-device history. Keep this limitation in mind before collecting real personal information.
+Citizen accounts reuse the existing scrypt password hashing and expiring, revocable MongoDB bearer sessions. The frontend retains the existing sessionStorage token key; refresh preserves the session, and sign-in from another browser retrieves account-owned history. The backend sets immutable report ownerId from authentication, never the request body. Another citizen cannot read a private report by ID. Old browser keys no longer authorize live reporting or private history; ownerless records remain preserved as legacy/imported for officer review. See [Phase 6.5](docs/phase65.md) for security assumptions and compatibility.
+
+Login routes citizens to `/my-reports`, administrators to `/admin`, and operators to `/operator`, preserving an intended destination only for that role or a public page. Shared navigation/landing links show permitted portals; direct wrong-role URLs display a denial with a return link without discarding the valid session. Account/logout is available throughout the application. Sign out and authenticate as another provisioned account to use another role. See [portal access, root cause and verification](docs/portal-access.md).
+
+Officers can review reporter names, email/contact verification state and supporting household evidence under `/admin/reports`. Names/contact/locality are user-provided; email ownership, identity and residency are not verified. No email/SMS provider, fake OTP or government ID is used. Public live clusters below the configured household threshold are withheld, coordinates of larger clusters are generalized, and household population breakdowns are suppressed. Authorized municipal views retain precise evidence. Agent snapshots omit citizen identity and household coordinates. Own history and status pages show recorded area approval/assignment without claiming household delivery. See [remediation policy and verification](docs/remediation.md).
 
 The client sends a unique `submissionId`. Retrying an unchanged submission returns the existing report instead of creating another, including concurrent retries. POST submissions are limited to 30 per connection/IP per 15 minutes with an in-process limiter; production deployments will need appropriate proxy configuration and a shared limiter.
 
@@ -97,7 +104,7 @@ The frontend build explicitly sets `NODE_ENV=production`, so the backend's devel
 | `CORS_ORIGIN`                                 | Comma-separated exact origins; no trailing slash   | Development/test: `http://localhost:5173,http://127.0.0.1:5173`; required explicitly in production |
 | `VITE_API_BASE_URL`                           | Public relative or absolute API base URL           | `/api`                                                                                             |
 | `API_PROXY_TARGET`                            | Vite dev/preview proxy target                      | `http://127.0.0.1:<PORT>`                                                                          |
-| `MONGODB_TEST_URI`                            | Optional read-only MongoDB test target             | `MONGODB_URI`                                                                                      |
+| `MONGODB_TEST_URI`                            | Optional MongoDB test server; mutating suites use isolated UUID databases             | `MONGODB_URI`                                                                                      |
 | `ADMIN_SESSION_HOURS`                         | Admin session lifetime, 0.1–24 hours               | `8`                                                                                                |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | Provisioning command only; password ≥12 characters | Development can generate credentials; production requires email/password                           |
 
@@ -107,53 +114,64 @@ Only variables prefixed with `VITE_` are exposed to the browser. Never use that 
 
 Use `CORS_ORIGIN=http://localhost:5173,http://127.0.0.1:5173` in the root `.env` for the default development server. These are distinct browser origins, even though both refer to this computer. Explicit environment values replace the defaults; add any different frontend port or host to that list. Restart the API after changing it. Production requires an explicit list such as `CORS_ORIGIN=https://your-frontend.example`; local origins are never added automatically in production.
 
-Keep `VITE_API_BASE_URL=/api` for the Vite proxy. The proxy preserves the browser's Origin on report POST requests, so its backend target is not the frontend origin to allow. CORS runs before the report routes and handles preflights for JSON and `X-Citizen-Token`. The application uses that header for anonymous access and does not enable credentialed cross-origin cookies; no wildcard origin or credentials setting is needed.
+Keep `VITE_API_BASE_URL=/api` for the Vite proxy. The proxy preserves the browser's Origin on report POST requests, so its backend target is not the frontend origin to allow. CORS runs before routes and handles JSON/Authorization preflights with explicit origins. Authentication uses bearer sessions rather than credentialed cross-origin cookies.
 
-`npm run test:dev-origins` runs real browser submissions from both local origins on port 5173 using the normal development command and root `.env`, without overriding `CORS_ORIGIN`. Locally it reuses an existing development server; otherwise ports 5000/5173 must be free so it can start one. CI requires a fresh server. It checks HTTP 201, MongoDB persistence, confirmation/history, and removes only its own test reports. This supplements the isolated preview-server browser suite.
+`npm run test:dev-origins` starts a separate test API and Vite server, never reuses a normal development server, and uses a UUID-named test database. It checks both localhost and 127.0.0.1. Port 5173 must be free, or set `AQUASHIELD_BROWSER_DEV_PORT` to a free port (for example 5175). Existing CORS unit tests also cover both default port-5173 origins. Browser fixture guards reject ordinary databases; teardown drops only the verified test database.
 
-Current admin authentication uses opaque MongoDB sessions, not `JWT_SECRET`. Redis and Mapbox placeholders are optional. Legacy `AI_PROVIDER=bedrock`, `BEDROCK_MODEL_ID`, `STRANDS_MODE` and `DEMO_AI_MODE` entries in the unchanged `.env.example` are inactive placeholders; they neither load an SDK nor execute an agent. Changing the template/validation waits for the authorized agent phase. Report seeding and deterministic logic still work without keys.
+Current admin authentication uses opaque MongoDB sessions, not `JWT_SECRET`. Redis, Mapbox and Bedrock placeholders remain optional. Strands/Gemini use backend-only `AI_PROVIDER=gemini`, `GEMINI_API_KEY`, configurable `GEMINI_MODEL_ID`, `DEMO_AI_MODE` and bounded `AI_TIMEOUT_MS` (default 15000). `.env.example` currently uses `DEMO_AI_MODE=false`; explicitly set true for key-free simulation. Absence defaults to false. Production rejects demo AI and fictional evidence. Any legacy `.env` value `AI_PROVIDER=bedrock` must be changed to `gemini` before real execution; `STRANDS_MODE` is unused.
 
-Planned server-only configuration is `AI_PROVIDER=gemini`, `GEMINI_API_KEY` (blank in examples), configurable `GEMINI_MODEL` and `DEMO_AI_MODE=false`. Explicit demo mode enables key-free labeled simulation; real mode requires a backend key and never silently falls back to demo or Bedrock. Never use `VITE_` for the key, commit it, log it or return it to browsers. These variables are not wired into the current app. AWS deployment authentication remains separate.
+Explicit demo mode needs no key, performs no provider calls and shows “Demo AI simulation — no Gemini execution.” For real mode set `DEMO_AI_MODE=false`, a backend-only key and an account-accessible model ID, then restart. Missing configuration or provider failure returns an explicit error; there is no silent demo/Bedrock fallback. Never prefix the key with `VITE_`, commit it, log it or return it to browsers. AWS authentication is separate.
+
+`npm run test:ai:live` checks model access, then sends only fictional evidence through the actual Strands/Google provider, validates the response and prints safe stage/timing/error metadata. Missing key/model prints **SKIPPED**, not a verified result. The latest live diagnostic confirmed model access but generation returned Google HTTP 503; no complete live assessment is claimed. See [the full agent guide](docs/phase5.md).
 
 ## Routes
 
-| Frontend route               | Behavior                                                                       |
-| ---------------------------- | ------------------------------------------------------------------------------ |
-| `/`                          | Citizen landing page and base layout                                           |
-| `/report`                    | Water problem reporting form                                                   |
-| `/report/success?id=<id>`    | Persisted report confirmation                                                  |
-| `/my-reports`                | Anonymous browser-owned report history                                         |
-| `/my-reports?demo=true`      | Clearly labeled simulated report history                                       |
-| `/report/:id`                | Owner-only report details, verification status and aggregate shortage evidence |
-| `/status`                    | API/database health, loading/error states, retry                               |
-| `/login`                     | Administrator sign-in                                                          |
-| `/admin`, `/admin/shortages` | Protected command center and shortage map/table                                |
-| `/alerts`                    | Public aggregate shortage evidence; no private report/fleet layers             |
-| `/alerts/:id`                | Public aggregate detail without private assessment context                     |
-| `/admin?demo=true`           | Labeled deterministic multi-area demo                                          |
-| `/admin/shortages/:id`       | Shortage evidence and numeric calculation details                              |
-| `/admin/analytics`           | Protected evidence analytics                                                   |
-| `/operator`                  | Operator workspace placeholder                                                 |
-| Other paths                  | Friendly 404                                                                   |
+| Frontend route               | Behavior                                                                             |
+| ---------------------------- | ------------------------------------------------------------------------------------ |
+| `/`                          | Citizen landing page and base layout                                                 |
+| `/report`                    | Water problem reporting form                                                         |
+| `/report/success?id=<id>`    | Persisted report confirmation                                                        |
+| `/my-reports`                | Signed-in citizen's account-owned report history |
+| `/my-reports?demo=true`      | Clearly labeled simulated report history                                             |
+| `/report/:id`                | Owner-only report details, verification status and aggregate shortage evidence       |
+| `/status`                    | API/database health, loading/error states, retry                                     |
+| `/login`                     | Administrator sign-in                                                                |
+| `/register`, `/citizen/login` | Public citizen registration and shared-session citizen sign-in |
+| `/admin/reports`, `/admin/reports/:id` | Officer-only reporter source, contact and supporting evidence review |
+| `/admin`, `/admin/shortages` | Protected command center and shortage map/table                                      |
+| `/alerts`                    | Public aggregate shortage evidence; no private report/fleet layers                   |
+| `/alerts/:id`                | Public aggregate detail without private assessment context                           |
+| `/admin?demo=true`           | Labeled deterministic multi-area demo                                                |
+| `/admin/shortages/:id`       | Shortage evidence and numeric calculation details                                    |
+| `/admin/analytics`           | Protected evidence analytics                                                         |
+| `/admin/tankers`             | Protected fleet management and operator provisioning |
+| `/admin/allocations`         | Fair recommendations, review, approval/rejection and explicit assignment |
+| `/operator`                  | Authenticated operator's own tanker and assignments |
+| `/admin` AI panel            | Four role assessments with explicit real/demo mode, evidence and human-review status |
+| Other paths                  | Friendly 404                                                                         |
 
 | Method     | Backend route                                                              | Behavior                                                                           |
 | ---------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | GET        | `/`                                                                        | Backend identity and API link                                                      |
 | GET        | `/api`                                                                     | Phase/version and endpoint metadata                                                |
 | GET        | `/api/health`                                                              | `200` when MongoDB responds to ping; `503` otherwise                               |
-| POST       | `/api/reports`                                                             | Validate/save report; `201` new, `200` idempotent retry                            |
-| GET        | `/api/reports`                                                             | This browser's history; `page` and `limit` pagination                              |
+| POST       | `/api/reports`                                                             | CITIZEN session; validate/save account-owned report; `201` new, `200` idempotent retry |
+| GET        | `/api/reports`                                                             | CITIZEN account's history; `page` and `limit` pagination                            |
 | GET        | `/api/reports?demo=true`                                                   | Public simulated reports only                                                      |
 | GET        | `/api/reports/:id`                                                         | Owner-only details/photo, or a public demo report                                  |
 | GET        | `/api/shortages`, `/api/shortages/:id`                                     | Refresh and return public aggregates; `?demo=true` selects only simulated evidence |
 | POST       | `/api/shortages/detect`                                                    | Admin-only aggregate refresh; rate limited                                         |
 | GET / POST | `/api/shortages/:id/severity`, `/api/shortages/:id/calculate-severity`     | Public inspect / admin-only refresh of deterministic severity                      |
-| POST       | `/api/auth/login`, `/api/auth/logout`                                      | Rate-limited admin login / authenticated session revocation                        |
-| GET        | `/api/auth/me`                                                             | Validate admin session and role                                                    |
+| POST       | `/api/auth/login`, `/api/auth/logout`                                      | Rate-limited shared login / authenticated session revocation                       |
+| GET        | `/api/auth/me`                                                             | Validate current CITIZEN, ADMIN or OPERATOR session                                 |
+| POST | `/api/auth/register` | Strict public citizen registration with server-assigned role |
+| GET | `/api/dashboard/reports`, `/api/dashboard/reports/:id` | ADMIN-only source/contact and report evidence |
 | GET        | `/api/dashboard/summary`, `/api/dashboard/map`, `/api/dashboard/analytics` | Protected metrics/activity, map layers and analytics                               |
 | GET        | `/api/dashboard/shortages/:id`                                             | Protected assessment context and recorded delivery history if available            |
 
-Report POST/list require `X-Citizen-Token` (64 lowercase hexadecimal characters). All private reads are filtered by the hashed key. JSON errors remain consistent: `422` invalid report, `400` missing key, `404` unavailable report, `413` oversized payload, `429` rate limit, and `503` unavailable database. Photo contents are omitted from list/submission responses and included only in an authorized detail response.
+**Phase 5 admin-only POST endpoints:** `/api/ai/detect`, `/api/ai/allocate`, `/api/ai/logistics`, `/api/ai/predict`, `/api/ai/recommend-allocation`. Accept only optional `eventId` and boolean `demo`; the two allocation routes share one implementation. Recommendations cannot assign/dispatch resources. See [request/response and error details](docs/phase5.md#protected-apis).
+
+Live report POST/list/detail require the existing `Authorization: Bearer <session>` for a CITIZEN account. All private reads are filtered by backend-authenticated account ownership; `X-Citizen-Token` is no longer sufficient. JSON errors remain consistent: `422` invalid report, `401` missing/expired session, `403` wrong role, `404` unavailable report, `413` oversized payload, `429` rate limit, and `503` unavailable database. Photo contents are omitted from list/submission responses and included only in an authorized detail response. Public fictional reports remain available outside production through explicit demo mode.
 
 Errors use the spec's format:
 
@@ -180,23 +198,25 @@ Express routes -> health controller -> Mongoose -> MongoDB ping
 
 Backend configuration, routes, controllers, and middleware are separate modules. Frontend pages, layout, API client, and status hook are separated. There are no TypeScript application files or shared-types package.
 
-The Report collection stores citizen-provided location/locality, supply details, household size, description, sanitized optional photo, anonymous owner hash, submission ID, timestamps, pending status, and a demo flag. JavaScript report options are shared between frontend and backend in `packages/shared/reportOptions.js`; there is no TypeScript shared-types package.
+The Report collection stores citizen-provided household evidence, sanitized photo, server-assigned citizen ownerId, an internal reporter hash for duplicate detection, submission ID, timestamps, verification status and a demo flag. Legacy ownerless and demo records are retained without assigning them to real users. JavaScript report options are shared in `packages/shared/reportOptions.js`.
 
-Citizen accounts, recommendations, forecasts, allocation, dispatch and delivery workflows are deferred. Phase 4 adds User/AdminSession collections and protected read-only dashboard services that reuse Phase 3 aggregates. The operator page retains the Phase 1 placeholder. Phase 3 adds Area and ShortageEvent collections and separate deterministic clustering, confidence, population, severity and fairness helper modules. Fairness helpers require supplied delivery evidence, leave unknown history unknown, and expose no allocation workflow. The transparent early-warning model is retained in the specification for a later phase; no prediction engine runs in the current application.
+Phase 6 adds persisted fleet/allocation APIs and private operator assignments. Phase 6.5 extends existing authentication for citizens and ties report history to accounts. Scoring, fairness, agents and allocation evidence remain authoritative backend logic. Trip/dispatch controls, delivery verification and numeric forecasts remain deferred.
 
-## Planned decision support and later phases
+## Agent architecture and remaining phases
 
-| Phase    | Planned work — not implemented yet                                                                                                                                                                                                                |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 5 (next) | Four Strands/Gemini role definitions and read-only explanations of backend deterministic priority/fairness facts; server-only key, validated tools, real/demo provenance and key-free DEMO_AI_MODE; later logistics/risk tools remain unavailable |
-| 6        | Backend tanker feasibility/selection/distance/ETA, agent explanations, human-approved allocation, operator status, delivery OTP/QR and audit records                                                                                              |
-| 7        | Backend deterministic early-warning risk/horizon, Early Warning agent explanations and operational/fairness analytics                                                                                                                             |
-| 8        | Full regression verification, hardening and actual AWS deployment after compatibility checks                                                                                                                                                      |
-| 9        | Reproducible verified demo, final documentation/screenshots and deployment evidence in the video                                                                                                                                                  |
+The API pins `@strands-agents/sdk@1.20.0` and `@google/genai@2.6.0`. Node 22.21.1 was verified; no TypeScript service is required. `Agent` uses the explicit `GoogleModel` provider, Zod structured output and one read-only evidence tool. Configuration, prompts, input construction, output validation, demo simulation and provider invocation live in separate backend modules. [Official SDK](https://github.com/strands-agents/sdk-typescript), [Google provider](https://strandsagents.com/docs/user-guide/sdk/model-providers/google/)
 
-Each phase requires an explicit instruction and stops after its verification. Strands/Gemini with four roles is now a planned MVP requirement; Bedrock remains optional. Agent advice never replaces authoritative numeric calculations or human approval. Verify real Gemini execution separately from key-free demo simulations.
+Crisis Detection explains evidence/verification; Resource Allocation explains backend priority/fairness limitations; Logistics identifies missing operational inputs; Early Warning explains current/trend evidence without inventing a risk score. Backend numeric facts are authoritative. Model prose remains subject to human review, and recommendation confidence stays null rather than an invented percentage.
 
-The Node SDK supports TypeScript/JavaScript; prefer JavaScript where supported and isolate any technically required TypeScript to a backend-only agent service without converting React/Express/shared modules. Verify and pin SDK/provider/tool compatibility in implementation. [Official Node SDK](https://github.com/strands-agents/sdk-typescript), [Google provider](https://strandsagents.com/docs/user-guide/sdk/model-providers/google/)
+| Phase | Status / scope                                                                                                                                                             |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 5     | Implemented: four agent roles, protected APIs, dashboard panel, validated real-provider path and key-free demo mode. Complete live Gemini assessment remains unverified after provider unavailability. |
+| 6     | Implemented: deterministic fair allocation, fleet management, approval/rejection, atomic assignment and operator visibility. |
+| 7     | Not started: routing, trip controls and delivery verification per the latest phase-specific scope. |
+| 8     | Planned: full hardening and actual AWS deployment after compatibility/account checks.                                                                                      |
+| 9     | Planned: final demo, documentation and verified deployment evidence.                                                                                                       |
+
+Later phases require explicit authorization. Bedrock remains optional. The complete Phase 5 file inventory, API contract, limitations and test results are in [docs/phase5.md](docs/phase5.md).
 
 ## AWS deployment strategy — planned, not deployed
 
@@ -208,4 +228,4 @@ Verify the existing npm-workspace/root-lockfile build, `apps/web/dist`, Node.js 
 
 Do not claim AWS deployment from configuration placeholders, mock output or local-only screenshots. Publish actual service names, tested URLs and results only after successful public health/auth/report/dashboard/persistence checks. Bedrock calls and AWS model credentials are not required. Local Gemini integration does not prove AWS hosting; later hosting must also verify any agent-service build, protected internal boundary, Gemini outbound connectivity and backend-only secret injection. Local AWS CLI authentication is currently unavailable; verify deployment account access separately in that later phase.
 
-Implementation stops after Phase 4. Later phases require a new instruction.
+Implementation stops after Phase 6.5. No Phase 7 or deployment is authorized by this addition.

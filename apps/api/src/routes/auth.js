@@ -7,14 +7,36 @@ import {
   loginAdmin,
   logoutAdmin,
   bearerToken,
+  createCitizen,
 } from "../services/authService.js";
 import { requireAdmin } from "../middleware/admin.js";
+import { registrationInput } from "../validation/auth.js";
 export function createAuthRouter(config, databaseStatus) {
   const router = Router();
   router.use((_req, res, next) => {
     res.set("Cache-Control", "no-store");
     next();
   });
+  router.post(
+    "/register",
+    createSubmissionLimiter({ max: 10 }),
+    async (req, res) => {
+      const input = validate(
+        registrationInput,
+        req.body,
+        "Please check your registration details.",
+      );
+      if ((await databaseStatus()) !== "connected")
+        throw new ApiError(
+          503,
+          "DATABASE_UNAVAILABLE",
+          "Registration is temporarily unavailable.",
+        );
+      res
+        .status(201)
+        .json({ success: true, data: { user: await createCitizen(input) } });
+    },
+  );
   router.post(
     "/login",
     createSubmissionLimiter({ max: 10 }),
@@ -39,16 +61,26 @@ export function createAuthRouter(config, databaseStatus) {
         );
       res.json({
         success: true,
-        data: await loginAdmin(input.email, input.password, config),
+        data: await loginAdmin(input.email, input.password, config, [
+          "ADMIN",
+          "OPERATOR",
+          "CITIZEN",
+        ]),
       });
     },
   );
-  router.get("/me", requireAdmin(databaseStatus), (req, res) =>
-    res.json({ success: true, data: { user: req.admin } }),
+  router.get(
+    "/me",
+    requireAdmin(databaseStatus, ["ADMIN", "OPERATOR", "CITIZEN"]),
+    (req, res) => res.json({ success: true, data: { user: req.admin } }),
   );
-  router.post("/logout", requireAdmin(databaseStatus), async (req, res) => {
-    await logoutAdmin(bearerToken(req));
-    res.json({ success: true, data: { loggedOut: true } });
-  });
+  router.post(
+    "/logout",
+    requireAdmin(databaseStatus, ["ADMIN", "OPERATOR", "CITIZEN"]),
+    async (req, res) => {
+      await logoutAdmin(bearerToken(req));
+      res.json({ success: true, data: { loggedOut: true } });
+    },
+  );
   return router;
 }

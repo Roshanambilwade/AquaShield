@@ -1,4 +1,7 @@
 import { Link } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "../lib/authContext.js";
+import { allowedDestination, portalHome } from "../lib/portalAccess.js";
 
 const workspaces = [
   {
@@ -28,6 +31,9 @@ const workspaces = [
 ];
 
 export default function HomePage() {
+  const auth = useContext(AuthContext);
+  const citizenActions =
+    !auth.loading && (!auth.user || auth.user.role === "CITIZEN");
   return (
     <div className="page">
       <section className="hero">
@@ -47,12 +53,21 @@ export default function HomePage() {
             experiencing and track your report in one place.
           </p>
           <div className="hero-actions">
-            <Link to="/report" className="button">
-              Report water shortage <span aria-hidden="true">↗</span>
-            </Link>
-            <Link to="/my-reports" className="button button-secondary">
-              Track my report
-            </Link>
+            {citizenActions && (
+              <>
+                <Link to="/report" className="button">
+                  Report water shortage <span aria-hidden="true">↗</span>
+                </Link>
+                <Link to="/my-reports" className="button button-secondary">
+                  Track my report
+                </Link>
+              </>
+            )}
+            {auth.user && auth.user.role !== "CITIZEN" && (
+              <Link to={portalHome(auth.user.role)} className="button">
+                Open your portal
+              </Link>
+            )}
             <Link to="/alerts" className="button button-secondary">
               View active local alerts
             </Link>
@@ -80,11 +95,11 @@ export default function HomePage() {
         </div>
       </section>
       <section className="foundation-note" aria-label="Project availability">
-        <span className="phase-badge">Phase 4</span>
+        <span className="phase-badge">Phases 1–6.5</span>
         <p>
           Citizen reporting and shortage evidence are available. Municipal teams
-          can sign in to the command center. Emergency response operations will
-          arrive in later phases.
+          can review evidence, approve allocations and assign eligible tankers.
+          Trips, delivery verification and forecasts remain future work.
         </p>
       </section>
       <section className="workspace-section" aria-labelledby="workspace-title">
@@ -93,19 +108,26 @@ export default function HomePage() {
           <h2 id="workspace-title">Connected by a common need.</h2>
         </div>
         <div className="workspace-grid">
-          {workspaces.map((workspace) => (
-            <article className="workspace-card" key={workspace.number}>
-              <div className="card-top">
-                <span>{workspace.label}</span>
-                <span className="card-number">{workspace.number}</span>
-              </div>
-              <h3>{workspace.title}</h3>
-              <p>{workspace.text}</p>
-              <Link to={workspace.to}>
-                {workspace.action} <span aria-hidden="true">↗</span>
-              </Link>
-            </article>
-          ))}
+          {workspaces
+            .filter(
+              (workspace) =>
+                !auth.loading &&
+                (!auth.user ||
+                  allowedDestination(auth.user.role, workspace.to)),
+            )
+            .map((workspace) => (
+              <article className="workspace-card" key={workspace.number}>
+                <div className="card-top">
+                  <span>{workspace.label}</span>
+                  <span className="card-number">{workspace.number}</span>
+                </div>
+                <h3>{workspace.title}</h3>
+                <p>{workspace.text}</p>
+                <Link to={workspace.to}>
+                  {workspace.action} <span aria-hidden="true">↗</span>
+                </Link>
+              </article>
+            ))}
         </div>
       </section>
     </div>

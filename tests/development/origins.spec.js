@@ -6,8 +6,15 @@ import {
 } from "../../apps/api/src/config/database.js";
 import Report from "../../apps/api/src/models/Report.js";
 import { detectShortages } from "../../apps/api/src/services/shortageService.js";
+import { prepareBrowserCitizen } from "../helpers/citizen.js";
 
 const createdIds = [];
+const citizens = [];
+test.beforeEach(async ({ page }) => {
+  const citizen = await prepareBrowserCitizen();
+  citizens.push(citizen);
+  await citizen.signIn(page);
+});
 test.beforeAll(async () => {
   await connectDatabase(loadEnv());
 });
@@ -15,6 +22,7 @@ test.afterAll(async () => {
   if (createdIds.length)
     await Report.deleteMany({ _id: { $in: createdIds }, isDemo: false });
   await detectShortages(loadEnv());
+  for (const citizen of citizens) await citizen.cleanup();
   await disconnectDatabase();
 });
 

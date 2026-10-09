@@ -6,7 +6,7 @@ export function estimateAffectedPopulation(
   area,
   config = detectionConfig(),
 ) {
-  // One contribution per anonymous key. Never treat repeated reports as people.
+  // One contribution per reporter key. Never treat repeated reports as people.
   const households = [
     ...new Map(reports.map((r) => [r.reporterKeyHash, r])).values(),
   ];

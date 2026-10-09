@@ -39,7 +39,7 @@ export async function getHealth(signal) {
   }
   return payload;
 }
-import { getCitizenToken } from "./citizen.js";
+import { adminHeaders, ADMIN_TOKEN_KEY } from "./adminApi.js";
 
 export class ReportApiError extends Error {
   constructor(message, code, fields = {}) {
@@ -50,6 +50,7 @@ export class ReportApiError extends Error {
 }
 
 async function reportRequest(path, { method = "GET", body, signal } = {}) {
+  const requestHeaders = adminHeaders();
   const timeout = AbortSignal.timeout(15000);
   let response;
   try {
@@ -58,7 +59,7 @@ async function reportRequest(path, { method = "GET", body, signal } = {}) {
       signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
       headers: {
         Accept: "application/json",
-        "X-Citizen-Token": getCitizenToken(),
+        ...requestHeaders,
         ...(body ? { "Content-Type": "application/json" } : {}),
       },
       body: body ? JSON.stringify(body) : undefined,
@@ -87,12 +88,24 @@ async function reportRequest(path, { method = "GET", body, signal } = {}) {
     );
   }
   if (!response.ok || !payload.success) {
+    if (
+      response.status === 401 &&
+      ["AUTH_REQUIRED", "SESSION_EXPIRED"].includes(payload.code) &&
+      requestHeaders.Authorization &&
+      requestHeaders.Authorization === adminHeaders().Authorization
+    ) {
+      sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+      window.dispatchEvent(new Event("admin-session-ended"));
+    }
     const knownCodes = [
       "VALIDATION_ERROR",
       "INVALID_PHOTO",
       "DATABASE_UNAVAILABLE",
       "REPORT_NOT_FOUND",
-      "CITIZEN_KEY_REQUIRED",
+      "AUTH_REQUIRED",
+      "SESSION_EXPIRED",
+      "CITIZEN_REQUIRED",
+      "DEMO_DISABLED",
       "PAYLOAD_TOO_LARGE",
       "RATE_LIMITED",
     ];

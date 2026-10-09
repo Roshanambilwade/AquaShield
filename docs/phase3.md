@@ -1,5 +1,7 @@
 # Phase 3 — detection, confidence and severity
 
+This record describes the Phase 3 calculations. Phase 6.5 now requires citizen accounts for new reports/private history and derives reporter keys from account IDs; existing anonymous/imported/demo evidence and all numeric formulas are preserved. Accounts do not verify people, households or residence. See [current account setup and limits](phase65.md).
+
 ## Run and inspect
 
 Run `npm run seed:demo` and `npm run dev`. Open `/admin?demo=true` to inspect five simulated zones. Select a geographic marker or zone card, inspect both weighted calculation tables, or open a persistent event detail URL. `/admin` and `/alerts` show real citizen evidence only. `Run detection` recalculates from MongoDB; it accepts no client scores. New report submissions automatically update real shortage events. Citizen report status pages show the matching aggregate without exposing other citizens' reports.
@@ -57,11 +59,11 @@ Unknown components stay null. Weights are not silently redistributed. Displayed 
 
 ## Persistence, API and scope
 
-`Area` stores labeled simulation context; `ShortageEvent` stores aggregate metrics, private membership references, score components and evidence. API serialization omits membership IDs, anonymous hashes, descriptions, photos and household coordinates. Aggregate zone centers are public; a single-report event can reveal an approximate location. This prototype is intended for fictional/local demonstration until account authorization and privacy aggregation thresholds are introduced.
+`Area` stores labeled context; `ShortageEvent` stores precise evidence for authorized municipal views. Current public serialization withholds live clusters below `PUBLIC_MIN_HOUSEHOLDS` (default 5, minimum 3), generalizes coordinates using `PUBLIC_LOCATION_GRID_DEGREES` (default 0.02), and omits household population breakdowns. Public totals include published clusters only. Fictional demo evidence is exempt. Owners retain their submitted report but receive the same safe aggregate policy. This reduces disclosure; it is not differential privacy.
 
 `GET /api/shortages[/:id]?demo=true|false` refreshes aggregates. `POST /api/shortages/detect` and `POST /api/shortages/:id/calculate-severity` accept only an empty object, recompute from stored evidence and are rate limited. `GET /api/shortages/:id/severity` returns the breakdown. All use the existing exact-origin CORS/security/error middleware. Production rejects demo shortage requests and seeding.
 
-Detection runs synchronously in a serialized queue per API process. A batch limit of 5,000 reports fails explicitly rather than dropping evidence; a paginated background worker and cross-process locking are future work. Detection failures after successful persistence return `detectionStatus=DEFERRED`; unchanged submission retries and subsequent status/shortage reads recalculate from MongoDB. Report status shows the deferred state. No derived failure discards a saved citizen report. Event keys/indexes prevent duplicate persisted events.
+Detection uses a process-local gate per database and demo/live mode. Concurrent reads share a batch and reuse successful results for `DETECTION_REFRESH_MS` (default 15 seconds, maximum 60 seconds). New submissions, explicit municipal detection and demo seeding force invalidation. Each drain has one running batch, one dirty generation and at most two batches; continuous writes return `DETECTION_BUSY` for later retry. Failed persistence never marks results fresh. Report creation still acknowledges persisted reports with `DEFERRED` if detection fails. The 5,000-report capacity limit remains; cross-process locking and a background worker are future work.
 
 The zone map uses projected geographic coordinates with north up and severity markers; it works offline, shows aggregate centers and has keyboard selection. It is clearly labeled a coordinate-based map without street tiles. Paid APIs and external tile availability are not required.
 

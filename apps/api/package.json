@@ -6,12 +6,15 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "test": "node --test test/app.test.js test/env.test.js test/reportValidation.test.js test/detection.test.js test/auth.test.js",
-    "test:mongo": "node --test test/mongo.test.js test/reports.mongo.test.js test/shortages.mongo.test.js test/dashboard.mongo.test.js",
+    "test": "node --test test/app.test.js test/env.test.js test/reportValidation.test.js test/detection.test.js test/auth.test.js test/ai.test.js test/operations.test.js test/portal.test.js test/remediation.test.js",
+    "test:mongo": "node --test test/mongo.test.js test/reports.mongo.test.js test/shortages.mongo.test.js test/dashboard.mongo.test.js test/ai.mongo.test.js test/operations.mongo.test.js test/citizen.mongo.test.js",
+    "test:ai:live": "node src/scripts/testLiveAi.js",
     "seed:demo": "node src/demo/seed.js",
     "admin:create": "node src/scripts/createAdmin.js"
   },
   "dependencies": {
+    "@google/genai": "2.6.0",
+    "@strands-agents/sdk": "1.20.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",

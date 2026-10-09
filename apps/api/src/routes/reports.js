@@ -1,6 +1,7 @@
 import express, { Router } from "express";
 import { createReportControllers } from "../controllers/reportController.js";
 import { createSubmissionLimiter } from "../middleware/submissionLimit.js";
+import { requireAdmin } from "../middleware/admin.js";
 
 export function createReportRouter(databaseStatus, config) {
   const router = Router();
@@ -9,6 +10,7 @@ export function createReportRouter(databaseStatus, config) {
   router.post(
     "/",
     createSubmissionLimiter(),
+    requireAdmin(databaseStatus, ["CITIZEN"]),
     express.json({ limit: "3mb" }),
     controller.create,
   );

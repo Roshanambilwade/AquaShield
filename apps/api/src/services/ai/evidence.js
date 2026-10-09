@@ -144,7 +144,7 @@ export function buildEvidence(
       "Read-only recommendation; human review required.",
       "Emerging evidence is not a forecast.",
       "Approximate population may overlap between zones.",
-      "No tanker selection or dispatch workflow exists yet.",
+      "Authorized tanker approval and assignment exist; this assessment cannot perform either. Trips and verified delivery remain future work.",
     ],
   };
   return {
@@ -158,7 +158,7 @@ export function buildEvidence(
 export async function loadEvidence(config, input) {
   const [shortages, ops, analytics] = await Promise.all([
     listShortages(config, input.demo),
-    operations(input.demo),
+    operations(input.demo, config),
     dashboardAnalytics(config, input.demo),
   ]);
   return buildEvidence(

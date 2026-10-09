@@ -1,13 +1,20 @@
+import { listShortages } from "../services/shortageService.js";
 import { Router } from "express";
 import { z } from "zod";
 import { requireAdmin } from "../middleware/admin.js";
 import { ApiError } from "../middleware/errors.js";
-import { validate, reportIdSchema } from "../validation/report.js";
+import {
+  validate,
+  reportIdSchema,
+  reportQuerySchema,
+} from "../validation/report.js";
 import {
   dashboardSummary,
   dashboardMap,
   dashboardAnalytics,
   dashboardDetail,
+  dashboardReports,
+  dashboardReport,
 } from "../services/dashboardService.js";
 export function createDashboardRouter(config, databaseStatus) {
   const router = Router();
@@ -19,7 +26,11 @@ export function createDashboardRouter(config, databaseStatus) {
   router.use((req, _res, next) => {
     req.demo =
       validate(
-        z.object({ demo: z.enum(["true", "false"]).default("false") }).strict(),
+        req.path === "/reports"
+          ? reportQuerySchema
+          : z
+              .object({ demo: z.enum(["true", "false"]).default("false") })
+              .strict(),
         req.query,
       ).demo === "true";
     if (req.demo && config.NODE_ENV === "production")
@@ -30,7 +41,26 @@ export function createDashboardRouter(config, databaseStatus) {
       );
     next();
   });
+  router.get("/reports", async (req, res) =>
+    res.json({
+      success: true,
+      data: await dashboardReports(
+        validate(reportQuerySchema, req.query),
+        req.demo,
+      ),
+    }),
+  );
+  router.get("/reports/:id", async (req, res) =>
+    res.json({
+      success: true,
+      data: await dashboardReport(
+        validate(reportIdSchema, req.params.id),
+        req.demo,
+      ),
+    }),
+  );
   for (const [path, service] of [
+    ["shortages", listShortages],
     ["summary", dashboardSummary],
     ["map", dashboardMap],
     ["analytics", dashboardAnalytics],

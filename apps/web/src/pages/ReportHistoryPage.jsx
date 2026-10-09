@@ -5,8 +5,19 @@ import {
 } from "../../../../packages/shared/reportOptions.js";
 import useReportData from "../hooks/useReportData.js";
 import ReportFeedback from "../components/ReportFeedback.jsx";
+import CitizenAccess from "../components/CitizenAccess.jsx";
 
 export default function ReportHistoryPage() {
+  const [params] = useSearchParams();
+  return params.get("demo") === "true" ? (
+    <ReportHistory />
+  ) : (
+    <CitizenAccess>
+      <ReportHistory />
+    </CitizenAccess>
+  );
+}
+function ReportHistory() {
   const [params, setParams] = useSearchParams();
   const demo = params.get("demo") === "true";
   const candidatePage = Number(params.get("page") || 1);
@@ -27,7 +38,7 @@ export default function ReportHistoryPage() {
       <p className="page-intro">
         {demo
           ? "Fictional reports for exploring the citizen reporting flow. No real shortage or response is represented."
-          : "Reports submitted from this browser. Keep your browser storage to retain access to your history."}
+          : "Reports belonging to your citizen account. Sign in again to revisit your saved history."}
       </p>
       <div className="history-toolbar">
         <Link className="button" to="/report">
@@ -48,7 +59,13 @@ export default function ReportHistoryPage() {
                     <div className="card-top">
                       <span>{new Date(report.createdAt).toLocaleString()}</span>
                       <span className="status-badge degraded">
-                        Pending verification
+                        {report.verificationStatus === "VERIFIED"
+                          ? report.isDemo
+                            ? "Verified (simulated)"
+                            : "Verified"
+                          : report.verificationStatus === "REJECTED"
+                            ? "Rejected"
+                            : "Pending verification"}
                       </span>
                     </div>
                     <h2>{report.locality}</h2>
@@ -56,6 +73,16 @@ export default function ReportHistoryPage() {
                       {optionLabel(PROBLEM_OPTIONS, report.problem)} · Household
                       size: {report.householdSize}
                     </p>
+                    {report.responseStatus && (
+                      <p>
+                        Municipal response:{" "}
+                        {report.responseStatus.status === "ASSIGNED"
+                          ? "Tanker assigned to area"
+                          : "Area response approved"}
+                        . This does not confirm household delivery or report
+                        verification.
+                      </p>
+                    )}
                     {report.isDemo && (
                       <span className="phase-badge">Simulated demo</span>
                     )}

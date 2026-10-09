@@ -117,3 +117,7 @@ Paths below are relative to the repository root.
 - UI: new `apps/web/src/components/AiRecommendationPanel.jsx`; `AdminDashboardPanels.jsx`, `apps/web/src/pages/ShortagesPage.jsx`, `apps/web/src/lib/adminApi.js`, `apps/web/src/admin.css`.
 - Tests: new `apps/api/test/ai.test.js`, `apps/api/test/ai.mongo.test.js`, `tests/e2e/phase5.spec.js`; updated `apps/api/test/app.test.js`, `apps/api/test/dashboard.mongo.test.js`, `tests/e2e/phase4.spec.js`, `playwright.config.js`.
 - Documentation: `AQUASHIELD_SPEC.md`, `README.md`, `docs/demo.md`, `docs/phase4.md`, this file.
+
+## Pre-Phase-7 remediation update
+
+See [the remediation report](remediation.md) for current public aggregation, bounded detection refresh, authoritative allocation advice, recovery policy, fleet eligibility, citizen response history, test isolation and agent verification. Earlier test counts in this document are historical phase snapshots. No live Gemini inference was run during remediation; demo and mocked-provider tests are not proof of live execution. Phase 7 and deployment remain outside this task.

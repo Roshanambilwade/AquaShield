@@ -10,9 +10,16 @@ import { invokeGemini } from "../services/ai/provider.js";
 import { requireAiConfiguration } from "../config/ai.js";
 import { ApiError } from "../middleware/errors.js";
 import { directDiagnostic } from "../services/ai/directDiagnostic.js";
+import { roles } from "../services/ai/contracts.js";
+import { buildAllocationEvidence } from "../services/ai/allocationEvidence.js";
+import { rankAllocationEvents } from "../services/allocationEngine.js";
 
 // Explicit live smoke command. Uses only fictional evidence and no database.
 const config = { ...loadEnv(), DEMO_AI_MODE: false };
+const role =
+  process.argv.find((arg) => arg.startsWith("--role="))?.slice(7) || "detect";
+if (!Object.hasOwn(roles, role))
+  throw new Error("Choose --role=detect|allocate|logistics|predict.");
 const startedAt = Date.now();
 let stage = "CONFIGURATION";
 console.log(
@@ -77,72 +84,54 @@ if (!config.GEMINI_API_KEY || !config.GEMINI_MODEL_ID) {
         apiKey: config.GEMINI_API_KEY,
         httpOptions: { timeout: config.AI_TIMEOUT_MS },
       });
-      let requests = 0;
-      const monitoredClient = {
-        models: {
-          async *generateContentStream(request) {
-            const requestNumber = ++requests;
-            console.log(
-              JSON.stringify({
-                stage,
-                progress: "GOOGLE_GENERATION_REQUEST_STARTED",
-                requestNumber,
-                elapsedMs: Date.now() - startedAt,
-              }),
-            );
-            const stream =
-              await generationClient.models.generateContentStream(request);
-            console.log(
-              JSON.stringify({
-                stage,
-                progress: "GOOGLE_STREAM_OPENED",
-                requestNumber,
-                elapsedMs: Date.now() - startedAt,
-              }),
-            );
-            let first = true;
-            for await (const chunk of stream) {
-              if (first) {
-                first = false;
-                console.log(
-                  JSON.stringify({
-                    stage,
-                    progress: "GOOGLE_FIRST_CHUNK_RECEIVED",
-                    requestNumber,
-                    elapsedMs: Date.now() - startedAt,
-                  }),
-                );
-              }
-              yield chunk;
-            }
-          },
-        },
-      };
       const events = buildShortageEvents(
         demoReports(),
         demoAreas(),
         config,
         DEMO_OBSERVED_AT,
       ).map((event, i) => ({ ...event, id: `synthetic-${i}` }));
-      const facts = buildEvidence(
+      const crisisFacts = buildEvidence(
         events,
         { tankers: null, deliveries: null },
         config,
         { demo: true },
       );
+      const facts =
+        role === "allocate"
+          ? buildAllocationEvidence(
+              {
+                events,
+                rankings: rankAllocationEvents(events, [], config),
+                candidates: [],
+                excluded: [],
+                proposedLitres: null,
+                isDemo: true,
+              },
+              config,
+            )
+          : crisisFacts;
+      const generationStarted = Date.now();
       const result = await runAgent(
-        "detect",
+        role,
         config,
         { demo: true },
         {
           evidenceLoader: async () => facts,
-          invoke: (args) => invokeGemini({ ...args, client: monitoredClient }),
+          invoke: (args) =>
+            invokeGemini({
+              ...args,
+              client: generationClient,
+              progress: (event) =>
+                console.log(JSON.stringify({ stage, ...event })),
+            }),
         },
       );
       console.log(
         JSON.stringify({
           status: "VERIFIED_REAL_GEMINI",
           agent: result.agent,
+          generationLatencyMs: Date.now() - generationStarted,
+          validation: "PASSED",
           execution: result.execution,
           evidenceVersion: result.facts.evidenceVersion,
           humanReview: result.humanReview,

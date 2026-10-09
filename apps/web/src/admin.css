@@ -358,6 +358,78 @@
     gap: 15px;
   }
 }
+.ai-panel {
+  grid-column: 1 / -1;
+  border-top: 4px solid #168578;
+  min-width: 0;
+}
+.ai-heading,
+.ai-controls {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.ai-controls label {
+  display: grid;
+  gap: 7px;
+  flex: 1;
+  min-width: 200px;
+}
+.ai-controls select {
+  font: inherit;
+  padding: 10px;
+  border: 1px solid #bcd3d0;
+  border-radius: 8px;
+  background: white;
+  width: 100%;
+}
+.ai-result {
+  margin-top: 20px;
+  border-top: 1px solid #d5e4e0;
+  padding-top: 14px;
+  overflow-wrap: anywhere;
+}
+.ai-result h3 {
+  margin-top: 20px;
+}
+.ai-summary {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.ai-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+.ai-facts div {
+  background: #f0f7f5;
+  padding: 14px;
+  border-radius: 10px;
+}
+.ai-facts dt {
+  color: #506966;
+  font-size: 0.85rem;
+}
+.ai-facts dd {
+  margin: 8px 0 0;
+  font-weight: 700;
+}
+.ai-review {
+  padding: 12px;
+  background: #fff5da;
+  color: #654c17;
+  border-radius: 8px;
+  font-weight: 600;
+}
+.ai-result details {
+  margin-top: 16px;
+}
+.ai-result summary {
+  cursor: pointer;
+  font-weight: 600;
+}
 @media (max-width: 560px) {
   .admin-toolbar {
     gap: 12px;
@@ -380,4 +452,79 @@
   .login-card {
     padding: 22px;
   }
+}
+.operations-page {
+  display: grid;
+  gap: 1.25rem;
+}
+.operations-page .page-title,
+.operations-page .page-intro {
+  margin: 0;
+}
+.operations-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.operations-page label {
+  display: grid;
+  gap: 0.4rem;
+  font-weight: 600;
+}
+.operations-page input,
+.operations-page select {
+  width: 100%;
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid #b8cdcd;
+  border-radius: 0.45rem;
+  font: inherit;
+  background: white;
+  color: #153e42;
+}
+.operations-page .operations-check {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  margin: 1rem 0;
+}
+.operations-check input {
+  width: auto;
+}
+.operations-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.operation-card {
+  border: 1px solid #d1e1df;
+  background: #f5faf9;
+  border-radius: 0.7rem;
+  padding: 1.2rem;
+  overflow-wrap: anywhere;
+}
+.operation-card h3 {
+  margin-top: 0;
+}
+.operation-card form {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.7rem;
+}
+.operations-page details {
+  margin: 1rem 0;
+}
+.operations-page button {
+  margin: 0.4rem 0.5rem 0.4rem 0;
+}
+@media (max-width: 760px) {
+  .operations-form,
+  .operations-cards {
+    grid-template-columns: 1fr;
+  }
+}
+.admin-toolbar nav {
+  flex-wrap: wrap;
+  min-width: 0;
 }
