@@ -29,7 +29,7 @@ These rules override any conflicting instruction later in this document.
 
 # AQUASHIELD — COMPLETE HACKATHON BUILD SPECIFICATION
 
-**Implementation status (9 October 2026):** Phases 1–6 and Phase 6.5 citizen authentication/report ownership are implemented locally. Existing admin/operator access, deterministic calculations, Strands/Gemini integration and allocation/assignment are preserved. A complete live Gemini assessment remains unverified after provider failures; see [Phase 5 limits](docs/phase5.md), [Phase 6 operations](docs/phase6.md) and [Phase 6.5 accounts](docs/phase65.md). Requirements below describe the complete target and do not authorize Phase 7 or deployment.
+**Implementation status (9 October 2026):** Phases 1–7, including Phase 6.5 citizen authentication/report ownership, are implemented locally. Phase 7 adds persisted routing/trip/delivery workflows and fictional OTP verification; secure real-recipient handoff remains unconfigured by default. Existing authorization, deterministic calculations, Strands/Gemini integration and allocation recovery are preserved. A complete live Gemini assessment remains unverified after provider failures. See [Phase 7 behavior and limits](docs/phase7.md), [Phase 5](docs/phase5.md), [Phase 6](docs/phase6.md) and [Phase 6.5](docs/phase65.md). The latest Phase 7 prompt authorizes routing/delivery only, not prediction or deployment.
 
 ## 1. ROLE
 
@@ -448,7 +448,7 @@ Recommendations remain read-only in Phase 5. Tanker feasibility/selection and hu
 
 Define the Logistics Strands/Gemini role in Phase 5. Until Phase 6 enables fleet and routing tools, it explicitly reports unavailable operational inputs rather than inventing an assignment, distance or ETA.
 
-In Phase 6 the backend checks stored tanker locations, capacities, availability and assignments; calculates distance and estimated ETA using a configured routing source or labeled straight-line/average-speed fallback; and selects feasible candidates deterministically. All numeric distance/ETA/feasibility calculations stay in the JavaScript backend.
+In Phase 6 the backend checks stored tanker locations, capacities, availability and assignments and selects feasible candidates deterministically. Phase 7 adds distance and estimated ETA using a configured routing source or labeled straight-line/average-speed fallback. All numeric distance/ETA/feasibility calculations stay in the JavaScript backend.
 
 The agent explains the backend result, constraints, assumptions and recommended operational steps. It cannot invent coordinates, traffic, exact arrival times, fleet availability or capacity, and cannot dispatch. Administrator approval plus fresh backend feasibility checks authorize assignment. Clearly label estimates and simulated records. Bedrock and AWS CLI credentials are not required for Gemini execution.
 
@@ -456,11 +456,11 @@ The agent explains the backend result, constraints, assumptions and recommended 
 
 # 17. EARLY WARNING AGENT AND DETERMINISTIC RISK — LATER PREDICTION
 
-Define the Early Warning Strands/Gemini role in Phase 5 with an explicit unavailable-data response until Phase 7 implements prediction tools. Do not call current EMERGING clusters forecasts.
+Define the Early Warning Strands/Gemini role in Phase 5 with an explicit unavailable-data response until a separately authorized later phase implements prediction tools. Phase 7 implements trips/delivery only. Do not call current EMERGING clusters forecasts.
 
 Preserve predictionEngine and the transparent risk model in section 58. The JavaScript backend calculates risk score, level and approximate horizon from configurable report trend, supply delay, environmental stress, infrastructure incidents and historical inputs. Missing inputs and uncertainty remain explicit; a trained ML model is not required.
 
-The agent explains these results and recommends preparation actions. It cannot generate authoritative risk numbers or turn illustrative 87/100 or 12–24-hour examples into facts. Backend reasons remain inspectable separately from Gemini advice. Demo mode uses labeled simulated inputs and backend-derived numbers with no model call. Actual prediction and alert operations wait for Phase 7 authorization.
+The agent explains these results and recommends preparation actions. It cannot generate authoritative risk numbers or turn illustrative 87/100 or 12–24-hour examples into facts. Backend reasons remain inspectable separately from Gemini advice. Demo mode uses labeled simulated inputs and backend-derived numbers with no model call. Actual prediction and alert operations remain deferred to separate authorization after Phase 7.
 
 ---
 
@@ -468,7 +468,7 @@ The agent explains these results and recommends preparation actions. It cannot g
 
 Citizen report → existing JavaScript clustering/confidence/population/severity services → persisted event → authorized read-only assessment → backend deterministic priority/fairness facts → Strands/Gemini role explanations → administrator review.
 
-Phase 6 adds backend fleet/routing tools and human-approved assignment; Phase 7 adds deterministic prediction tools and Early Warning explanations. Four focused roles can share one server-side service; do not create unnecessary distributed infrastructure. Phase 5 defines all four roles but must disclose unavailable later-phase tools.
+Phase 6 adds backend fleet tools and human-approved assignment; Phase 7 adds deterministic route estimates, owned trips and delivery verification. Deterministic prediction remains a separately authorized later phase. Four focused roles share the existing backend service; no new agent tools or provider changes are required for Phase 7.
 
 Express authenticates/authorizes requests before invoking agents. If isolated apps/agents is required, use a validated internal contract and protected server-to-server boundary; no public unauthenticated agent endpoint or direct browser key access. Agents get bounded, read-only backend tools and cannot mutate MongoDB/allocations. Do not pass arbitrary citizen text as instructions.
 
@@ -1672,7 +1672,7 @@ Avoid unsupported claims of exact affected population, exact remaining water, pe
 
 # 74. IMPLEMENTATION ORDER
 
-Latest phase-specific prompts control scope. Phases 1–5 are preserved; Phase 6 implements fair allocation and tanker/operator assignment only. The latest Phase 6 request supersedes the older phase grouping below: routing, trip controls and delivery verification belong to Phase 7 and are not implemented. Remaining prediction, verification, documentation and AWS work stays deferred to explicit authorization. Complete live Gemini assessment remains unverified after provider failures. Stop after Phase 6; no deployment.
+Latest phase-specific prompts control scope. Phases 1–6.5 are preserved. The latest Phase 7 request authorizes routing, operator trips, delivery OTP, actual litres, completion recovery, citizen response tracking and municipal delivery history only. Numerical prediction and AWS deployment remain deferred. Complete live Gemini assessment remains unverified after provider failures. Stop after Phase 7; no deployment or automatic commits.
 
 ## PHASE 1 — Foundation (complete)
 React/JavaScript/Vite, Express/JavaScript, MongoDB/Mongoose, configuration, routing/layout, health and errors.
@@ -1695,8 +1695,8 @@ Persisted validated tanker management, existing deterministic severity/fairness-
 ## PHASE 6.5 — Citizen authentication and report ownership (implemented)
 Public server-assigned CITIZEN registration, shared login/current-user/logout, account-owned reporting/history/status, strict role/owner authorization and ADMIN-only reporter/evidence review. Preserve ownerless legacy/demo records, account/contact verification uncertainty and existing Phases 1–6. Reuse existing password hashing, sessions, rate limits and CORS. No email/SMS verification, AI provider changes, AWS deployment or Phase 7 work. See docs/phase65.md for APIs, setup, tests and limitations.
 
-## PHASE 7 — Routing, trips and delivery verification (not started)
-Reserved by the latest Phase 6 scope for route display, trip controls, arrival, delivery OTP/QR, recorded delivered litres and trip transitions. Implement only after separate authorization. Deterministic early-warning prediction and operational analytics remain later requirements, not Phase 6 functionality; preserve the specified backend risk model and uncertainty without inventing a revised complete phase plan.
+## PHASE 7 — Routing, trips and delivery verification (implemented locally)
+Database-backed ASSIGNED → EN_ROUTE → ARRIVED → DELIVERED workflow, deterministic straight-line/average-speed estimates with an optional validated road-routing adapter, owned operator controls, secure hashed/expiring/attempt-limited OTP, isolated non-production demo reveal, recorded actual litres, conditional completion recovery, tanker/allocation updates, municipal metrics/history/audits and private citizen response tracking. No GPS/traffic/SMS or independently verified household delivery is claimed; real recipient handoff must be configured before production verification. See docs/phase7.md. Numerical prediction remains outside this phase.
 
 ## PHASE 8 — Full verification, hardening and separate AWS deployment (later)
 Full regressions/security/agent-boundary tests, account authentication/eligibility, runtime/build/network/secret compatibility including any isolated agent service, Amplify plus eligible App Runner or justified AWS alternative, Atlas and public auth/report/dashboard/persistence/agent checks. Gemini remains the selected real provider; Bedrock is optional.
@@ -1729,7 +1729,7 @@ Strands/Gemini agents explain those facts, assess missing evidence and propose a
 
 Implemented demo operations must work without manual MongoDB edits. Preserve current citizen submission, seed:demo, detection, severity inspection, admin map/detail and history workflows.
 
-Phase 6 now provides tested admin UI actions for recommendations, explicit approval/rejection and assignment, plus a safe owned-fictional-operations reset and operator visibility. The original report-only seed command is unchanged. Trip progression, delivery verification/completion and deterministic risk generation remain deferred. Follow docs/phase6.md; do not claim a complete allocation-to-delivery workflow.
+Phase 6 provides tested recommendations, approval/rejection and assignment with owned fictional reset. Phase 7 extends the UI through trips, demo OTP, actual fictional delivered litres and recorded completion. The original report-only seed command is unchanged. Active trips/pending completion block reset; real/custom records are preserved. Follow docs/phase7.md and disclose recipient-handoff and navigation limitations. Deterministic risk generation remains deferred.
 
 The final complete demo should run from the UI against tested backend/database services. Show the actual method and label fictional/approximate/unknown inputs. Backend numeric facts can be inspected without a key. Show successful actual Gemini calls before claiming real AI; use DEMO_AI_MODE for clearly labeled key-free simulations, not proof of provider execution.
 

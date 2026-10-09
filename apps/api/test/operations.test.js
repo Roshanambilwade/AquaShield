@@ -44,7 +44,7 @@ test("tanker model rejects invalid capacities, coordinates and invented status",
     { availableLitres: 11000 },
     { capacityLitres: 0 },
     { currentLocation: { lat: 91, lng: 0 } },
-    { status: "EN_ROUTE" },
+    { status: "DELIVERED" },
   ])
     await assert.rejects(
       new Tanker({

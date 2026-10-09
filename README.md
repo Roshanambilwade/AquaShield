@@ -2,7 +2,7 @@
 
 An intelligence and decision layer for emergency water management, by **AquaSentinels** for Environmental Hacks — Heat & Water Track.
 
-**Phases 1–6 and Phase 6.5 are implemented; complete live Gemini execution remains unverified.** Phase 6.5 adds citizen registration/sign-in, account-owned report tracking and officer-only reporter review using existing authentication. It stops before Phase 7. See [Phase 6.5 setup, security, APIs and file inventory](docs/phase65.md), [Phase 6](docs/phase6.md), [Phase 5](docs/phase5.md), [Phase 4](docs/phase4.md) and [Phase 3 calculations](docs/phase3.md).
+**Phases 1–7, including Phase 6.5, are implemented locally; complete live Gemini execution remains unverified.** Phase 7 adds persisted operator trips, deterministic route estimates, protected OTP verification, actual delivered litres, completion recovery, municipal history and private citizen response updates. See [Phase 7 behavior, demo, security and verification](docs/phase7.md), [Phase 6.5 accounts](docs/phase65.md), [Phase 6 operations](docs/phase6.md), [Phase 5 agents](docs/phase5.md), [Phase 4](docs/phase4.md) and [Phase 3 calculations](docs/phase3.md).
 
 **Strategy:** AWS will host the functioning application; it is not a mandatory AI/LLM provider. Phase 5 integrates Strands Agents SDK with Google Gemini for Crisis Detection, Resource Allocation, Logistics and Early Warning. All numeric facts remain deterministic backend calculations. Bedrock is optional; unavailable local AWS CLI authentication does not block Gemini. Demo mode and SDK wiring are tested. A live model-access check succeeded, but generation returned Google HTTP 503; a complete live assessment remains unverified. AWS deployment has not been performed. See the [honest demo guide](docs/demo.md).
 
@@ -26,7 +26,8 @@ An intelligence and decision layer for emergency water management, by **AquaSent
 - Protected command center with eight KPI cards, OpenStreetMap/Leaflet plus offline map fallback, private report layers, event filters/details, activity and evidence analytics.
 - Four Strands/Gemini agent roles, protected read-only APIs and a responsive recommendation panel with backend numeric evidence, source references, missing inputs and human-review status.
 - Explicit key-free demo simulation, real-provider configuration/errors, bounded calls and validated output. Complete live Google assessment remains unverified after provider unavailability.
-- Persisted tanker management, source-attributed fairness evidence, deterministic eligible-candidate selection, explicit approval/rejection/assignment, audit snapshots, concurrency checks and private operator assignment views. Trip/dispatch controls, delivery and numeric forecasting remain later work.
+- Persisted tanker management, source-attributed fairness evidence, deterministic eligible-candidate selection, explicit approval/rejection/assignment, audit snapshots, concurrency checks and private operator assignment views.
+- Database-backed ASSIGNED → EN_ROUTE → ARRIVED → DELIVERED trip controls, scrypt-hashed expiring delivery OTPs, actual litre accounting, conditional completion recovery, municipal delivery history and owner-scoped citizen response tracking. Demo OTP reveal is fictional and non-production only. Real recipient verification requires a backend handoff adapter; none is configured by default. Numerical forecasts remain later work.
 
 ## Running locally
 
@@ -107,6 +108,9 @@ The frontend build explicitly sets `NODE_ENV=production`, so the backend's devel
 | `MONGODB_TEST_URI`                            | Optional MongoDB test server; mutating suites use isolated UUID databases             | `MONGODB_URI`                                                                                      |
 | `ADMIN_SESSION_HOURS`                         | Admin session lifetime, 0.1–24 hours               | `8`                                                                                                |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | Provisioning command only; password ≥12 characters | Development can generate credentials; production requires email/password                           |
+| `ROUTING_BASE_URL` | Optional backend OSRM-compatible HTTPS endpoint | Empty; straight-line fallback |
+| `ROUTING_AVERAGE_SPEED_KPH`, `ROUTING_TIMEOUT_MS` | Labeled average-speed ETA / service timeout | `25` km/h / `5000` ms |
+| `DELIVERY_OTP_TTL_SECONDS`, `DELIVERY_OTP_MAX_ATTEMPTS`, `DELIVERY_OTP_REISSUE_SECONDS` | Bounded expiry, attempts and cooldown | `300` / `5` / `60` |
 
 Only variables prefixed with `VITE_` are exposed to the browser. Never use that prefix for secrets. `.env` files, build output, dependencies, and local test artifacts are ignored by Git.
 
@@ -147,6 +151,8 @@ Explicit demo mode needs no key, performs no provider calls and shows “Demo AI
 | `/admin/tankers`             | Protected fleet management and operator provisioning |
 | `/admin/allocations`         | Fair recommendations, review, approval/rejection and explicit assignment |
 | `/operator`                  | Authenticated operator's own tanker and assignments |
+| `/operator/assignment/:id`    | Owned assigned-job detail, route estimates and trip controls |
+| `/admin/deliveries` | Protected trip/delivery history, actual litres, verification audits and recovery |
 | `/admin` AI panel            | Four role assessments with explicit real/demo mode, evidence and human-review status |
 | Other paths                  | Friendly 404                                                                         |
 
@@ -200,7 +206,7 @@ Backend configuration, routes, controllers, and middleware are separate modules.
 
 The Report collection stores citizen-provided household evidence, sanitized photo, server-assigned citizen ownerId, an internal reporter hash for duplicate detection, submission ID, timestamps, verification status and a demo flag. Legacy ownerless and demo records are retained without assigning them to real users. JavaScript report options are shared in `packages/shared/reportOptions.js`.
 
-Phase 6 adds persisted fleet/allocation APIs and private operator assignments. Phase 6.5 extends existing authentication for citizens and ties report history to accounts. Scoring, fairness, agents and allocation evidence remain authoritative backend logic. Trip/dispatch controls, delivery verification and numeric forecasts remain deferred.
+Phase 6 adds persisted fleet/allocation APIs and private operator assignments. Phase 6.5 ties report history to accounts. Phase 7 adds trusted delivery records, operator trip controls, protected OTP verification, recorded actual litres, standalone-MongoDB completion recovery and citizen area-response updates. Scoring, fairness, agents and allocation evidence remain authoritative backend logic. Numerical forecasts remain deferred.
 
 ## Agent architecture and remaining phases
 
@@ -212,7 +218,7 @@ Crisis Detection explains evidence/verification; Resource Allocation explains ba
 | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 5     | Implemented: four agent roles, protected APIs, dashboard panel, validated real-provider path and key-free demo mode. Complete live Gemini assessment remains unverified after provider unavailability. |
 | 6     | Implemented: deterministic fair allocation, fleet management, approval/rejection, atomic assignment and operator visibility. |
-| 7     | Not started: routing, trip controls and delivery verification per the latest phase-specific scope. |
+| 7     | Implemented locally: route estimates, owned trips, demo OTP and recorded delivery; real recipient handoff remains unconfigured by default. |
 | 8     | Planned: full hardening and actual AWS deployment after compatibility/account checks.                                                                                      |
 | 9     | Planned: final demo, documentation and verified deployment evidence.                                                                                                       |
 
@@ -228,4 +234,16 @@ Verify the existing npm-workspace/root-lockfile build, `apps/web/dist`, Node.js 
 
 Do not claim AWS deployment from configuration placeholders, mock output or local-only screenshots. Publish actual service names, tested URLs and results only after successful public health/auth/report/dashboard/persistence checks. Bedrock calls and AWS model credentials are not required. Local Gemini integration does not prove AWS hosting; later hosting must also verify any agent-service build, protected internal boundary, Gemini outbound connectivity and backend-only secret injection. Local AWS CLI authentication is currently unavailable; verify deployment account access separately in that later phase.
 
-Implementation stops after Phase 6.5. No Phase 7 or deployment is authorized by this addition.
+Implementation stops after Phase 7. No Phase 8 or deployment is performed.
+
+## Phase 7 API and verification
+
+Authenticated ADMIN/OPERATOR: `GET /api/deliveries?demo=true|false` and
+`GET /api/deliveries/:id`. Owning OPERATOR: `POST /api/deliveries/:id/start`,
+`/arrive`, `/otp`, `/demo-otp`, `/verify` and `/complete`. ADMIN-only:
+`POST /api/deliveries/:id/recover`. Inputs, limits, recovery policy and the exact
+fictional UI walkthrough are documented in [docs/phase7.md](docs/phase7.md).
+Real OTP issuance fails closed without a secure backend recipient handoff adapter;
+codes are never exposed in ordinary production API responses. Normal tests use
+isolated databases, mocked routing and controlled recipient handoff, not paid
+services, live Gemini, production SMS or live GPS.

@@ -7,6 +7,7 @@ import { randomUUID } from "node:crypto";
 process.env.NODE_ENV = "test";
 process.env.DEMO_AI_MODE = "true";
 process.env.GEMINI_API_KEY = "";
+process.env.ROUTING_BASE_URL = "";
 process.env.MONGODB_TEST_DB_NAME ||= `aquashield_browser_test_${randomUUID().replaceAll("-", "")}`;
 
 const localTemp = fileURLToPath(new URL("./.local/tmp/", import.meta.url));

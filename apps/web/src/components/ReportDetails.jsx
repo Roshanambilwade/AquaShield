@@ -50,8 +50,23 @@ export default function ReportDetails({ report }) {
           <p>
             {report.responseStatus.status === "ASSIGNED"
               ? "Tanker assigned to the shortage area"
-              : "Allocation approved; assignment pending"}
+              : report.responseStatus.status === "EN_ROUTE"
+                ? "Tanker en route to the shortage area"
+                : report.responseStatus.status === "ARRIVED"
+                  ? "Tanker arrived at the shortage area"
+                  : report.responseStatus.status === "DELIVERED"
+                    ? "Water delivery recorded for the shortage area"
+                    : report.responseStatus.status === "UNKNOWN"
+                      ? "Municipal response status unavailable"
+                      : "Allocation approved; assignment pending"}
           </p>
+          {report.responseStatus.deliveredAt && (
+            <p>
+              Area delivery recorded{" "}
+              {new Date(report.responseStatus.deliveredAt).toLocaleString()}
+              {report.isDemo ? " (simulated demo)" : ""}.
+            </p>
+          )}
           <p>
             This is an area response. Delivery to your household has not been
             verified.

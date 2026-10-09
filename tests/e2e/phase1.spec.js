@@ -33,7 +33,7 @@ test("overview has no browser errors or horizontal overflow", async ({
     "A coordinated response.",
   );
   await expect(page.getByLabel("Project availability")).toContainText(
-    "Phases 1–6.5",
+    "Phases 1–7",
   );
   await expect(page.getByRole("navigation")).toBeVisible();
   expect(

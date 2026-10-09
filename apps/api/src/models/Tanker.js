@@ -7,7 +7,7 @@ const schema = new mongoose.Schema(
     availableLitres: { type: Number, default: null, min: 0, max: 100000 },
     status: {
       type: String,
-      enum: ["AVAILABLE", "ASSIGNED", "UNAVAILABLE"],
+      enum: ["AVAILABLE", "ASSIGNED", "EN_ROUTE", "ARRIVED", "UNAVAILABLE"],
       default: "UNAVAILABLE",
     },
     currentLocation: {

@@ -78,7 +78,15 @@ function ReportHistory() {
                         Municipal response:{" "}
                         {report.responseStatus.status === "ASSIGNED"
                           ? "Tanker assigned to area"
-                          : "Area response approved"}
+                          : report.responseStatus.status === "EN_ROUTE"
+                            ? "Tanker en route to area"
+                            : report.responseStatus.status === "ARRIVED"
+                              ? "Tanker arrived at area"
+                              : report.responseStatus.status === "DELIVERED"
+                                ? "Water delivery recorded for area"
+                                : report.responseStatus.status === "UNKNOWN"
+                                  ? "Unknown"
+                                  : "Area response approved"}
                         . This does not confirm household delivery or report
                         verification.
                       </p>

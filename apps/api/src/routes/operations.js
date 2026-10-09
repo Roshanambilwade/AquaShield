@@ -27,6 +27,11 @@ import {
 } from "../services/operationsService.js";
 import { createOperator } from "../services/authService.js";
 import { seedOperations } from "../demo/seedOperations.js";
+import {
+  listDeliveries,
+  ensureDelivery,
+  deliveryDetail,
+} from "../services/deliveryService.js";
 
 export function createOperationsRouter(config, databaseStatus, aiDependencies) {
   const router = Router();
@@ -225,6 +230,22 @@ export function createOperatorRouter(config, databaseStatus) {
     next();
   });
   router.use(requireAdmin(databaseStatus, ["OPERATOR"]));
+  router.get("/assignments/:id", async (req, res) => {
+    validate(z.object({}).strict(), req.query);
+    const allocation = await Allocation.findOne({
+      _id: validate(reportIdSchema, req.params.id),
+      operatorId: req.admin.id,
+      status: { $in: ["ASSIGNED", "COMPLETED"] },
+      ...(config.NODE_ENV === "production" ? { isDemo: false } : {}),
+    });
+    if (!allocation)
+      throw new ApiError(404, "ALLOCATION_NOT_FOUND", "Assignment not found.");
+    const d = await ensureDelivery(allocation);
+    res.json({
+      success: true,
+      data: await deliveryDetail(d.id, req.admin, config),
+    });
+  });
   router.get("/assignments", async (req, res) => {
     validate(z.object({}).strict(), req.query);
     const filter = {
@@ -240,6 +261,7 @@ export function createOperatorRouter(config, databaseStatus) {
     res.json({
       success: true,
       data: {
+        deliveries: await listDeliveries(req.admin, config),
         tankers: tankers.map((t) => ({
           id: String(t._id),
           name: t.name,

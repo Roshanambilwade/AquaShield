@@ -1,5 +1,6 @@
 import ShortageEvent from "../models/ShortageEvent.js";
 import Allocation from "../models/Allocation.js";
+import Delivery from "../models/Delivery.js";
 
 // Input reports have already passed owner authorization. Never expose allocation
 // IDs, staff details, tanker details or internal notes in a citizen response.
@@ -19,17 +20,28 @@ export async function reportResponses(reports) {
       .lean();
     const allocations = await Allocation.find({
       isDemo: demo,
-      active: true,
       eventId: { $in: events.map((e) => e._id) },
-      status: { $in: ["APPROVED", "ASSIGNING", "ASSIGNED"] },
+      status: { $in: ["APPROVED", "ASSIGNING", "ASSIGNED", "COMPLETED"] },
     })
       .select("eventId status approvedAt assignedAt")
+      .sort({ createdAt: -1 })
+      .lean();
+    const deliveries = await Delivery.find({
+      allocationId: { $in: allocations.map((a) => a._id) },
+      isDemo: demo,
+    })
+      .select(
+        "allocationId status startedAt arrivedAt deliveredAt otpVerified isDemo",
+      )
       .lean();
     for (const event of events) {
       const allocation = allocations.find(
         (a) => String(a.eventId) === String(event._id),
       );
       if (!allocation) continue;
+      const delivery = deliveries.find(
+        (d) => String(d.allocationId) === String(allocation._id),
+      );
       for (const id of [
         ...event.reportIds,
         ...event.duplicateReportIds,
@@ -37,10 +49,30 @@ export async function reportResponses(reports) {
       ]) {
         if (!ids.includes(String(id))) continue;
         result.set(String(id), {
-          status:
-            allocation.status === "ASSIGNING" ? "APPROVED" : allocation.status,
+          status: delivery
+            ? delivery.status === "RESETTING" ||
+              (delivery.status === "DELIVERED" && !delivery.otpVerified)
+              ? "UNKNOWN"
+              : delivery.status === "COMPLETING"
+                ? "ARRIVED"
+                : delivery.status
+            : allocation.status === "ASSIGNING"
+              ? "APPROVED"
+              : allocation.status === "COMPLETED"
+                ? "UNKNOWN"
+                : allocation.status,
           approvedAt: allocation.approvedAt ?? null,
           assignedAt: allocation.assignedAt ?? null,
+          ...(delivery && delivery.status !== "ASSIGNED"
+            ? {
+                startedAt: delivery.startedAt ?? null,
+                arrivedAt: delivery.arrivedAt ?? null,
+                deliveredAt:
+                  delivery.status === "DELIVERED" && delivery.otpVerified
+                    ? delivery.deliveredAt
+                    : null,
+              }
+            : {}),
         });
       }
     }

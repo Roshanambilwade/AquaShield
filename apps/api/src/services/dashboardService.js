@@ -32,7 +32,8 @@ const tankerSchema = z.object({
 });
 const deliverySchema = z.object({
   _id: z.any(),
-  areaId: z.string(),
+  eventId: z.any().optional(),
+  areaId: z.string().nullable(),
   status: z.literal("DELIVERED"),
   otpVerified: z.literal(true),
   litresDelivered: z.number().nonnegative(),
@@ -315,11 +316,13 @@ export async function dashboardDetail(id, config, demo) {
     }),
     {},
   );
-  const previous = event.areaId
-    ? ops.deliveries
-        ?.filter((d) => d.areaId === event.areaId)
-        .sort((a, b) => b.deliveredAt - a.deliveredAt)[0]
-    : null;
+  const previous = ops.deliveries
+    ?.filter(
+      (d) =>
+        String(d.eventId) === event.id ||
+        (event.areaId != null && d.areaId === event.areaId),
+    )
+    .sort((a, b) => b.deliveredAt - a.deliveredAt)[0];
   return {
     event,
     waterLevels,
@@ -331,7 +334,7 @@ export async function dashboardDetail(id, config, demo) {
           isDemo: demo,
         }
       : null,
-    deliveryDataAvailable: ops.deliveries != null && event.areaId != null,
+    deliveryDataAvailable: ops.deliveries != null,
     recommendedAction: {
       source: "DETERMINISTIC_ASSESSMENT_GUIDANCE",
       text: recommendedAction(event),

@@ -7,6 +7,7 @@ import { createShortageRouter } from "./routes/shortages.js";
 import { createAuthRouter } from "./routes/auth.js";
 import { createDashboardRouter } from "./routes/dashboard.js";
 import { createAiRouter } from "./routes/ai.js";
+import { createDeliveryRouter } from "./routes/deliveries.js";
 import {
   createOperationsRouter,
   createOperatorRouter,
@@ -15,7 +16,11 @@ import { ApiError, errorHandler, notFound } from "./middleware/errors.js";
 
 export function createApp(
   config,
-  { databaseStatus = getDatabaseStatus, aiDependencies } = {},
+  {
+    databaseStatus = getDatabaseStatus,
+    aiDependencies,
+    deliveryDependencies,
+  } = {},
 ) {
   const app = express();
   app.disable("x-powered-by");
@@ -51,6 +56,10 @@ export function createApp(
     createOperationsRouter(config, databaseStatus, aiDependencies),
   );
   app.use("/api/operator", createOperatorRouter(config, databaseStatus));
+  app.use(
+    "/api/deliveries",
+    createDeliveryRouter(config, databaseStatus, deliveryDependencies),
+  );
   app.use("/api/shortages", createShortageRouter(config, databaseStatus));
   app.get("/", (_req, res) =>
     res.json({ success: true, data: { name: "AquaShield API", api: "/api" } }),

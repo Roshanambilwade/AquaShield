@@ -95,11 +95,12 @@ export default function HomePage() {
         </div>
       </section>
       <section className="foundation-note" aria-label="Project availability">
-        <span className="phase-badge">Phases 1–6.5</span>
+        <span className="phase-badge">Phases 1–7</span>
         <p>
           Citizen reporting and shortage evidence are available. Municipal teams
           can review evidence, approve allocations and assign eligible tankers.
-          Trips, delivery verification and forecasts remain future work.
+          Assigned operators can record trips and demo OTP delivery. Forecasts
+          remain future work.
         </p>
       </section>
       <section className="workspace-section" aria-labelledby="workspace-title">

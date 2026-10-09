@@ -13,6 +13,8 @@ const schema = new mongoose.Schema(
         "ASSIGNING",
         "RECONCILING",
         "ASSIGNED",
+        "COMPLETED",
+        "RESETTING",
         "REJECTED",
       ],
       required: true,

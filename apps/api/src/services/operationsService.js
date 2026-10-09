@@ -159,7 +159,7 @@ export async function allocationSnapshot(config, demo, ownId) {
     AllocationEvidence.find({ isDemo: demo }).lean(),
     Allocation.find({
       isDemo: demo,
-      status: { $in: ["ASSIGNING", "RECONCILING", "ASSIGNED"] },
+      status: { $in: ["ASSIGNING", "RECONCILING", "ASSIGNED", "RESETTING"] },
       ...(ownId ? { _id: { $ne: ownId } } : {}),
     })
       .select("eventId")

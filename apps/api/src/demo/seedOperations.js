@@ -1,6 +1,7 @@
 import Tanker from "../models/Tanker.js";
 import Allocation from "../models/Allocation.js";
 import AllocationEvidence from "../models/AllocationEvidence.js";
+import Delivery from "../models/Delivery.js";
 import { seedDemoReports } from "./seedReports.js";
 import { listShortages } from "../services/shortageService.js";
 import {
@@ -20,6 +21,19 @@ export async function seedOperations(config, actor, { reset = false } = {}) {
   await seedDemoReports(config);
   const owned = await Tanker.find({ isDemo: true, seedOwner: owner });
   if (reset) {
+    if (
+      await Delivery.exists({
+        isDemo: true,
+        tankerId: { $in: owned.map((t) => t._id) },
+        $or: [
+          { status: { $in: ["EN_ROUTE", "ARRIVED", "COMPLETING"] } },
+          { syncPending: true },
+        ],
+      })
+    )
+      throw conflict(
+        "A demo trip or completion is in progress. Complete or recover it before reset.",
+      );
     // Freeze fleet first: revision checks invalidate concurrent candidate reads.
     // A reservation already in flight is left intact, and reset fails closed.
     if (
@@ -46,6 +60,50 @@ export async function seedOperations(config, actor, { reset = false } = {}) {
       throw conflict(
         "An assignment started during reset. Retry after it completes.",
       );
+    const resetAllocations = await Allocation.find({
+      isDemo: true,
+      tankerId: { $in: owned.map((t) => t._id) },
+      status: { $nin: ["ASSIGNING", "RECONCILING"] },
+    }).select("_id");
+    const resetIds = resetAllocations.map((a) => a._id);
+    // Claim both sides before deleting. A concurrent trip start either wins
+    // before the Delivery claim (reset rolls back) or fails its ASSIGNED CAS.
+    await Allocation.updateMany(
+      { _id: { $in: resetIds }, status: "ASSIGNED" },
+      { $set: { status: "RESETTING" } },
+    );
+    await Delivery.updateMany(
+      { allocationId: { $in: resetIds }, isDemo: true, status: "ASSIGNED" },
+      { $set: { status: "RESETTING" } },
+    );
+    if (
+      await Delivery.exists({
+        allocationId: { $in: resetIds },
+        isDemo: true,
+        $or: [
+          { status: { $in: ["EN_ROUTE", "ARRIVED", "COMPLETING"] } },
+          { syncPending: true },
+        ],
+      })
+    ) {
+      await Allocation.updateMany(
+        { _id: { $in: resetIds }, status: "RESETTING" },
+        { $set: { status: "ASSIGNED" } },
+      );
+      await Delivery.updateMany(
+        { allocationId: { $in: resetIds }, status: "RESETTING" },
+        { $set: { status: "ASSIGNED" } },
+      );
+      throw conflict(
+        "A trip started during reset. Its reservation was preserved.",
+      );
+    }
+    await Delivery.deleteMany({
+      isDemo: true,
+      allocationId: { $in: resetAllocations.map((a) => a._id) },
+      status: { $in: ["RESETTING", "DELIVERED"] },
+      syncPending: false,
+    });
     await Allocation.deleteMany({
       isDemo: true,
       tankerId: { $in: owned.map((t) => t._id) },
@@ -58,6 +116,11 @@ export async function seedOperations(config, actor, { reset = false } = {}) {
         $inc: { revision: 1 },
       },
     );
+    await Delivery.deleteMany({
+      isDemo: true,
+      allocationId: { $in: resetIds },
+      status: { $in: ["ASSIGNED", "RESETTING"] },
+    });
   }
   const definitions = [
     {

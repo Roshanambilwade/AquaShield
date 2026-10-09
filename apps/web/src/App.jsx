@@ -16,6 +16,8 @@ import LoginPage from "./pages/LoginPage.jsx";
 import AnalyticsPage from "./pages/AnalyticsPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
 import ReportReviewPage from "./pages/ReportReviewPage.jsx";
+import DeliveriesPage from "./pages/DeliveriesPage.jsx";
+import OperatorAssignmentPage from "./pages/OperatorAssignmentPage.jsx";
 
 export default function App() {
   return (
@@ -37,12 +39,17 @@ export default function App() {
           <Route path="analytics" element={<AnalyticsPage />} />
           <Route path="tankers" element={<OperationsPage fleetOnly />} />
           <Route path="allocations" element={<OperationsPage />} />
+          <Route path="deliveries" element={<DeliveriesPage />} />
           <Route path="reports" element={<ReportReviewPage />} />
           <Route path="reports/:id" element={<ReportReviewPage />} />
         </Route>
         <Route path="alerts" element={<ShortagesPage />} />
         <Route path="alerts/:id" element={<ShortageStatusPage />} />
         <Route path="operator" element={<OperatorPage />} />
+        <Route
+          path="operator/assignment/:id"
+          element={<OperatorAssignmentPage />}
+        />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

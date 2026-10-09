@@ -1,7 +1,9 @@
 import { useContext, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { AuthContext } from "../lib/authContext.js";
 import { adminRequest } from "../lib/adminApi.js";
 import RoleGuard from "../components/RoleGuard.jsx";
+import TripCard from "../components/TripCard.jsx";
 export default function OperatorPage() {
   return (
     <RoleGuard role="OPERATOR">
@@ -63,6 +65,21 @@ function OperatorAssignments() {
             ))}
           </section>
           <section className="admin-panel">
+            <h2>Trip controls and delivery history</h2>
+            {!data.deliveries?.length && <p>No trips recorded yet.</p>}
+            <div className="operations-cards">
+              {data.deliveries?.map((d) => (
+                <TripCard
+                  key={d.id}
+                  delivery={d}
+                  onChange={async () => {
+                    setData(await adminRequest("/operator/assignments"));
+                  }}
+                />
+              ))}
+            </div>
+          </section>
+          <section className="admin-panel">
             <h2>Current assignments</h2>
             {!data.assignments.length && (
               <p>No assignment has been approved and assigned to you.</p>
@@ -73,6 +90,12 @@ function OperatorAssignments() {
                   {a.destination.area} · {a.status}
                 </h3>
                 <p>Assignment {a.id}</p>
+                <Link
+                  className="button button-secondary"
+                  to={`/operator/assignment/${a.id}`}
+                >
+                  Open assigned job
+                </Link>
                 {a.isDemo && (
                   <p className="demo-note">Simulated demo assignment</p>
                 )}

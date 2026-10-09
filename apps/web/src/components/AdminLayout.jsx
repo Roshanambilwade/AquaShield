@@ -18,6 +18,9 @@ export default function AdminLayout() {
             <NavLink to={`/admin/analytics${suffix}`}>Analytics</NavLink>
             <NavLink to={`/admin/allocations${suffix}`}>Allocations</NavLink>
             <NavLink to={`/admin/tankers${suffix}`}>Tankers</NavLink>
+            <NavLink to={`/admin/deliveries${suffix}`}>
+              Trips and deliveries
+            </NavLink>
             <NavLink to={`/admin/reports${suffix}`}>Citizen reports</NavLink>
           </nav>
         </div>
