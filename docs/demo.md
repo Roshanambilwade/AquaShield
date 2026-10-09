@@ -1,6 +1,6 @@
 # AquaShield demo — implemented capabilities and future checkpoints
 
-This guide reflects the revised specification strategy as of 9 October 2026. Phases 1–4 work locally; the next phase is explainable deterministic decision support. No LLM agents, tanker allocation/delivery workflow, prediction engine or verified AWS deployment have been added. AWS hosting is a later required deliverable; Strands Agents SDK and Amazon Bedrock remain optional future enhancements.
+This guide reflects the revised specification strategy as of 9 October 2026. Phases 1–4 work locally; the next phase adds Strands/Gemini agents around explainable deterministic backend decisions. No LLM agents, tanker allocation/delivery workflow, prediction engine or verified AWS deployment have been added. AWS hosting is a later required deliverable; Strands Agents SDK with Google Gemini and four roles is the planned MVP architecture; Bedrock remains optional. Local AWS CLI authentication is unavailable and does not block Gemini development. Agent configuration/code is not implemented by this documentation change.
 
 ## Demonstrate the current Phase 1–4 application
 
@@ -27,12 +27,20 @@ The five areas contain 66 fictional report submissions, including two duplicates
 
 ## Later phases — do not demonstrate as completed yet
 
-- Phase 5: show structured deterministic recommendations with source evidence, stable priority rules, fairness assumptions, unknown inputs and explanations. No provider call is required; this phase cannot assign a tanker or dispatch water.
+- Phase 5: show four Strands/Gemini role definitions (Crisis Detection, Resource Allocation, Logistics, Early Warning), backend deterministic recommendations/fairness/ranking and separately validated agent explanations. Logistics/risk inputs remain unavailable until their later phase. Show actual successful Gemini execution with provider/model provenance; demonstrate DEMO_AI_MODE separately as key-free simulation with no provider call. This phase cannot assign tankers or dispatch water.
 - Phase 6: once implemented/tested, show valid fleet data, feasibility checks, human approval/audit, assignment, operator trip status, estimated route/ETA, OTP/QR verification and recorded litres. Do not invent T04, fleet availability, exact travel time or people served.
-- Phase 7: show the retained deterministic early-warning model evaluated against available trend/supply/environment/incident/history inputs, including unknowns, reasons and approximate horizon. Do not script an 87/100 prediction or substitute an EMERGING cluster for it.
+- Phase 7: show the retained backend deterministic early-warning model evaluated against available trend/supply/environment/incident/history inputs, plus Early Warning agent explanations, unknowns, reasons and approximate horizon. Do not script an 87/100 prediction or substitute an EMERGING cluster for it.
 - Phase 8–9: complete hardening/public deployment tests, then film the actual AWS-hosted application and publish accurate setup/screenshots/results. Prefer Amplify Hosting and eligible compatible App Runner, allowing MongoDB Atlas. Follow the account-eligibility and technical checks in specification sections 47–48; the target account/configuration is not yet verified.
 
-There is currently no implemented `reset:demo` command or complete allocation-to-delivery demo. Extend/reset only labeled fictional records when the later phase is authorized, preserving private live data. Optional future LLM integrations must disclose actual execution and cannot replace deterministic numeric facts or approvals.
+There is currently no implemented `reset:demo` command or complete allocation-to-delivery demo. Extend/reset only labeled fictional records when the later phase is authorized, preserving private live data. Planned Strands/Gemini integrations must disclose actual execution and cannot replace deterministic numeric facts or approvals. Bedrock is optional.
+
+## Planned agent-mode demonstration — not implemented yet
+
+Use Strands with an explicitly configured Google/Gemini provider. Store GEMINI_API_KEY only in the backend/agent process environment; examples stay blank and credentials never appear on camera, in logs, bundles, API responses or source control. Choose a verified supported GEMINI_MODEL during implementation. Main React/Express modules remain JavaScript; TypeScript is allowed only inside an isolated agent service if the supported integration requires it.
+
+- Real mode: DEMO_AI_MODE=false; demonstrate successful actual Gemini calls through Strands using minimal synthetic evidence, recorded role/provider/model/framework and validated explanations. Backend computes all severity/confidence/population/fairness/distance/ETA/risk numbers. A missing key or failed call is an explicit error/unavailable state, not simulated success.
+- Demo mode: DEMO_AI_MODE=true; test without a key or network model calls using the same validated contract and backend-calculated facts. Display "Demo AI simulation — no Gemini execution," isDemo=true and providerExecuted=false. A simulation does not prove real Strands/Gemini execution.
+- Preserve Phase 1–4 reporting/detection/dashboard availability during provider failures. Do not silently default to Bedrock or switch real failures into demo results. Keep production demo protections intact.
 
 ## Required AWS evidence for the final video
 

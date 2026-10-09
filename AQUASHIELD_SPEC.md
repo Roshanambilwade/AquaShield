@@ -12,12 +12,12 @@ These rules override any conflicting instruction later in this document.
 
 5. Do not create `.ts` or `.tsx` files for the main frontend or backend.
 
-6. Do not add a TypeScript shared-types package unless it is technically required by a dependency.
+6. Do not add a TypeScript shared-types package unless technically required by a dependency. If the official supported Strands Node SDK integration requires TypeScript, isolate it to the backend-only agent service; never convert the main application.
 
 7. AWS is a mandatory core requirement for this hackathon project.
-8. **AWS requirement:** Satisfy the hackathon's AWS requirement by deploying the functioning AquaShield application on AWS. The deployment must be real and demonstrated in the final video. Do not make Strands Agents SDK or Amazon Bedrock mandatory for the MVP.
+8. **AWS requirement:** Deploy the functioning AquaShield application on AWS in a separate later phase and demonstrate tested public frontend/backend URLs in the final video. Local AWS CLI authentication is currently unavailable and must not block Gemini agent development. Amazon Bedrock is optional, not required for the MVP.
 
-9. **AI implementation:** Strands Agents SDK and Amazon Bedrock are optional future enhancements. For the current MVP, use explainable, deterministic backend logic for crisis prioritization, allocation recommendations, and risk scoring. Do not label deterministic outputs as LLM-generated or claim real AI-agent execution.
+9. **AI implementation:** Use Strands Agents SDK with Google Gemini for Crisis Detection, Resource Allocation, Logistics and Early Warning roles. Keep severity, confidence, population estimates, fairness/priority, distance, ETA and risk scores deterministic in the JavaScript backend. Keep GEMINI_API_KEY only in a backend environment variable, never hardcoded or committed. Provide explicit DEMO_AI_MODE for key-free testing, clearly labeled as simulation rather than actual Gemini execution. Claim real execution only after a successful provider call.
 
 10. **Deployment strategy:** Prefer AWS Amplify Hosting for the React/Vite frontend and AWS App Runner for the Node.js/Express backend, provided these fit the existing repository. MongoDB Atlas may remain the external database. Verify compatibility before selecting the final configuration.
 
@@ -35,7 +35,7 @@ You are a senior full-stack engineer, product designer, and hackathon engineerin
 
 Build a working, explainable AquaShield MVP with frontend, backend APIs, MongoDB, citizen reporting, geographic/time shortage detection, confidence, deterministic severity, decision support, fairness-aware allocation, tanker operations, delivery verification, deterministic early warning, an admin dashboard, realistic labeled demo evidence, tests and documentation.
 
-The AWS requirement is actual application deployment, demonstrated through tested public frontend/backend URLs in the final video. AWS is not a required AI/LLM provider. Strands Agents SDK, Amazon Bedrock and real LLM agents are optional future enhancements, outside MVP acceptance.
+The AWS requirement is actual application deployment, demonstrated through tested public frontend/backend URLs in the final video. AWS is not a required AI/LLM provider. Strands Agents SDK with Google Gemini and four focused roles is the planned MVP agent architecture. Bedrock is optional; local AWS CLI authentication is not needed for Gemini. Numeric calculations remain deterministic backend facts.
 
 Implement one authorized phase at a time. Phase 1–4 application code is already working; this specification describes the completed foundation and planned later phases. Do not infer that later features or AWS deployment are already implemented. Keep the local application runnable with one clear setup process. Reuse working JavaScript modules and do not ask unnecessary clarification questions.
 
@@ -68,7 +68,7 @@ Citizen reports + available infrastructure/environment signals
 → verified delivery
 → deterministic early warning.
 
-Describe implemented modules as deterministic decision support. AI/LLM integration may be offered later but is not claimed as running in the current application.
+Describe current Phase 1–4 modules as deterministic decision support. Strands/Gemini agents are planned for Phase 5, not running yet. Distinguish real Gemini advice from backend facts and key-free DEMO_AI_MODE simulations.
 
 ---
 
@@ -108,7 +108,7 @@ Citizen Report
 → Recorded response outcome
 → Monitoring and deterministic early-warning risk.
 
-The recommendation layer supplies evidence, rules, assumptions and missing inputs. An authorized administrator approves operational actions. The system records the decision. No LLM is required for this workflow; allocation, delivery and prediction remain later-phase work.
+The recommendation layer supplies evidence, rules, assumptions and missing inputs. An authorized administrator approves operational actions. The system records the decision. Strands/Gemini agents will explain backend facts and recommend actions in authorized later phases; allocation, delivery and prediction operations remain phase-scoped. The current deterministic core continues working without model access.
 
 ---
 
@@ -118,7 +118,7 @@ Position AquaShield as an intelligence and decision layer for emergency water ma
 
 Its value is report-based detection, spatial/time clustering, evidence-based shortage confidence, transparent deterministic severity, explainable prioritization, fairness-aware allocation, early warning, delivery verification and auditability.
 
-Do not claim to be the first tanker booking system, to know exact remaining water, or to know exact affected population without verified evidence. Label estimates and simulated inputs. Do not market deterministic modules as LLM agents or describe the current application as running Strands/Bedrock. These integrations are optional future enhancements.
+Do not claim to be the first tanker booking system, to know exact remaining water, or to know exact affected population without verified evidence. Label estimates and simulated inputs. Do not market deterministic modules as LLM agents or describe the current application as running Strands/Bedrock. The planned Strands/Gemini integration is not implemented yet; Bedrock alone remains optional.
 
 Current emerging report evidence and future predictive risk are different concepts. Explain what has been implemented, what remains a placeholder, and which later capabilities are planned.
 
@@ -135,10 +135,10 @@ These are target capabilities, delivered only in their authorized phases.
 
 ## 6.2 Administrator / Municipal Operator
 - Sign in, inspect reports and shortage evidence, severity, confidence and approximate affected population.
-- Request an explainable deterministic priority recommendation in Phase 5.
+- Request Strands/Gemini explanations of deterministic priority recommendations in Phase 5, with clear real/demo provenance.
 - Review event verification/merging and approve/reject resource allocations when those workflows are implemented.
 - Monitor available fleet records, delivery, predictions, analytics and audit history in later phases.
-- Optional future LLM summaries are supplementary and never authorize dispatch.
+- Gemini explanations supplement backend facts and never authorize dispatch; explicit demo output is labeled as simulation.
 
 ## 6.3 Tanker Operator
 - In the later operational phase, view assignments and estimated route/ETA, start a trip, record arrival, verify delivery with OTP/QR and record delivered litres.
@@ -149,7 +149,7 @@ Phase 4's tanker-operator page is a placeholder, not a working trip or authentic
 
 # 7. CORE FEATURE SET
 
-Implement the MVP in the phase order in section 74 and the latest authorized Codex prompt. Deterministic decision support is required; real LLM agents are optional future enhancements and not a prerequisite for any MVP phase.
+Implement the MVP in the phase order in section 74 and the latest authorized Codex prompt. Required planned capabilities include deterministic decision support and four Strands/Gemini agent roles. Bedrock is optional; real execution and key-free demo testing are distinct. Implement only the authorized phase.
 
 ## MUST HAVE — Citizen Water Shortage Reporting
 A citizen submits location, area/locality, problem type, last supply time, approximate shortage duration, household water category, household size and timestamp, with optional description/photo. Identity/contact fields may be optional when a later account workflow is implemented; preserve the existing anonymous browser-owned reporting.
@@ -404,86 +404,79 @@ Example:
 
 ---
 
-# 13. DETERMINISTIC DECISION SUPPORT AND OPTIONAL FUTURE AGENTS
+# 13. STRANDS AGENT FRAMEWORK WITH GOOGLE GEMINI
 
-The MVP uses small, modular JavaScript services for crisis evidence, priority recommendations, logistics and risk. These are deterministic business services, not LLM agents. Reuse severityEngine, confidenceEngine, reportClusteringService and fairnessEngine rather than recreating their calculations.
+The planned MVP agent framework is the Strands Agents SDK, with Google Gemini as the real language-model provider. Amazon Bedrock is an optional provider enhancement and must not be a startup, local authentication, testing or MVP dependency. Local AWS CLI authentication is currently unavailable; this does not block Gemini agent development. AWS deployment remains a separate later phase.
 
-Strands Agents SDK, Amazon Bedrock and real LLM-based crisis/allocation/logistics/prediction agents are optional future enhancements. They are not startup dependencies, default providers, required phase deliverables or acceptance criteria. A future adapter may summarize validated evidence but must leave deterministic scores, factual inputs and authorization authoritative.
+Implement four roles: Crisis Detection, Resource Allocation, Logistics and Early Warning. These agents interpret validated evidence and provide explanations/recommendations. They do not calculate authoritative numbers, establish field verification, invent missing inputs, approve resources or write operational state. Reuse backend severityEngine, confidenceEngine, populationEngine, reportClusteringService, fairnessEngine and later routing/prediction services.
 
-Do not create a separate agent service or require an AI credential just to run the MVP. Missing information stays unknown, and output provenance must identify the method actually executed.
+The official Node SDK supports TypeScript/JavaScript and documents a Google provider. Prefer JavaScript integration where the selected supported SDK permits it. If its supported integration requires TypeScript, isolate source, tsconfig, dependencies, build and compiled output to a server-side apps/agents service. Never convert apps/web, apps/api or shared application modules, or introduce a TypeScript shared-types package for convenience.
 
----
+Verify and pin the supported SDK/provider version during implementation, including runtime, tool calling and structured-output capabilities. Current official documentation uses @strands-agents/sdk, @google/genai and GoogleModel from @strands-agents/sdk/models/google. Explicitly select the Gemini provider; do not instantiate an agent with an implicit Bedrock default. Package/import names can change and must be checked against the pinned version. These are future integration requirements, not installed dependencies. [Official Node SDK](https://github.com/strands-agents/sdk-typescript), [Google provider](https://strandsagents.com/docs/user-guide/sdk/model-providers/google/)
 
-# 14. CRISIS EVIDENCE SERVICE
-
-Reuse the existing geographic/time clustering, duplicate/suspicious handling, shortage event creation and confidence calculations.
-
-Inputs: structured reports, locations, timestamps, problem types, verified infrastructure incidents and environmental data where available.
-
-Outputs: event summary, shortage confidence, evidence, affected zone, severity inputs, report exclusions and recommended verification action. Summaries and verification guidance are generated from backend rules/templates, not an LLM. Automated corroboration does not become field verification.
-
-Return structured data with source references, observation time, method and unknown inputs. Confidence always means confidence that a genuine shortage exists. An optional future crisis-summary agent may explain these authoritative results without recalculating them or inventing evidence.
+Use backend-only GEMINI_API_KEY and a configurable GEMINI_MODEL. Provide explicit DEMO_AI_MODE for key-free testing. Demo responses are simulations, not actual Gemini or Strands execution. The current Phase 1–4 app contains no agent implementation; this task changes documentation only.
 
 ---
 
-# 15. EXPLAINABLE PRIORITY AND RECOMMENDATION SERVICE
+# 14. CRISIS DETECTION AGENT
 
-Phase 5 builds an explainable decision-support layer without requiring an LLM, AWS AI credentials or a provider SDK.
+The Crisis Detection role uses Strands with Gemini to explain the existing shortage evidence: geographic/time clustering, duplicate/suspicious exclusions, verified report counts, infrastructure/environment context and uncertainty. Backend tools supply computed severity, shortage confidence and approximate population with source references and observation times.
 
-Inputs: existing shortage events, deterministic severity/confidence, approximate population, duration, known environmental/vulnerability data and verified delivery history when available. Fleet/capacity/location information may be read where records exist; actual tanker selection/assignment belongs to the later allocation phase.
+Return an evidence summary, missing inputs, limitations and recommended verification actions. Never create an event, mark a report verified or recompute a numeric score from model text. Existing report submission/detection continues deterministically without waiting for an agent. Automated corroboration is not field verification. Confidence means evidence that a genuine shortage exists, not water remaining.
 
-Use configurable deterministic rules and the existing fairnessEngine. Document ranking and stable tie-breakers. Unknown delivery history is not zero deliveries; retain null/partial priority where required by the existing fairness helpers and explain any evidence-only ordering. Do not invent a fairness benefit from missing records.
-
-Return structured recommendations containing method DETERMINISTIC, rule version, source event references, ranked attention areas, evidence-based reasons, known score components, assumptions, excluded/unknown inputs and recommended assessment actions. Reuse the event's shortage confidence; do not invent a separate numeric recommendation confidence or label it as water remaining.
-
-Recommendations are read-only. No allocation, dispatch or delivery state changes occur in Phase 5. Human approval becomes actionable in the later operations phase. A future optional LLM allocation agent can summarize the validated recommendation but cannot replace numeric ranking or authorization.
+Phase 5 enables read-only assessment; real output records actual Gemini execution. Explicit demo mode returns the same validated contract with simulation labels and no provider call.
 
 ---
 
-# 16. DETERMINISTIC LOGISTICS SUPPORT — LATER OPERATIONS PHASE
+# 15. RESOURCE ALLOCATION AGENT AND DETERMINISTIC PRIORITY SERVICE
 
-When tanker operations are authorized, select feasible tankers using stored locations, capacities, availability, existing assignments and deterministic distance/ETA calculations. Do not invent coordinates, fleet availability, traffic or exact arrival times.
+Phase 5 adds a Strands/Gemini Resource Allocation role around an explainable deterministic priority service. Inputs are existing events, severity/confidence, approximate population, duration, available environmental/vulnerability evidence and verified delivery history when present.
 
-Return the candidate tanker/area references, calculated or approximate distance, estimated ETA, capacity checks, selection rules and explanatory reasons. Label assumptions such as straight-line routing or average speed. Missing fleet/location data means no defensible tanker recommendation, not a fabricated assignment.
+Backend rules and fairnessEngine calculate ranking, fairness adjustments and stable tie-breakers. Unknown delivery history is not zero deliveries; preserve null/partial priority and explain evidence-only ordering. The agent explains the backend ordering, identifies limitations and proposes assessment actions; it cannot alter scores, numeric priority or approved state. Reuse shortage confidence rather than inventing a numeric recommendation confidence.
 
-The optional future Logistics Agent may provide supplementary prose from this structured result. Neither Strands nor Bedrock is required for logistics or human-approved assignment.
+Output separates authoritative deterministicFacts (rule version, ranked event references, scores/estimates, source evidence, assumptions and unknowns) from agentAdvice (role, validated narrative/action, provider and execution metadata). Gemini must be explicitly selected for real calls. DEMO_AI_MODE uses labeled deterministic simulations, never a fake provider-executed flag.
 
----
-
-# 17. DETERMINISTIC EARLY-WARNING SUPPORT — LATER PREDICTION PHASE
-
-Preserve the transparent predictionEngine model in section 58. Use increasing report frequency, supply delay, infrastructure incidents, environmental stress, available rainfall and historical patterns to derive a configurable risk score, level, approximate horizon, reasons and preparation guidance.
-
-No LLM or trained ML model is required. Risk is different from current shortage severity and shortage confidence. In Phase 4, an EMERGING report cluster is limited current evidence, not a forecast. Prediction is not implemented merely because this model is specified.
-
-Risk examples such as 87/100 or 12–24 hours are illustrative. Derive displayed values from actual inputs and label uncertainty/unknown signals. An optional future prediction-summary agent can explain the deterministic model, not substitute invented risk values or certainty.
+Recommendations remain read-only in Phase 5. Tanker feasibility/selection and human-approved assignments belong to Phase 6. A missing fleet is unavailable evidence, not permission to invent a tanker. The backend revalidates constraints before any later human-approved operation.
 
 ---
 
-# 18. DETERMINISTIC SERVICE ORCHESTRATION
+# 16. LOGISTICS AGENT AND BACKEND ROUTING — LATER OPERATIONS
 
-Input reports
-→ Existing clustering and confidence services
-→ Backend deterministic severity
-→ Explainable priority/recommendation service
-→ Administrator review
-→ Later-phase deterministic fleet/logistics checks
-→ Explicit human approval
-→ Recorded tanker assignment.
+Define the Logistics Strands/Gemini role in Phase 5. Until Phase 6 enables fleet and routing tools, it explicitly reports unavailable operational inputs rather than inventing an assignment, distance or ETA.
 
-In the later prediction phase: periodic structured signals → predictionEngine → labeled early-warning risk alerts.
+In Phase 6 the backend checks stored tanker locations, capacities, availability and assignments; calculates distance and estimated ETA using a configured routing source or labeled straight-line/average-speed fallback; and selects feasible candidates deterministically. All numeric distance/ETA/feasibility calculations stay in the JavaScript backend.
 
-Keep orchestration simple and modular. The MVP does not require an agent runtime or a distributed agent architecture. Optional future Strands/Bedrock adapters must be isolated extensions whose absence does not disable deterministic core services.
+The agent explains the backend result, constraints, assumptions and recommended operational steps. It cannot invent coordinates, traffic, exact arrival times, fleet availability or capacity, and cannot dispatch. Administrator approval plus fresh backend feasibility checks authorize assignment. Clearly label estimates and simulated records. Bedrock and AWS CLI credentials are not required for Gemini execution.
+
+---
+
+# 17. EARLY WARNING AGENT AND DETERMINISTIC RISK — LATER PREDICTION
+
+Define the Early Warning Strands/Gemini role in Phase 5 with an explicit unavailable-data response until Phase 7 implements prediction tools. Do not call current EMERGING clusters forecasts.
+
+Preserve predictionEngine and the transparent risk model in section 58. The JavaScript backend calculates risk score, level and approximate horizon from configurable report trend, supply delay, environmental stress, infrastructure incidents and historical inputs. Missing inputs and uncertainty remain explicit; a trained ML model is not required.
+
+The agent explains these results and recommends preparation actions. It cannot generate authoritative risk numbers or turn illustrative 87/100 or 12–24-hour examples into facts. Backend reasons remain inspectable separately from Gemini advice. Demo mode uses labeled simulated inputs and backend-derived numbers with no model call. Actual prediction and alert operations wait for Phase 7 authorization.
+
+---
+
+# 18. AGENT ORCHESTRATION AND BACKEND BOUNDARIES
+
+Citizen report → existing JavaScript clustering/confidence/population/severity services → persisted event → authorized read-only assessment → backend deterministic priority/fairness facts → Strands/Gemini role explanations → administrator review.
+
+Phase 6 adds backend fleet/routing tools and human-approved assignment; Phase 7 adds deterministic prediction tools and Early Warning explanations. Four focused roles can share one server-side service; do not create unnecessary distributed infrastructure. Phase 5 defines all four roles but must disclose unavailable later-phase tools.
+
+Express authenticates/authorizes requests before invoking agents. If isolated apps/agents is required, use a validated internal contract and protected server-to-server boundary; no public unauthenticated agent endpoint or direct browser key access. Agents get bounded, read-only backend tools and cannot mutate MongoDB/allocations. Do not pass arbitrary citizen text as instructions.
+
+Track request/role, source event and evidence version, framework/provider/model, timestamps, execution status, demo flag and validated output. Use bounded timeouts, retries and tool-call budgets. Agent failure must not prevent report persistence, deterministic detection, scores or existing dashboards. Never silently switch a failed real call into a successful demo or Bedrock call.
 
 ---
 
 # 19. HUMAN-IN-THE-LOOP
 
-The deterministic recommendation layer proposes assessment/priority actions. Administrators review evidence, assumptions and missing inputs. Only the later allocation workflow may create an assignment after an authorized approval and fresh availability checks.
+Agents propose assessment/actions and explain deterministic evidence. Administrators review facts, assumptions, unknowns and actual execution provenance. Only Phase 6's allocation workflow may create an assignment after explicit authorized approval and fresh backend feasibility checks.
 
-Planned operational actions: Approve Allocation, Reject and Recalculate. Record the actor, recommendation provenance, rule version, evidence and outcome. Phase 5 recommendations alone must not dispatch resources.
-
-Any optional future LLM recommendation has the same human-approval and audit requirements, with its supplementary provenance clearly identified.
+Planned operational actions: Approve Allocation, Reject and Recalculate. Record actor, deterministic rule version, source evidence, agent role/provider/execution metadata and outcome. Phase 5 agent responses alone must never dispatch resources. Demo recommendations have the same approval constraints and cannot masquerade as real Gemini execution.
 
 ---
 
@@ -583,15 +576,15 @@ Recommended action
 
 ---
 
-# 22. EXPLAINABLE RECOMMENDATION PANEL
+# 22. EXPLAINABLE AGENT RECOMMENDATION PANEL
 
-In Phase 5, build a visible AquaShield Recommendation / Decision Support panel using deterministic backend output. Show recommended assessment or priority action, existing severity and shortage confidence, approximate affected population, evidence, fairness context where verified, missing inputs and rule version.
+In Phase 5, build a visible recommendation panel showing backend severity, shortage confidence, approximate population, deterministic priority, source evidence, fairness context, missing inputs and rule version alongside validated Strands/Gemini explanations.
 
-Use language such as "Deterministic recommendation — human review required." A tanker proposal may appear only when real or clearly labeled simulated fleet data and a tested logistics/selection rule exist in the later operations phase. Unknown delivery history must be shown as unknown, not "no recent delivery."
+Clearly distinguish execution states: Gemini-generated advice (actual successful call), Demo AI simulation (no model execution), deterministic evidence only, unavailable/pending and failed provider call. Show agent role and real provider/model when applicable. Never label backend scores as Gemini-calculated or simulate an execution badge.
 
-Approve Allocation is available only once the later authorization/allocation workflow exists. No recommendation may be labeled LLM-generated unless an optional future provider actually executed.
+A tanker proposal appears only when real or clearly labeled simulated records and tested backend selection/routing exist in Phase 6. Unknown delivery history is unknown, not "no recent delivery." Approve Allocation requires the later workflow and authorization.
 
-The working Phase 4 application currently contains an inactive AI-labeled placeholder. Keep its current code untouched during this documentation task; its text/functionality can be aligned when Phase 5 is explicitly authorized.
+The working Phase 4 UI has an inactive AI-labeled placeholder. This documentation task leaves its code untouched and starts no Phase 5 development.
 
 ---
 
@@ -934,7 +927,7 @@ Illustrative future record; this is not the current database implementation:
   "createdAt": "..."
 }
 
-Do not default aiRecommendation to true. Optional future LLM involvement must have explicit execution provenance; human approval and backend scores remain authoritative.
+Do not default aiRecommendation to true. Gemini advice must carry explicit real/demo execution provenance separate from deterministic recommendationMethod; human approval and backend scores remain authoritative.
 
 ---
 
@@ -971,11 +964,9 @@ Do not default aiRecommendation to true. Optional future LLM involvement must ha
 
 # 39. AUDIT LOG — IMPLEMENT IN THE AUTHORIZED PHASE
 
-Record decisions with actor, action, entity, entityId, timestamp and metadata.
+Record decisions with actor, action, entity, entityId, timestamp and metadata. Events include REPORT_CREATED, REPORT_VERIFIED, SHORTAGE_DETECTED, RECOMMENDATION_GENERATED, ALLOCATION_APPROVED, TANKER_ASSIGNED, TANKER_ARRIVED, DELIVERY_VERIFIED and PREDICTION_GENERATED.
 
-Events: REPORT_CREATED, REPORT_VERIFIED, SHORTAGE_DETECTED, RECOMMENDATION_GENERATED, ALLOCATION_APPROVED, TANKER_ASSIGNED, TANKER_ARRIVED, DELIVERY_VERIFIED and PREDICTION_GENERATED.
-
-Recommendation metadata includes method DETERMINISTIC, rule version, source evidence, assumptions and missing inputs. A future optional provider may record actual LLM execution separately; never emit an agent-executed event for deterministic code or a mock.
+Recommendation metadata separates deterministic rule version/source evidence/assumptions from agent role/framework/provider/model/execution status. Record DEMO_SIMULATION, REAL_GEMINI, DETERMINISTIC_ONLY and failures distinctly, with request/evidence versions and validated outcome. Never emit a successful provider/agent-executed event for a mock, missing key or failed call. Never log API keys, auth tokens or unnecessary private citizen data.
 
 ---
 
@@ -1003,13 +994,13 @@ GET /api/shortages/:id/severity
 POST /api/shortages/:id/calculate-severity — admin only
 POST /api/shortages/:id/verify — later verification workflow
 
-## Deterministic Decision Support — planned Phase 5
+## Agent-Assisted Decision Support — planned Phase 5
 POST /api/recommendations/prioritize
 GET /api/recommendations/:id
-Use structured evidence, deterministic rules, source/method metadata and admin authorization. These planned routes require no LLM provider and must not allocate or dispatch resources.
+Use structured evidence, deterministic rules, source/method metadata and admin authorization. These planned routes return backend facts plus separately labeled Strands/Gemini advice or demo simulation and must not allocate or dispatch resources. Provider failures are explicit without breaking deterministic facts.
 
-## Optional Future AI Adapters
-/api/ai/detect, /api/ai/allocate, /api/ai/logistics, /api/ai/predict and /api/ai/recommend-allocation are optional future integration proposals. They are not mandatory MVP endpoints, are not currently implemented and are not aliases that disguise deterministic services as agents.
+## Four-role agent invocation — planned, not current endpoints
+POST /api/ai/detect, POST /api/ai/allocate, POST /api/ai/logistics and POST /api/ai/predict invoke the corresponding read-only assessment roles through protected Express APIs. Route names do not authorize resource allocation, dispatch or prediction generation. Use validated inputs, admin authorization, rate limits and explicit mode/provenance. Later backend tools remain unavailable until their operational/prediction phase. Avoid duplicate implementations when the recommendations API can orchestrate a role.
 
 ## Tankers — later operations phase
 GET /api/tankers
@@ -1111,7 +1102,7 @@ Keep a clean environmental dashboard with high readability, reusable components,
 
 Components include MetricCard, SeverityBadge, ConfidenceBadge, ShortageCard, ReportCard, MapView, TankerCard, DecisionSupportPanel, PredictionCard, Timeline, AllocationModal, DeliveryVerificationModal, LoadingState, EmptyState, ErrorState and Toast, implemented only when needed in their authorized phase.
 
-Optional future AI UI must disclose actual execution and remain supplemental to deterministic evidence.
+The planned Strands/Gemini UI must distinguish real provider execution, demo simulation, deterministic evidence and unavailable/error states. Numeric fields come from the backend.
 
 ---
 
@@ -1120,7 +1111,7 @@ Optional future AI UI must disclose actual execution and remain supplemental to 
 AquaShield command-center heading
 → Honest KPIs
 → Map and active shortage evidence
-→ Explainable deterministic recommendation, when Phase 5 is implemented
+→ Backend-calculated recommendation with separate Strands/Gemini explanation and real/demo execution label, when Phase 5 is implemented
 → Current emerging evidence / separately labeled predictive risks
 → Recorded tanker operations, when implemented
 → Recent activity and evidence analytics.
@@ -1161,11 +1152,11 @@ Available tankers, assignment, route/ETA, previous delivery and predicted risk r
 5. Show labeled seeded scenarios separately from live citizen evidence. The current recommendation placeholder, fleet/delivery values and forecast values must be described as inactive/unknown where applicable.
 
 ## Planned later-phase complete flow
-6. Phase 5 generates a deterministic, explained priority recommendation with assumptions and source evidence. No LLM is required and no dispatch occurs here.
+6. Phase 5 generates backend deterministic priority facts plus Strands/Gemini explanations or explicitly labeled demo simulation, with source evidence and assumptions. Real Gemini execution requires a server-side key, not AWS CLI credentials. No dispatch occurs here.
 7. The later operations phase checks actual or explicitly simulated fleet feasibility, administrator approval and audit records before assigning a tanker.
 8. Operator progresses ASSIGNED → EN_ROUTE → ARRIVED, with calculated distance and clearly estimated ETA.
 9. OTP/QR verification and recorded delivered litres update delivery/operational metrics. People served is approximate unless separately verified; do not infer exact people served from tanker capacity.
-10. The later prediction phase calculates early-warning risk, uncertainty and preparation guidance from trend/environment inputs. Do not substitute current emerging evidence for a forecast.
+10. The later prediction phase calculates early-warning risk/uncertainty in the backend and uses the Early Warning agent to explain preparation guidance from those facts. Do not substitute current emerging evidence for a forecast.
 11. The deployment phase demonstrates tested public AWS frontend/backend URLs and MongoDB persistence in the final video.
 
 Only show steps whose phases have actually been implemented and tested. Future allocation/prediction/AWS screenshots or simulated provider responses are not proof of execution. Do not manually force demonstration scores into MongoDB.
@@ -1188,7 +1179,7 @@ Compatibility checks before a final deployment configuration:
 - Browser/API integration: static hosting does not run Vite's local proxy. Configure a tested hosted API base URL or explicitly verified reverse proxy; preserve the exact frontend CORS allowlist and check bearer/citizen-token preflights, auth and report/photo persistence.
 - Assess in-process rate limits and serialized detection before enabling multiple backend instances. Preserve production demo restrictions; resolve any isolated demo environment explicitly rather than silently enabling fictional production data.
 
-Strands Agents SDK, Amazon Bedrock, AI_PROVIDER, BEDROCK_MODEL_ID and agent credentials are optional future enhancements, not hosting requirements. Deterministic decision support must run without them. README must report chosen services, compatibility outcomes, actual deployment status, public URLs, verification results and limitations; never claim deployment before public tests pass.
+Strands/Gemini agent integration and AWS deployment are separate deliverables. Later hosting must accommodate the agent runtime/build if present, Gemini outbound HTTPS and secure backend environment injection. No Bedrock/model IAM access is required. The deterministic application remains usable without model access. README must report chosen services, compatibility outcomes, actual deployment status, public URLs, verification results and limitations; never claim deployment before public tests pass.
 
 ---
 
@@ -1196,11 +1187,11 @@ Strands Agents SDK, Amazon Bedrock, AI_PROVIDER, BEDROCK_MODEL_ID and agent cred
 
 Prefer one compatible architecture: Amplify Hosting → tested Express API on eligible App Runner → MongoDB Atlas. Service eligibility, runtime/build compatibility and networking must be checked as described in section 47; document any justified AWS-hosting alternative. No cloud resources are created by this specification update.
 
-The authorized deployment phase will configure build/start commands, HTTPS endpoints, exact CORS, SPA/API routing, server-side secrets, database connectivity, health checks and deployment logs. Use Secrets Manager or Parameter Store where needed; use roles instead of committed access keys. Docker/image deployment is an option if managed-source builds do not fit, not a requirement to introduce an AI service.
+The authorized deployment phase will configure build/start commands, HTTPS endpoints, exact CORS, SPA/API routing, server-side secrets, database connectivity, health checks and deployment logs. Use Secrets Manager or Parameter Store where needed; use roles instead of committed access keys. Docker/image deployment is an option if managed-source builds do not fit. Include an isolated agent service build/internal endpoint only if that integration requires one; no Bedrock/AgentCore hosting mandate.
 
 Before declaring AWS deployment complete, test public frontend direct navigation/refresh, public API health with MongoDB connected, admin login/authorization/logout, citizen report submission and persistence after reload/reconnect, derived shortage data and dashboard retrieval. Verify unavailable integrations remain honestly unknown. Record service names, URLs, region, commit/configuration, test outcomes and any limits in docs/aws.md and the final video.
 
-Planning notes or local tests are not deployment proof. Keep public live-app evidence and labeled local/isolated seed demonstrations distinguishable. Optional future Bedrock/Strands execution is not needed for deployment acceptance.
+Planning notes or local tests are not deployment proof. Keep public live-app evidence and labeled local/isolated seed demonstrations distinguishable. Real Gemini verification is a separate AI acceptance item; neither Bedrock execution nor local AWS CLI model authentication is required. AWS hosting itself still requires verified account access in that later phase.
 
 ---
 
@@ -1208,7 +1199,7 @@ Planning notes or local tests are not deployment proof. Keep public live-app evi
 
 Keep local npm commands working. In the authorized deployment phase, create a backend container if required by the selected AWS hosting approach; a frontend container is optional because Amplify can host static build artifacts.
 
-Optional local docker-compose services: web, api, mongodb and redis only if useful. A separate AI container/service is an optional future enhancement and never a prerequisite for the deterministic MVP or AWS deployment.
+Optional local docker-compose services: web, api, mongodb and redis only if useful. If SDK compatibility requires an isolated agent service, package its build and protected internal connection during later deployment. A separate container is a deployment choice, not a requirement to convert the JavaScript app or use Bedrock.
 
 ---
 
@@ -1287,23 +1278,23 @@ Do not expose stack traces to users.
 
 ---
 
-# 54. DECISION-SUPPORT SAFETY / RELIABILITY
+# 54. AGENT SAFETY AND DECISION-SUPPORT RELIABILITY
 
-Deterministic recommendations must not invent coordinates, population, tanker availability, water quantities, delivery history or evidence, and must never silently approve allocations.
+Use validated, bounded structured backend facts and read-only allowlisted tools. Agents must not invent coordinates, population, tanker availability, quantities, delivery history, field verification or numeric scores, and must never approve allocations. Treat citizen descriptions as untrusted data, not instructions.
 
-Operate on validated structured backend facts. Preserve exact verified values, approximate/estimated values and unknown values distinctly. Return structured output with method, rule version, source evidence, reasons, assumptions and missing inputs.
+Preserve verified, approximate and unknown values separately. Validate output schemas, evidence references, suggested actions and any echoed values against backend facts; reject unsupported/contradictory output rather than trusting model prose. Limit retries, tokens, calls and timeouts; handle provider/rate-limit/safety errors with sanitized API errors and an honest UI state.
 
-These same constraints apply to an optional future LLM integration. Supplemental prose must not alter authoritative severity/confidence/fairness/risk scores or claim agent execution when no provider ran.
+Agent failures leave existing report/detection/dashboard functionality operational. Keep keys server-side and redact secrets/private data from prompts, logs, responses and screenshots. Explicit demo mode is a separate labeled execution path, never an automatic real-call fallback.
 
 ---
 
-# 55. STRUCTURED DECISION INPUTS AND OPTIONAL FUTURE PROMPTING
+# 55. STRUCTURED AGENT INPUTS AND PROMPTS
 
-For deterministic decision support, preprocess existing event evidence rather than duplicating calculations. Supply event/area references, authoritative severity, shortage confidence, approximate population, duration, environmental inputs, verified previous-delivery records when available and valid fleet records only when the relevant phase is implemented.
+Prepare backend-calculated facts rather than duplicating numerical logic: event/area IDs, source/evidence version, observation time, severity, shortage confidence, approximate population, duration, known environmental/vulnerability data, verified delivery context and feasible fleet/routing/risk outputs only when their phase exists.
 
-For example, unknown previousDeliveryLitres must be null, not zero. A missing fleet feed is unknown, not a list of invented tankers. Preserve observation timestamps and simulation labels. Generate reasons from tested rules/templates and return structured output.
+Unknown previousDeliveryLitres stays null, not zero; missing fleet/history remains unknown. Preserve simulation flags. Send only minimal authorized aggregate evidence to Gemini, not raw database dumps, household photos/coordinates, contact details, citizen/session tokens or API keys.
 
-Only if a future LLM enhancement is explicitly authorized: do not send raw unstructured database dumps or private report data unnecessarily. Give a bounded validated evidence object, request supplemental explanation/summary, validate the result and disclose the actual provider execution. Prompts and provider responses are not required for the MVP.
+Define role-specific prompts for Crisis Detection, Resource Allocation, Logistics and Early Warning: explain supplied facts, cite evidence references, identify missing inputs, follow deterministic ordering and recommend allowed human-reviewed actions. Require validated structured responses, never authoritative model-calculated severity/confidence/population/distance/ETA/risk. Version prompts and contracts. Verify tool/structured-output compatibility against the pinned official SDK/Gemini version; validate locally regardless of provider support.
 
 ---
 
@@ -1471,97 +1462,100 @@ This demonstrates that AquaShield is trying to distribute scarce resources fairl
 
 # 62. TECH STACK
 
-Main application: React + JavaScript + Vite + React Router on the frontend; Node.js + Express + JavaScript + Mongoose + Zod on the backend; MongoDB/MongoDB Atlas; existing secure session authentication and CSS components. Keep .js/.jsx files and shared JavaScript constants; no TypeScript application migration or shared-types package.
+Main application: React + JavaScript + Vite + React Router; Node.js + Express + JavaScript + Mongoose + Zod; MongoDB/Atlas; existing sessions and CSS components. Preserve .js/.jsx and shared JavaScript constants; do not migrate the main app to TypeScript.
 
-Map: React Leaflet/OpenStreetMap with the existing offline coordinate fallback. Add chart/state/style libraries only when needed; do not replace working components unnecessarily.
+Map: React Leaflet/OpenStreetMap with the existing offline fallback. Preserve working components. Deterministic backend: severity, confidence, population, clustering, fairness, routing/ETA and later predictionEngine.
 
-Decision support: existing deterministic severity, confidence, clustering and fairness modules; explainable recommendation services next; deterministic predictionEngine in its later authorized phase.
+Agent framework: official Strands Agents SDK for Node, real model provider: Google Gemini. Configure the Google provider explicitly and verify/pin its supported version. Prefer JavaScript where supported; TypeScript is permitted only inside isolated apps/agents if technically required by the supported integration. No main-app or shared-types conversion.
 
-Deployment: prefer AWS Amplify Hosting and eligible AWS App Runner after section 47's compatibility checks, with Atlas allowed. Docker/Redis are optional where justified.
-
-Optional future AI/LLM enhancements: Strands Agents SDK, Amazon Bedrock or another explicitly selected provider. None is required for local use, recommendations, risk scoring, deployment or MVP acceptance.
+Provide DEMO_AI_MODE for labeled key-free agent simulation. Bedrock is optional, with no AWS authentication required for local Gemini use. AWS Amplify Hosting plus eligible compatible App Runner, Atlas and any agent-service build/network configuration are verified in the separate later deployment phase. Docker/Redis are optional where justified.
 
 ---
 
 # 63. REPOSITORY STRUCTURE
 
-Preserve the existing JavaScript npm workspaces and module separation. Proposed future documentation/modules do not imply they already exist:
+Preserve current JavaScript npm workspaces. Planned modules below do not already exist:
 
 aquashield/
 ├── apps/
-│   ├── web/                 # React/Vite .jsx/.js
-│   └── api/                 # Express .js routes/services/models
+│   ├── web/                 # existing React/Vite .jsx/.js
+│   ├── api/                 # existing Express .js; owns deterministic facts
+│   └── agents/              # planned server-only Strands/Gemini integration if isolation is needed
 ├── packages/
-│   └── shared/              # JavaScript constants/options
-├── scripts/                 # .js scripts if needed; existing API scripts may remain in place
+│   └── shared/              # existing JavaScript constants/options
 ├── docs/
 │   ├── phase3.md
 │   ├── phase4.md
 │   ├── demo.md
-│   ├── decision-support.md  # planned with the authorized recommendation phase
+│   ├── ai-architecture.md   # planned architecture/configuration and execution modes
 │   └── aws.md               # planned with actual deployment
 ├── README.md
 ├── .env.example
 └── package.json
 
-Do not require apps/agents, packages/types, .ts/.tsx scripts or a standalone agent service. Optional future provider adapters can be isolated inside backend modules without changing the main application's language or core services.
+If supported SDK integration requires TypeScript, keep all .ts sources, tsconfig, dependencies and compiled JavaScript output confined to apps/agents. The main .js/.jsx applications consume validated JSON contracts; do not add packages/types or convert application scripts. If JavaScript integration is supported, do not add TypeScript unnecessarily. One isolated service may host all four roles. No new service or dependencies are created in this documentation task.
 
 ---
 
 # 64. ENVIRONMENT VARIABLES
 
-Keep the existing working .env.example and active validation until a configuration change is explicitly authorized. Main settings include NODE_ENV, PORT, MONGODB_URI, connection timeouts, CORS_ORIGIN, VITE_API_BASE_URL, ADMIN_SESSION_HOURS and the existing configurable clustering/confidence/severity weights and thresholds. Provisioning uses ADMIN_EMAIL/ADMIN_PASSWORD; current sessions do not require JWT_SECRET.
+Existing active configuration and .env.example remain unchanged during this documentation task. Preserve NODE_ENV, PORT, MONGODB_URI/timeouts, exact CORS_ORIGIN, public VITE_API_BASE_URL, ADMIN_SESSION_HOURS, provisioning and deterministic weights/thresholds. Current sessions do not use JWT_SECRET.
 
-Only VITE_* values are public build-time frontend settings. Database credentials and any deployment secrets stay server-side. Hosted API URLs and frontend-origin allowlists must be set to the actual deployed endpoints; App Runner's service port uses its reserved PORT as covered in section 47.
+Future authorized agent implementation adds/validates server-only AI_PROVIDER=gemini, GEMINI_API_KEY (blank in examples), configurable GEMINI_MODEL, DEMO_AI_MODE=false by default, and bounded provider/tool timeout/retry settings. Prefer the explicit Google provider; legacy STRANDS_MODE is not a provider selector. The unchanged template's AI_PROVIDER=bedrock is inactive legacy configuration, not the new intended default. Correct it only in the authorized implementation phase. BEDROCK_MODEL_ID/AWS model credentials are optional and not required for MVP Gemini use.
 
-Legacy AI_PROVIDER=bedrock, BEDROCK_MODEL_ID, STRANDS_MODE and DEMO_AI_MODE placeholders are inactive optional future configuration. Their presence in the current file does not enable AI, establish an AWS dependency for local startup, or make deterministic outputs mocks. They must not become required settings for Phase 5. AWS deployment identity/roles are separate from optional AI-provider access.
+With DEMO_AI_MODE=true, allow a missing Gemini key and make no provider calls. With demo mode false, a missing key, incompatible model or failed provider returns an explicit agent-unavailable/error state; do not silently simulate, default to Bedrock or break the existing deterministic application. Live Gemini verification requires a real backend key, but offline tests must not.
 
-REDIS_URL and MAPBOX_TOKEN remain optional. Never include real credentials in examples or commit .env files. This documentation task does not edit environment/configuration code.
+GEMINI_API_KEY must exist only in a backend/agent-process environment variable loaded from ignored local configuration or injected securely by hosting. Never hardcode/commit it, prefix it with VITE_, return it from an API, log it or place it in browser storage/bundles. Secrets examples remain empty. [Google key guidance](https://ai.google.dev/gemini-api/docs/api-key)
+
+AWS deployment identity/roles are separate from Google model authentication. Local AWS CLI authentication is unavailable and not a prerequisite for agent integration; later deployment must verify account access separately. Hosted API/CORS/network/port settings follow section 47. Redis and Mapbox settings remain optional.
 
 ---
 
-# 65. DEMO MODE
+# 65. DEMO AI MODE AND SEEDED EVIDENCE
 
-The working npm run seed:demo inserts deterministic fictional reports/areas/context and derived shortage events for the current Phase 3/4 walkthrough. It does not create a fleet, allocations, deliveries, predictions, citizen accounts or agent responses. It works without AWS/LLM credentials or DEMO_AI_MODE, and production demo restrictions remain in force.
+Current seed:demo inserts fictional reports/areas/context and derived shortage events; it runs without AI credentials or DEMO_AI_MODE and creates no agent responses, fleet, delivery or forecasts. Production seed/demo protections remain intact.
 
-Later authorized phases may extend clearly labeled seeds for tanker operations, delivery and trend-based risk, plus a safe reset:demo equivalent scoped to fictional records. Do not document an unimplemented reset command as currently working. Never delete live reports/accounts or seed final computed scores/recommendations as fake outputs.
+In the authorized agent phase, DEMO_AI_MODE=true enables repeatable key-free simulations for all four roles using the same validated input/output contract and backend-calculated numeric facts. Clearly label every demo response in API/UI/audit with isDemo=true, executionMode=DEMO_SIMULATION, providerExecuted=false and actual method. Do not claim Strands/Gemini execution when an offline simulator ran. Unknown later-phase inputs remain unknown, not fabricated fleet/risk data.
 
-See docs/demo.md for current capabilities, future checkpoints and the evidence required before filming an AWS-hosted final demonstration.
+With DEMO_AI_MODE=false, record REAL_GEMINI and providerExecuted=true only after an actual successful Gemini call through Strands, with actual provider/model/framework/evidence provenance. Failed/missing-key calls are unavailable/errors, not demo successes. Deterministic core remains usable. Keep test/demo records separate from live evidence; no silent production simulation or weakened demo restrictions.
+
+Later phases may extend labeled seeds, trend/fleet inputs and safe fictional-record reset. Never seed final scores as fake model output or delete private live records. See docs/demo.md for current/future scope and separate AWS deployment evidence.
 
 ---
 
 # 66. TESTING
 
-Preserve all existing Phase 1–4 tests. Add tests only as the corresponding phase is implemented: severity/confidence/clustering, fairness adjustments and unknown history, recommendation ranking/tie-breakers/reasons/provenance, authorization, feasible tanker selection and human approvals, OTP/delivery persistence, deterministic risk and uncertainty, public AWS frontend/backend integration.
+Preserve Phase 1–4 tests and deterministic formula/unknown-input/authorization guarantees. Agent-phase unit/integration tests cover four role contracts, correct explicit Gemini selection, backend tool boundaries, unchanged numeric facts/ranking, prompt injection, schema/evidence validation, missing later-phase data, key redaction, no frontend key exposure and unauthorized invocation.
 
-Phase 5's full tests must pass with no AI provider credentials/SDK or network model calls. Changing unknown inputs must not cause fabricated exact values, scores or deliveries. Deterministic score/risk tests check the configured rule calculations, not a canned LLM response.
+Offline CI uses DEMO_AI_MODE or injected provider doubles without a real key, AWS CLI authentication or network calls. Assert simulation provenance and zero provider calls, stable backend-derived numbers, and no allocations. Test missing-key real mode, timeouts/rate limits/provider failures and no silent demo/Bedrock fallback. Keep fixture tests separate from a real provider smoke test.
 
-Strands/Bedrock adapter tests are optional future work and not MVP gates. Run relevant regressions, lint/build and browser flows after each authorized implementation phase. For documentation-only edits, verify section consistency, override preservation, links and an application-code-unchanged diff; do not claim newly run application tests that were not executed.
+Before claiming real AI complete, perform an explicitly enabled live Gemini integration test through Strands using only synthetic/minimal evidence and a server-side key. Verify actual provider/model provenance and validate the response; do not expect exact model prose. Record four-role outcomes, including honest unavailable tools in Phase 5. Simulation does not satisfy real execution acceptance. Bedrock tests are optional.
+
+Later phases test allocation/approval/OTP/delivery, deterministic risk, public AWS routing/auth/persistence and agent-service deployment if present. Run regressions/lint/build/browser flows after implementation. Documentation-only tasks check consistency, all 12 override rules, links and unchanged-code diffs; do not claim newly run application tests.
 
 ---
 
 # 67. README AND DEMO DOCUMENTATION
 
-Document the problem, solution, implemented features, architecture, actual JavaScript stack, data models, local setup, authentication, current demo commands, environment configuration, implemented APIs, screenshots, demo flow, tests, limitations, future scope and team.
+Document implemented versus planned capabilities honestly: current JavaScript app, existing APIs/auth/setup/tests, deterministic calculations and remaining limitations. Phase 1–4 has an inactive AI placeholder, not Strands/Gemini execution.
 
-Use a Decision Support section describing the deterministic method. Put Strands, Bedrock and real LLM agents under Optional Future Enhancements. State clearly that the recommendation layer, operational workflows and risk model are planned until their phases are completed. Do not imply that the current Phase 4 AI placeholder executes a provider.
+Describe the planned Strands/Gemini four-role architecture, server-only key/model configuration, isolated TypeScript exception if required, deterministic ownership of every numeric value, human approval and real versus demo provenance. Bedrock belongs under Optional Future Enhancements, not the MVP setup prerequisites. DEMO_AI_MODE tests without a key; it does not prove real Gemini execution. AWS CLI authentication is a separate later deployment issue.
 
-The AWS section must distinguish preferred deployment targets, compatibility/account-eligibility checks, resources actually deployed, tested public URLs and verification status. Cite current service documentation where availability affects the plan. Do not claim completed deployment or AWS AI usage merely from environment placeholders.
+Only document installed packages, working commands/routes, tested model/version and live execution after implementation. Explain unchanged legacy .env.example entries without presenting them as the new strategy. Never show secrets or private citizen data in screenshots/prompts.
 
-Future demo documentation/video must reflect the currently tested implementation, derive scores from evidence, label simulations/estimates/unknowns and show real AWS deployment when complete. Preserve historical test reports with their phase/date context instead of inventing new verification results.
+AWS documentation records compatibility/account access, chosen services, actual tested URLs and deployment status; local model execution is not AWS deployment proof. Preserve historical test reports and current seed values instead of inventing new verification results.
 
 ---
 
 # 68. OPTIONAL FUTURE ENHANCEMENTS
 
 Not required for MVP:
-- Strands Agents SDK orchestration and real LLM-based crisis/allocation/logistics/prediction-summary agents.
-- Amazon Bedrock or other explicitly selected LLM providers.
-- Municipal APIs, IoT water-level sensors, groundwater/satellite monitoring and real-time weather feeds.
-- SMS/WhatsApp reporting, multilingual support and advanced ML forecasting.
-- Satellite drought analysis, predictive tanker positioning, automated infrastructure fault detection and statewide expansion.
+- Amazon Bedrock as an additional model provider, AWS-specific agent hosting frameworks and additional LLM providers.
+- Municipal APIs, IoT sensors, groundwater/satellite monitoring and real-time weather feeds.
+- SMS/WhatsApp reporting, multilingual support, advanced trained ML forecasting and predictive tanker positioning.
+- Automated infrastructure fault detection and statewide expansion.
 
-The deterministic recommendation layer, fairness rules and transparent early-warning model remain core planned MVP capabilities, not optional LLM substitutes. AWS application deployment remains mandatory for the final hackathon demonstration, subject to compatible service selection. Optional enhancements require a separate explicit instruction and must not delay the functioning deterministic MVP.
+Strands with Google Gemini and four agent roles are planned MVP requirements, alongside deterministic severity/confidence/population/fairness/logistics/risk calculations and human oversight. Key-free demo mode is required for testing but is not a substitute for verified real Gemini execution. AWS application deployment remains required in a separate later phase. Optional enhancements need explicit authorization.
 
 ---
 
@@ -1614,7 +1608,7 @@ Prepare a truthful story for the implementation actually completed at recording 
 
 0:50–1:15: Inspect Panchavati and other zones, actual backend severity, approximate population and unknown inputs. Use current calculated values rather than requiring 91/100, 94% or ~620.
 
-1:15–1:45: After Phase 5 is implemented, show deterministic recommendation reasons, fairness assumptions and human review. Before then, explicitly show the inactive placeholder.
+1:15–1:45: After Phase 5 is implemented, show backend deterministic facts/ranking and separately labeled real Strands/Gemini advice or DEMO_AI_MODE simulation, fairness assumptions and human review. Before then, explicitly show the inactive placeholder.
 
 1:45–2:10: After operations are implemented, show administrator approval, feasible assignment, status progression and estimated route/ETA. Otherwise label this as future work.
 
@@ -1660,7 +1654,7 @@ This should be reflected in both the UI and README architecture diagram.
 
 Prefer: estimated/approximate affected population, shortage confidence, deterministic severity, explainable recommendation, recommended allocation, human approval, deterministic early-warning risk, simulated evidence and unknown input.
 
-Use "AI/LLM-assisted" only for an optional future feature whose real provider execution is verified and clearly distinguished from deterministic rules. Do not use that label for the current placeholder, recommendations, ranking, fairness penalties or risk calculations.
+Use "Gemini-generated advice via Strands" only after verified actual provider execution. Label DEMO_AI_MODE output "Demo AI simulation — no Gemini execution." The current placeholder is inactive. Ranking, numeric recommendations, fairness penalties and risk calculations remain labeled deterministic backend results.
 
 Avoid unsupported claims of exact affected population, exact remaining water, perfect prediction, autonomous water distribution, real agent execution or completed AWS deployment. Identify the actual method and current phase honestly.
 
@@ -1668,37 +1662,37 @@ Avoid unsupported claims of exact affected population, exact remaining water, pe
 
 # 74. IMPLEMENTATION ORDER
 
-The latest phase-specific Codex prompts are authoritative. Phase 1–4 are complete; preserve their working functionality. This task only aligns documentation and starts no development phase.
+Latest phase-specific prompts control scope. Phases 1–4 are complete and must be preserved. This task updates documentation only and starts no development/deployment.
 
 ## PHASE 1 — Foundation (complete)
-React/JavaScript/Vite, Node.js/Express/JavaScript, MongoDB/Mongoose, environment configuration, base routing/layout, health and errors.
+React/JavaScript/Vite, Express/JavaScript, MongoDB/Mongoose, configuration, routing/layout, health and errors.
 
 ## PHASE 2 — Citizen reporting and database (complete)
-Location/locality and household reporting, validated report API, private report history/status, photo support, MongoDB persistence, labeled seeds and local-origin CORS.
+Validated household/location reporting, private history/status, photos, persistence, demo seeds and CORS.
 
 ## PHASE 3 — Shortage detection, confidence and severity (complete)
-Geographic/time clustering, duplicate/suspicious handling, persisted events, verification counts, confidence, approximate population, duration, deterministic configurable severity and fairness helpers. Preserve these modules.
+Geographic/time clustering, duplicate/suspicious handling, events, verification counts, confidence, approximate population, duration, configurable deterministic severity and fairness helpers.
 
 ## PHASE 4 — Admin dashboard and map (complete)
-Admin authentication/authorization, KPIs, map/table/details, evidence analytics/activity, responsive/error states and inactive recommendation extension point.
+Authentication/authorization, KPIs/map/table/details, analytics/activity, responsive/error states and inactive AI extension point.
 
-## PHASE 5 — Explainable deterministic decision support (NEXT, not started)
-Modular recommendation service using existing severity/confidence/fairness evidence; configurable priority rules and stable tie-breakers; reasons, provenance, uncertainty/unknown inputs and read-only admin recommendations. No LLM, Strands or Bedrock requirement; no tanker assignment, dispatch, delivery or new prediction workflow. Preserve existing tests and test this phase before stopping.
+## PHASE 5 — Strands/Gemini agents and explainable recommendations (NEXT, not started)
+Implement all four role definitions, explicit Google provider, server-only key/configuration, validated read-only tools/contracts, deterministic priority/fairness evidence, agent explanations, provenance, DEMO_AI_MODE and real Gemini smoke verification. Prefer JavaScript; isolate TypeScript to apps/agents only if required by supported SDK integration. Logistics/Early Warning must report unavailable later-phase tools, without inventing outputs. No tanker assignment, dispatch, delivery or new prediction workflow. No AWS CLI/Bedrock prerequisite. Run regressions, test both modes and stop.
 
-## PHASE 6 — Tanker allocation and verified delivery (later)
-Fleet management/feasibility, deterministic tanker/logistics selection, human-approved allocation, audit trail, operator UI, estimated route/ETA, trip status, OTP/QR verification and recorded litres. Do not silently dispatch from recommendations.
+## PHASE 6 — Tanker allocation, logistics and verified delivery (later)
+Backend fleet/feasibility/selection, deterministic distance/ETA, Logistics/Resource Allocation explanations, explicit human approval/audit, operator status, OTP/QR and recorded litres. Agents never authorize dispatch.
 
 ## PHASE 7 — Deterministic early warning and operational analytics (later)
-Implement the retained predictionEngine risk model with configurable trend/supply/environment/incident/history inputs, uncertainty and preparation guidance. Add fairness/delivery/prediction analytics based on real or clearly labeled simulated records. No LLM required.
+Implement predictionEngine with configurable trend/supply/environment/incident/history signals, backend risk/horizon and uncertainty; connect Early Warning explanations and preparation advice. Add evidence-based operational/fairness analytics. No model-calculated risk.
 
-## PHASE 8 — Full verification, hardening and AWS deployment (later)
-Full unit/integration/browser regressions, security/error/empty/loading states, compatibility/account-eligibility checks, Amplify frontend plus eligible App Runner backend (or justified AWS alternative), Atlas connectivity, public auth/report/persistence tests and honest AWS documentation. No mandatory Bedrock adapter or Strands configuration.
+## PHASE 8 — Full verification, hardening and separate AWS deployment (later)
+Full regressions/security/agent-boundary tests, account authentication/eligibility, runtime/build/network/secret compatibility including any isolated agent service, Amplify plus eligible App Runner or justified AWS alternative, Atlas and public auth/report/dashboard/persistence/agent checks. Gemini remains the selected real provider; Bedrock is optional.
 
 ## PHASE 9 — Verified demo and final documentation (later)
-Reproducible labeled scenario/reset where implemented, README/screenshots, final video demonstrating the real AWS deployment and completed end-to-end features, with explicit remaining limitations.
+Reproducible labeled data, real Gemini and clearly separate demo-mode evidence, screenshots/results, actual AWS URLs/persistence in the final video and explicit limitations.
 
-## Optional future enhancement — outside the required MVP phases
-Strands Agents SDK / Amazon Bedrock / real LLM agents may be added only when explicitly requested. They remain supplemental to deterministic calculations and human authorization, and are not a condition for phase completion or AWS deployment.
+## Optional future enhancement
+Add Bedrock or other provider/hosting adapters only when requested. They do not gate local Gemini work, deterministic calculations or MVP acceptance.
 
 ---
 
@@ -1706,17 +1700,15 @@ Strands Agents SDK / Amazon Bedrock / real LLM agents may be added only when exp
 
 Use reusable JavaScript modules, services, controllers, routes, validation schemas, hooks, components and utilities. Keep business logic separate from HTTP handlers and models separate from controllers. Preserve working components and tests.
 
-Keep recommendation explanations separate from numeric calculations while consuming their authoritative results. Optional future LLM adapters remain isolated extensions. Do not require a TypeScript conversion or shared-types package. Implement only the currently authorized phase.
+Keep recommendation explanations separate from numeric calculations while consuming their authoritative results. Strands/Gemini role integration stays server-side with validated contracts. If technically required, TypeScript is isolated to apps/agents; do not convert the main app or add a shared-types package. Implement only the currently authorized phase.
 
 ---
 
-# 76. AUTHORITATIVE BACKEND FACTS AND EXPLANATIONS
+# 76. AUTHORITATIVE BACKEND FACTS AND AGENT EXPLANATIONS
 
-Backend deterministic logic calculates distance, duration, severity, shortage confidence, recorded capacity/delivery context, approximate population, fairness adjustments and later early-warning risk.
+JavaScript backend logic calculates distance, ETA, duration, severity, shortage confidence, approximate population, fairness/priority, capacity/feasibility and later risk scores/horizons. These facts retain source references, observation time, rule version, assumptions and uncertainty. Unknown delivery history remains unknown.
 
-Recommendation reasons and summaries come from explicit tested rules/templates using those values, source evidence, observation times and known missing inputs. Document rule versions and stable priority ordering. Unknown delivery history remains unknown; estimates do not become verified measurements.
-
-Optional future LLMs may supplement summaries/explanations only. They must not invent facts, calculate authoritative numeric scores, override deterministic ranking or approve resources. The required MVP executes and remains explainable without an LLM provider.
+Strands/Gemini agents explain those facts, assess missing evidence and propose allowed actions. Their validated narrative is separate from numeric fields and deterministic ranking. Never use model text as a source of authoritative numbers, operational approval or field verification. Demo AI uses labeled simulations with the same boundaries. Only an actual successful provider call may be described as real Gemini execution.
 
 ---
 
@@ -1724,34 +1716,33 @@ Optional future LLMs may supplement summaries/explanations only. They must not i
 
 Implemented demo operations must work without manual MongoDB edits. Preserve current citizen submission, seed:demo, detection, severity inspection, admin map/detail and history workflows.
 
-As later phases are authorized, add tested UI actions for generating deterministic recommendations, approving feasible allocations, assigning tankers, progressing trips, verifying/completing delivery and generating deterministic risk. A safe fictional-data reset belongs to a later implemented demo workflow, not a falsely documented current command.
+As later phases are authorized, add tested UI actions for requesting Strands/Gemini advice from deterministic recommendations (with explicit real/demo labels), approving feasible allocations, assigning tankers, progressing trips, verifying/completing delivery and generating deterministic risk. A safe fictional-data reset belongs to a later implemented demo workflow, not a falsely documented current command.
 
-The final complete demo should run from the UI against tested backend/database services. Show the actual method and label fictional/approximate/unknown inputs. No agent call, provider credential or canned LLM response is needed to demonstrate deterministic decisions.
+The final complete demo should run from the UI against tested backend/database services. Show the actual method and label fictional/approximate/unknown inputs. Backend numeric facts can be inspected without a key. Show successful actual Gemini calls before claiming real AI; use DEMO_AI_MODE for clearly labeled key-free simulations, not proof of provider execution.
 
 ---
 
 # 78. MVP ACCEPTANCE CRITERIA
 
-These are final MVP goals, checked only after their authorized phase is implemented and tested. They do not authorize starting a new phase or claim the current Phase 4 app already meets future goals.
+These goals are checked only after the authorized phase is implemented/tested; they do not claim future work is already completed.
 
-[ ] Citizen can submit a report and retrieve its persisted MongoDB history/status.
-[ ] Location, geographic/time grouping and duplicate/suspicious handling work.
-[ ] Shortage confidence and verified report counts are explained correctly.
-[ ] Approximate affected population remains visibly estimated; unknowns remain unknown.
-[ ] Backend severity is deterministic/configurable with LOW/MEDIUM/HIGH/CRITICAL display.
-[ ] Admin authorization, dashboard/map/data retrieval and public/private boundaries work.
-[ ] Deterministic priority/recommendation service works without LLM credentials or SDKs.
-[ ] Recommendation reasons, fairness assumptions, rule version and source evidence are inspectable.
-[ ] Feasible tanker selection/logistics and human approval work in the operations phase.
-[ ] Assignment, estimated route/ETA and operator trip status are recorded.
-[ ] Delivery OTP/QR verification and recorded litres update dashboard metrics.
-[ ] Deterministic early-warning risk includes reasons, uncertainty and labeled horizon.
-[ ] Audit records, repeatable fictional seeds and a safely implemented reset are available.
-[ ] Real AWS frontend/backend deployment is verified through public URLs and MongoDB persistence, shown in the final video.
-[ ] README/demo/AWS documentation accurately distinguishes implemented, simulated and future capabilities.
-[ ] Environment examples contain no secrets; the application runs locally and core tests/lint/build pass.
+[ ] Citizen reporting/history/status persist in MongoDB with private access boundaries.
+[ ] Geographic/time clustering, duplicate handling, confidence/verified counts and approximate population remain correct.
+[ ] Backend severity is deterministic/configurable with all four severity levels; estimates and unknowns are explicit.
+[ ] Admin authorization, dashboard/map and existing public/private APIs continue working.
+[ ] Strands with explicitly configured Google Gemini implements Crisis Detection, Resource Allocation, Logistics and Early Warning roles.
+[ ] Real Gemini calls are verified with actual provider/model/framework provenance, separate from backend numeric facts.
+[ ] DEMO_AI_MODE provides key-free labeled simulations with no provider calls; missing-key real mode and provider errors never silently simulate or use Bedrock.
+[ ] Gemini keys remain server-side and never appear in source control, logs, browser bundles/storage or API responses.
+[ ] Main React/Express/shared app stays JavaScript; any technically required TypeScript is confined to the agent service.
+[ ] Deterministic priority/fairness/reasons/unknown inputs remain inspectable and agent tools are validated/read-only.
+[ ] Later fleet/logistics calculations and human-approved assignments, estimated route/ETA, operator status and verified delivery work.
+[ ] Later deterministic early-warning risk/horizon is explained by the agent without invented numbers.
+[ ] Audit records, repeatable fictional evidence and implemented safe reset preserve private live data.
+[ ] Separate actual AWS deployment is verified through public frontend/backend URLs and MongoDB persistence, shown in the final video.
+[ ] README/demo distinguish implemented/planned, simulated/real execution and exact/estimated/unknown values; tests/lint/build pass.
 
-Optional future acceptance, not required for MVP: actual Strands orchestration, Amazon Bedrock calls, LLM agents and provider-specific UI/tests. No check above depends on them.
+Bedrock, local AWS CLI model authentication and optional provider-specific adapters are not required for MVP agent execution. Offline simulation tests do not satisfy the real Gemini acceptance item.
 
 ---
 
@@ -1759,7 +1750,7 @@ Optional future acceptance, not required for MVP: actual Strands orchestration, 
 
 Inspect the repository and current authorized phase. Phase 1–4 code already exists and must not be rewritten for this strategy change. Do not execute an old whole-project initialization plan.
 
-For a genuinely empty repository, initialize JavaScript workspaces, React/Vite, Express, MongoDB, shared JavaScript constants, environment validation and a basic citizen → report → dashboard flow before later modules. Never require shared TypeScript types or a mandatory agents service.
+For a genuinely empty repository, initialize JavaScript workspaces, React/Vite, Express, MongoDB, shared JavaScript constants, environment validation and a basic citizen → report → dashboard flow before later modules. Do not require shared TypeScript types. Any technically required Strands TypeScript integration is isolated to the server-side agent service in its authorized phase.
 
 For subsequent explicitly authorized implementation: reuse working services, build only that phase, run relevant application/tests, fix regressions, report actual results and stop. This documentation update does not authorize Phase 5 implementation or deployment.
 
@@ -1769,7 +1760,7 @@ For subsequent explicitly authorized implementation: reuse working services, bui
 
 Build a working, explainable, visually strong hackathon MVP around real need, a clear user story, functioning execution, transparent deterministic decisions, human oversight, actual AWS application deployment and a truthful demonstration.
 
-The judge should see where a crisis is reported, how evidence supports severity/confidence, which action deserves attention, why a resource decision was approved and whether delivery was verified. Optional LLM enhancements may improve presentation later; they are not prerequisites or claimed core execution.
+The judge should see where a crisis is reported, how evidence supports severity/confidence, which action deserves attention, why a resource decision was approved and whether delivery was verified. The planned four Strands/Gemini roles explain backend decisions, with verified real execution distinguished from demo simulation. Bedrock is optional and AWS deployment is a separate later deliverable.
 
 Implement only the requested phase, preserve JavaScript and working Phase 1–4 functionality, and never claim deployment or future operations before they are tested.
 

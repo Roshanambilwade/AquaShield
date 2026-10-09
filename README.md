@@ -4,7 +4,7 @@ An intelligence and decision layer for emergency water management, by **AquaSent
 
 **Phases 1–4 are implemented.** The overrides at the top of [AQUASHIELD_SPEC.md](AQUASHIELD_SPEC.md) and the requested phase scope take precedence over the full MVP requirements. Implementation stops after the Phase 4 admin dashboard and map. See [Phase 4 setup and verification](docs/phase4.md) and [Phase 3 calculations](docs/phase3.md).
 
-**Strategy:** AWS will host the functioning application; it is not a mandatory AI/LLM provider. The next authorized phase builds explainable deterministic decision support. Strands Agents SDK, Amazon Bedrock and real LLM agents are optional future enhancements. No Phase 5 development or AWS deployment has been performed by this documentation update. See the [honest demo guide](docs/demo.md).
+**Strategy:** AWS will host the functioning application; it is not a mandatory AI/LLM provider. The next authorized phase integrates Strands Agents SDK with Google Gemini for Crisis Detection, Resource Allocation, Logistics and Early Warning. All numeric facts remain deterministic backend calculations. Bedrock is optional; unavailable local AWS CLI authentication does not block Gemini. No Phase 5 development or AWS deployment has been performed by this documentation update. See the [honest demo guide](docs/demo.md).
 
 ## Completed
 
@@ -24,7 +24,7 @@ An intelligence and decision layer for emergency water management, by **AquaSent
 - Municipal shortage overview with an offline geographic zone map, LOW/MEDIUM/HIGH/CRITICAL badges, emerging evidence and inspectable calculation tables.
 - Administrator provisioning, password hashing, expiring MongoDB sessions, role authorization and server-side logout.
 - Protected command center with eight KPI cards, OpenStreetMap/Leaflet plus offline map fallback, private report layers, event filters/details, activity and evidence analytics.
-- Explicit unknown operational values and an inactive AI-labeled placeholder in the current UI; no LLM execution, fleet, allocation, dispatch, delivery or forecasting workflow. The next phase will implement deterministic recommendations when explicitly authorized.
+- Explicit unknown operational values and an inactive AI-labeled placeholder in the current UI; no LLM execution, fleet, allocation, dispatch, delivery or forecasting workflow. The next phase will implement Strands/Gemini explanations around deterministic recommendations when explicitly authorized; no agents execute currently.
 
 ## Running locally
 
@@ -111,7 +111,9 @@ Keep `VITE_API_BASE_URL=/api` for the Vite proxy. The proxy preserves the browse
 
 `npm run test:dev-origins` runs real browser submissions from both local origins on port 5173 using the normal development command and root `.env`, without overriding `CORS_ORIGIN`. Locally it reuses an existing development server; otherwise ports 5000/5173 must be free so it can start one. CI requires a fresh server. It checks HTTP 201, MongoDB persistence, confirmation/history, and removes only its own test reports. This supplements the isolated preview-server browser suite.
 
-Current admin authentication uses opaque MongoDB sessions, not `JWT_SECRET`. Redis and Mapbox placeholders are optional. Legacy `AI_PROVIDER=bedrock`, `BEDROCK_MODEL_ID`, `STRANDS_MODE` and `DEMO_AI_MODE` entries in the unchanged `.env.example` are inactive optional-future configuration; they neither load an SDK nor execute an agent. Report seeding and deterministic logic work without provider credentials or `DEMO_AI_MODE`. Future AWS deployment configuration is separate from optional AI-provider access.
+Current admin authentication uses opaque MongoDB sessions, not `JWT_SECRET`. Redis and Mapbox placeholders are optional. Legacy `AI_PROVIDER=bedrock`, `BEDROCK_MODEL_ID`, `STRANDS_MODE` and `DEMO_AI_MODE` entries in the unchanged `.env.example` are inactive placeholders; they neither load an SDK nor execute an agent. Changing the template/validation waits for the authorized agent phase. Report seeding and deterministic logic still work without keys.
+
+Planned server-only configuration is `AI_PROVIDER=gemini`, `GEMINI_API_KEY` (blank in examples), configurable `GEMINI_MODEL` and `DEMO_AI_MODE=false`. Explicit demo mode enables key-free labeled simulation; real mode requires a backend key and never silently falls back to demo or Bedrock. Never use `VITE_` for the key, commit it, log it or return it to browsers. These variables are not wired into the current app. AWS deployment authentication remains separate.
 
 ## Routes
 
@@ -184,15 +186,17 @@ Citizen accounts, recommendations, forecasts, allocation, dispatch and delivery 
 
 ## Planned decision support and later phases
 
-| Phase    | Planned work — not implemented yet                                                                                                                                                          |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 5 (next) | Read-only deterministic recommendations using existing evidence, severity/confidence and fairness helpers, with ranking rules, explanations, provenance and missing inputs; no LLM required |
-| 6        | Tanker feasibility/selection, human-approved allocation, logistics/operator status, delivery OTP/QR verification and audit records                                                          |
-| 7        | Deterministic early-warning risk and operational/fairness analytics                                                                                                                         |
-| 8        | Full regression verification, hardening and actual AWS deployment after compatibility checks                                                                                                |
-| 9        | Reproducible verified demo, final documentation/screenshots and deployment evidence in the video                                                                                            |
+| Phase    | Planned work — not implemented yet                                                                                                                                                                                                                |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 5 (next) | Four Strands/Gemini role definitions and read-only explanations of backend deterministic priority/fairness facts; server-only key, validated tools, real/demo provenance and key-free DEMO_AI_MODE; later logistics/risk tools remain unavailable |
+| 6        | Backend tanker feasibility/selection/distance/ETA, agent explanations, human-approved allocation, operator status, delivery OTP/QR and audit records                                                                                              |
+| 7        | Backend deterministic early-warning risk/horizon, Early Warning agent explanations and operational/fairness analytics                                                                                                                             |
+| 8        | Full regression verification, hardening and actual AWS deployment after compatibility checks                                                                                                                                                      |
+| 9        | Reproducible verified demo, final documentation/screenshots and deployment evidence in the video                                                                                                                                                  |
 
-Each phase requires an explicit instruction and stops after its verification. Optional future Strands/Bedrock/LLM adapters may provide supplemental summaries; they never replace authoritative numeric calculations or human approval and are not MVP acceptance requirements.
+Each phase requires an explicit instruction and stops after its verification. Strands/Gemini with four roles is now a planned MVP requirement; Bedrock remains optional. Agent advice never replaces authoritative numeric calculations or human approval. Verify real Gemini execution separately from key-free demo simulations.
+
+The Node SDK supports TypeScript/JavaScript; prefer JavaScript where supported and isolate any technically required TypeScript to a backend-only agent service without converting React/Express/shared modules. Verify and pin SDK/provider/tool compatibility in implementation. [Official Node SDK](https://github.com/strands-agents/sdk-typescript), [Google provider](https://strandsagents.com/docs/user-guide/sdk/model-providers/google/)
 
 ## AWS deployment strategy — planned, not deployed
 
@@ -202,6 +206,6 @@ App Runner's eligibility is a required check: AWS stopped accepting new customer
 
 Verify the existing npm-workspace/root-lockfile build, `apps/web/dist`, Node.js 22.13+, Sharp dependencies, backend start/port/readiness, Atlas connectivity and restricted access. Static hosting must use a tested hosted API base URL or explicit reverse proxy rather than assume Vite's local proxy exists. Preserve exact hosted-origin CORS, admin/citizen-token authorization, production demo restrictions and current tests. Assess in-process rate limits/detection before scaling across backend instances. Section 47–48 of the [specification](AQUASHIELD_SPEC.md) contains service documentation and the deployment acceptance checklist.
 
-Do not claim AWS deployment from configuration placeholders, mock output or local-only screenshots. Publish actual service names, tested URLs and results only after successful public health/auth/report/dashboard/persistence checks. No AWS AI credentials, Strands SDK or Bedrock calls are required for that deployment.
+Do not claim AWS deployment from configuration placeholders, mock output or local-only screenshots. Publish actual service names, tested URLs and results only after successful public health/auth/report/dashboard/persistence checks. Bedrock calls and AWS model credentials are not required. Local Gemini integration does not prove AWS hosting; later hosting must also verify any agent-service build, protected internal boundary, Gemini outbound connectivity and backend-only secret injection. Local AWS CLI authentication is currently unavailable; verify deployment account access separately in that later phase.
 
 Implementation stops after Phase 4. Later phases require a new instruction.
