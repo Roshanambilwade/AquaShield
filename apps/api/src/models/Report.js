@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { auditSchema, protectAuditTrail } from "./auditTrail.js";
 import {
   PROBLEM_OPTIONS,
   WATER_LEVEL_OPTIONS,
@@ -20,6 +21,7 @@ const reportSchema = new mongoose.Schema(
       default: null,
       immutable: true,
     },
+    audit: { type: [auditSchema()], default: undefined },
     reporterKeyHash: { type: String, required: true, select: false },
     submissionId: { type: String, required: true, select: false },
     location: {
@@ -85,6 +87,8 @@ reportSchema.index({ reporterKeyHash: 1, submissionId: 1 }, { unique: true });
 reportSchema.index({ reporterKeyHash: 1, createdAt: -1, _id: -1 });
 reportSchema.index({ isDemo: 1, createdAt: -1, _id: -1 });
 reportSchema.index({ ownerId: 1, createdAt: -1, _id: -1 });
+reportSchema.index({ isDemo: 1, areaId: 1, createdAt: -1 });
+protectAuditTrail(reportSchema);
 
 const Report = mongoose.model("Report", reportSchema);
 const initializedDatabases = new WeakMap();

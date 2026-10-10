@@ -29,7 +29,7 @@ These rules override any conflicting instruction later in this document.
 
 # AQUASHIELD — COMPLETE HACKATHON BUILD SPECIFICATION
 
-**Implementation status (10 October 2026):** Phases 1–8, including citizen authentication/report ownership, are implemented locally. Phase 8 adds deterministic, Gemini-independent report-activity forecasts, quality/uncertainty, secure numerical APIs and persisted audited alerts; see docs/phase8.md. Phase 7 includes private citizen-portal OTP handoff, persisted trip/delivery workflows, logistics route evidence and recorded fairness/response analytics. Account participation does not independently verify identity or household receipt. Authorized live Crisis Detection, Logistics and Early Warning tests passed validation; Resource Allocation returned Google HTTP 503 and remains unverified. Existing deterministic calculations and allocation recovery are preserved. See [through-Phase-7 audit](docs/through-phase7-audit.md) and [Phase 7 behavior](docs/phase7.md). Physical water prediction and AWS deployment remain unsupported/deferred; no all-role live acceptance is claimed.
+**Implementation status (10 October 2026):** Phases 1–10, including citizen authentication/report ownership, are implemented locally. Phase 9 prepares deployment without deploying. Phase 10 adds bounded municipal analytics and secure searchable atomic audit history; see docs/phase10.md. Phase 8 adds deterministic, Gemini-independent report-activity forecasts, quality/uncertainty, secure numerical APIs and persisted audited alerts; see docs/phase8.md. Phase 7 includes private citizen-portal OTP handoff, persisted trip/delivery workflows, logistics route evidence and recorded fairness/response analytics. Account participation does not independently verify identity or household receipt. Authorized live Crisis Detection, Logistics and Early Warning tests passed validation; Resource Allocation returned Google HTTP 503 and remains unverified. Existing deterministic calculations and allocation recovery are preserved. See [through-Phase-7 audit](docs/through-phase7-audit.md) and [Phase 7 behavior](docs/phase7.md). Physical water prediction and AWS deployment remain unsupported/deferred; no all-role live acceptance is claimed.
 
 ## 1. ROLE
 
@@ -972,11 +972,13 @@ Do not default aiRecommendation to true. Gemini advice must carry explicit real/
 
 ---
 
-# 39. AUDIT LOG — IMPLEMENT IN THE AUTHORIZED PHASE
+# 39. AUDIT LOG — PHASE 10 COVERAGE
 
-Record decisions with actor, action, entity, entityId, timestamp and metadata. Events include REPORT_CREATED, REPORT_VERIFIED, SHORTAGE_DETECTED, RECOMMENDATION_GENERATED, ALLOCATION_APPROVED, TANKER_ASSIGNED, TANKER_ARRIVED, DELIVERY_VERIFIED and PREDICTION_GENERATED.
+Phase 10 projects existing atomic embedded journals into ADMIN-only searchable history, with event/target references, timestamp, authenticated actor role, server correlation UUID, safe previous/resulting state, outcome and demo/operational provenance. New report creation and existing allocation, reservation, trip, OTP, completion/recovery, balance and alert lifecycle writes retain their conditional integrity protections. Legacy missing metadata remains unknown. There is no new report-verification/review workflow; REPORT_VERIFIED, SHORTAGE_DETECTED and PREDICTION_GENERATED are not claimed as journal event types merely because they appeared in a planned list. Existing prediction records retain their original evidence separately. See docs/phase10.md for the implemented action catalog and restrictions.
 
 Recommendation metadata separates deterministic rule version/source evidence/assumptions from agent role/framework/provider/model/execution status. Record DEMO_SIMULATION, REAL_GEMINI, DETERMINISTIC_ONLY and failures distinctly, with request/evidence versions and validated outcome. Never emit a successful provider/agent-executed event for a mock, missing key or failed call. Never log API keys, auth tokens or unnecessary private citizen data.
+
+GET /api/audit supports validated UTC window, event type, actor ID, target type/ID, outcome, correlation ID and bounded server pagination; GET /api/audit/:id returns one safe event. No audit mutation API. Operational model guards protect journal edits/deletion; direct database privileges and retention/archival require separate controls. Existing restricted fictional reset remains prohibited in persistent demonstration mode. Authentication/authorization events use safe operational logging, not a newly persisted authentication ledger.
 
 ---
 
@@ -1412,28 +1414,11 @@ Do not spend major time on external notification integrations.
 
 # 60. ANALYTICS
 
-Admin analytics page:
+Phase 10 extends the existing ADMIN analytics page/API with selectable UTC windows (from inclusive, to exclusive, at most 90 days), area filters, persisted report activity/verification cohorts, allocation action timestamps, accepted recorded delivery counts/litres, valid response-time distributions, explicit pending elapsed time, current fleet eligibility/utilization and alert activity/status/risk/area summaries. Existing evidence/hourly/severity panels remain. Every metric's denominator, exclusions, missing values and scope are documented in docs/phase10.md and exposed through UI explanations.
 
-- reports per hour
-- active shortages
-- average response time
-- water delivered
-- tanker utilization
-- critical events
-- resolved events
-- estimated people served
-- allocation fairness
-- prediction accuracy if enough data exists
+Current severity/fleet snapshots are independent of the historical window. Report milestone means use the earliest valid stored event-linked action per report and do not establish household receipt. DELIVERED records count once, with verified OTP, positive integer litres and valid delivery timestamp; allocations and audit events are not summed as deliveries. Snapshot tanker utilization is busy/reserved records divided by all fleet records, not time utilization. Missing review/physical resolution timestamps and people-served quantities remain unknown.
 
-Charts:
-
-Reports over time
-
-Severity distribution
-
-Water delivered
-
-Tanker utilization
+Observed statistics remain separate from saved Phase 8 approximate report-activity forecasts and optional AI explanations. NOT_EVALUATED, INSUFFICIENT_DATA and stale/unavailable forecasts remain distinguishable. GET analytics/audit never refreshes detection, evaluates predictions, writes records or calls Gemini. No new prediction-accuracy claim, formula, threshold or horizon change.
 
 ---
 
@@ -1450,6 +1435,8 @@ Average response time
 Unserved high-priority areas
 
 This demonstrates that AquaShield is trying to distribute scarce resources fairly rather than simply dispatching whoever requested first.
+
+Phase 10 windowed area comparisons use recorded assignments and accepted delivered litres, with valid completed-response denominators. Current high-priority areas without a recorded delivery in that window require review; missing records are not proof of no water supply or measured unfairness. Existing deterministic priority/fairness rules are unchanged.
 
 ---
 
@@ -1690,6 +1677,9 @@ Separate AWS deployment remains later work: verify account/service eligibility, 
 
 ## PHASE 9 — Deployment readiness preparation
 Validate production configuration and secret exclusions, preserve current authentication and data, separate liveness/readiness/optional AI availability, bound graceful shutdown, prepare compatible reproducible containers and clean builds, run offline regressions/security checks and document pending deployment requirements. Preserve all demo records and numerical Phase 8 independence. No AWS deployment, cloud changes, migrations, resets, live inference or Phase 10. See docs/phase9-deployment-readiness.md for observed verification and blockers.
+
+## PHASE 10 — Analytics and auditability improvements
+Extend existing municipal analytics with accurate bounded historical cohorts, action/milestone denominators, current snapshot distinctions and safe source links. Strengthen existing atomic journals with optional authenticated actor/correlation/transition/outcome metadata; provide ADMIN-only bounded indexed audit search/detail. Preserve operational records, all existing security/concurrency/ownership checks and Phase 8 numerical independence/formulas. Document metric semantics, unknown historical fields, actual tests and file inventory in docs/phase10.md. No simulation, deployment, live inference, later-phase implementation or automatic commit. Stop after Phase 10.
 
 Verified final demo, simulation, polish and actual AWS deployment remain separate explicitly authorized later tasks. Preserve labeled data, distinguish real Gemini from demo output, and show actual public URLs/persistence only after deployment is tested.
 

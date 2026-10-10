@@ -9,6 +9,7 @@ import {
   conflict,
 } from "../services/operationsService.js";
 import { ApiError } from "../middleware/errors.js";
+import { auditEntry } from "../services/auditContext.js";
 const owner = "aquashield-phase6";
 export async function seedOperations(config, actor, { reset = false } = {}) {
   if (config.NODE_ENV === "production")
@@ -160,9 +161,7 @@ export async function seedOperations(config, actor, { reset = false } = {}) {
         isDemo: true,
         seedOwner: owner,
         observedAt: new Date(),
-        audit: [
-          { action: "DEMO_TANKER_SEEDED", actorId: actor.id, at: new Date() },
-        ],
+        audit: [auditEntry("DEMO_TANKER_SEEDED", actor)],
       });
     else if (reset)
       await Tanker.updateOne(
@@ -171,7 +170,7 @@ export async function seedOperations(config, actor, { reset = false } = {}) {
           $set: { ...t, observedAt: new Date() },
           $inc: { revision: 1 },
           $push: {
-            audit: { action: "DEMO_RESET", actorId: actor.id, at: new Date() },
+            audit: auditEntry("DEMO_RESET", actor),
           },
         },
       );

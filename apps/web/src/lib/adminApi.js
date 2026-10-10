@@ -87,6 +87,9 @@ export async function adminRequest(
       "PREDICTION_NOT_FOUND",
       "PREDICTION_CAPACITY",
       "PREDICTION_TIMEOUT",
+      "ANALYTICS_CAPACITY",
+      "ANALYTICS_TIMEOUT",
+      "AUDIT_NOT_FOUND",
     ];
     throw new Error(
       known.includes(payload.code)

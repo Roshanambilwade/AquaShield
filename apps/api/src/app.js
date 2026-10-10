@@ -1,5 +1,7 @@
 import express from "express";
 import cors from "cors";
+import { correlationMiddleware } from "./services/auditContext.js";
+import { createAuditRouter } from "./routes/audit.js";
 import { getDatabaseStatus } from "./config/database.js";
 import { createApiRouter } from "./routes/index.js";
 import { createReportRouter } from "./routes/reports.js";
@@ -25,6 +27,7 @@ export function createApp(
 ) {
   const app = express();
   app.disable("x-powered-by");
+  app.use(correlationMiddleware);
   app.use((_req, res, next) => {
     res.set({
       "X-Content-Type-Options": "nosniff",
@@ -59,6 +62,7 @@ export function createApp(
   app.use(express.json({ limit: "100kb" }));
   app.use("/api/auth", createAuthRouter(config, databaseStatus));
   app.use("/api/dashboard", createDashboardRouter(config, databaseStatus));
+  app.use("/api/audit", createAuditRouter(config, databaseStatus));
   app.use("/api/ai", createAiRouter(config, databaseStatus, aiDependencies));
   app.use("/api/predictions", createPredictionRouter(config, databaseStatus));
   app.use(

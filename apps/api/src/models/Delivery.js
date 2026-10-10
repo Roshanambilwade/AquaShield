@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { auditSchema, protectAuditTrail } from "./auditTrail.js";
 const ref = (name) => ({
   type: mongoose.Schema.Types.ObjectId,
   ref: name,
@@ -45,6 +46,10 @@ const schema = new mongoose.Schema(
     arrivedAt: Date,
     deliveredAt: Date,
     completionActorId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    completionActorRole: {
+      type: String,
+      enum: ["ADMIN", "OPERATOR", "CITIZEN"],
+    },
     otpVerified: { type: Boolean, default: false },
     verifiedAt: Date,
     verificationMethod: {
@@ -64,13 +69,7 @@ const schema = new mongoose.Schema(
     otpNextIssueAt: Date,
     otpAttempts: { type: Number, default: 0 },
     syncPending: { type: Boolean, default: false },
-    audit: [
-      {
-        action: String,
-        actorId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        at: Date,
-      },
-    ],
+    audit: [auditSchema()],
   },
   { timestamps: true, strict: "throw", autoCreate: false, autoIndex: false },
 );
@@ -83,4 +82,7 @@ schema.index(
 );
 schema.index({ operatorId: 1, createdAt: -1 });
 schema.index({ isDemo: 1, status: 1, deliveredAt: -1 });
+schema.index({ isDemo: 1, createdAt: -1 });
+schema.index({ isDemo: 1, eventId: 1, deliveredAt: 1 });
+protectAuditTrail(schema);
 export default mongoose.model("Delivery", schema);

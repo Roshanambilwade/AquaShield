@@ -12,6 +12,7 @@ import {
 import { requireAdmin } from "../middleware/admin.js";
 import { registrationInput } from "../validation/auth.js";
 import { demonstration } from "../config/demonstration.js";
+import { securityLog } from "../services/auditContext.js";
 export function createAuthRouter(config, databaseStatus) {
   const router = Router();
   router.use((_req, res, next) => {
@@ -33,14 +34,12 @@ export function createAuthRouter(config, databaseStatus) {
           "DATABASE_UNAVAILABLE",
           "Registration is temporarily unavailable.",
         );
-      res
-        .status(201)
-        .json({
-          success: true,
-          data: {
-            user: await createCitizen(input, { demo: demonstration(config) }),
-          },
-        });
+      res.status(201).json({
+        success: true,
+        data: {
+          user: await createCitizen(input, { demo: demonstration(config) }),
+        },
+      });
     },
   );
   router.post(
@@ -65,14 +64,19 @@ export function createAuthRouter(config, databaseStatus) {
           "DATABASE_UNAVAILABLE",
           "Sign-in is temporarily unavailable.",
         );
-      res.json({
-        success: true,
-        data: await loginAdmin(input.email, input.password, config, [
+      let session;
+      try {
+        session = await loginAdmin(input.email, input.password, config, [
           "ADMIN",
           "OPERATOR",
           "CITIZEN",
-        ]),
-      });
+        ]);
+      } catch (error) {
+        if (error.code === "INVALID_CREDENTIALS") securityLog("LOGIN_FAILED");
+        throw error;
+      }
+      securityLog("LOGIN_SUCCEEDED", session.user);
+      res.json({ success: true, data: session });
     },
   );
   router.get(
@@ -85,6 +89,7 @@ export function createAuthRouter(config, databaseStatus) {
     requireAdmin(databaseStatus, ["ADMIN", "OPERATOR", "CITIZEN"]),
     async (req, res) => {
       await logoutAdmin(bearerToken(req));
+      securityLog("LOGOUT_SUCCEEDED", req.admin);
       res.json({ success: true, data: { loggedOut: true } });
     },
   );

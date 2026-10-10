@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { auditSchema, protectAuditTrail } from "./auditTrail.js";
 const schema = new mongoose.Schema(
   {
     identifier: { type: String, required: true, trim: true, maxlength: 40 },
@@ -34,17 +35,12 @@ const schema = new mongoose.Schema(
     isDemo: { type: Boolean, required: true },
     seedOwner: { type: String, default: null },
     revision: { type: Number, default: 0 },
-    audit: [
-      {
-        action: String,
-        actorId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        at: Date,
-      },
-    ],
+    audit: [auditSchema()],
   },
   { timestamps: true, strict: "throw", autoCreate: false, autoIndex: false },
 );
 schema.index({ identifier: 1 }, { unique: true });
+protectAuditTrail(schema);
 schema.index(
   { operatorId: 1 },
   {

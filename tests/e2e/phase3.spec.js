@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { test, expect } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
@@ -29,7 +30,10 @@ test.beforeEach(async ({ page }) => {
 });
 test.afterAll(async () => {
   if (createdIds.length)
-    await Report.deleteMany({ _id: { $in: createdIds }, isDemo: false });
+    await Report.collection.deleteMany({
+      _id: { $in: createdIds.map((id) => new mongoose.Types.ObjectId(id)) },
+      isDemo: false,
+    });
   await detectShortages(loadEnv());
   await admin.cleanup();
   for (const citizen of citizens) await citizen.cleanup();
@@ -204,7 +208,10 @@ test("real browser submissions create a MongoDB event and retain citizen privacy
     await expect(page.getByRole("alert")).toContainText("citizen account");
   } finally {
     if (testIds.length)
-      await Report.deleteMany({ _id: { $in: testIds }, isDemo: false });
+      await Report.collection.deleteMany({
+        _id: { $in: testIds.map((id) => new mongoose.Types.ObjectId(id)) },
+        isDemo: false,
+      });
     for (const context of contexts) await context.close();
   }
 });

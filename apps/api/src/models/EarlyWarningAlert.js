@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
+import { auditFields, protectAuditTrail } from "./auditTrail.js";
 const audit = new mongoose.Schema(
   {
+    ...auditFields,
     type: {
       type: String,
       enum: [
@@ -57,4 +59,6 @@ const schema = new mongoose.Schema(
 );
 schema.index({ key: 1 }, { unique: true });
 schema.index({ isDemo: 1, status: 1, updatedAt: -1, _id: -1 });
+schema.index({ isDemo: 1, areaId: 1, createdAt: -1 });
+protectAuditTrail(schema, "type");
 export default mongoose.model("EarlyWarningAlert", schema);

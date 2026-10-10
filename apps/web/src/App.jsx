@@ -14,6 +14,7 @@ import ShortageStatusPage from "./pages/ShortageStatusPage.jsx";
 import AdminLayout from "./components/AdminLayout.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import AnalyticsPage from "./pages/AnalyticsPage.jsx";
+import AuditPage from "./pages/AuditPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
 import ReportReviewPage from "./pages/ReportReviewPage.jsx";
 import DeliveriesPage from "./pages/DeliveriesPage.jsx";
@@ -38,6 +39,8 @@ export default function App() {
           <Route path="shortages" element={<ShortagesPage admin />} />
           <Route path="shortages/:id" element={<ShortageStatusPage admin />} />
           <Route path="analytics" element={<AnalyticsPage />} />
+          <Route path="audit" element={<AuditPage />} />
+          <Route path="audit/:id" element={<AuditPage />} />
           <Route path="predictions" element={<PredictionsPage />} />
           <Route path="tankers" element={<OperationsPage fleetOnly />} />
           <Route path="allocations" element={<OperationsPage />} />

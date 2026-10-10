@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { test, expect } from "@playwright/test";
 import sharp from "sharp";
 import {
@@ -27,7 +28,10 @@ test.beforeAll(async () => {
 test.afterAll(async () => {
   // Delete only the exact report IDs created by these browser tests.
   if (ownedIds.length)
-    await Report.deleteMany({ _id: { $in: ownedIds }, isDemo: false });
+    await Report.collection.deleteMany({
+      _id: { $in: ownedIds.map((id) => new mongoose.Types.ObjectId(id)) },
+      isDemo: false,
+    });
   await detectShortages(loadEnv());
   for (const citizen of citizens) await citizen.cleanup();
   await disconnectDatabase();

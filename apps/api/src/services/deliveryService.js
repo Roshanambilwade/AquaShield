@@ -10,13 +10,10 @@ import { conflict } from "./operationsService.js";
 import { validPoint, tripRoute } from "./routingService.js";
 import { generateOtp, matchesOtp } from "./deliveryOtp.js";
 import { demonstration } from "../config/demonstration.js";
+import { auditEntry } from "./auditContext.js";
 
 const initialized = new WeakMap();
-const audit = (action, actor) => ({
-  action,
-  actorId: actor.id,
-  at: new Date(),
-});
+const audit = auditEntry;
 export async function initializeDeliveries() {
   const db = mongoose.connection.db;
   if (!initialized.has(db))
@@ -225,6 +222,7 @@ export async function transitionTrip(id, action, actor, config) {
         audit: audit(
           action === "start" ? "TRIP_STARTED" : "TANKER_ARRIVED",
           actor,
+          { before: { status: from }, after: { status: to } },
         ),
       },
     },
@@ -328,7 +326,10 @@ export async function issueDeliveryOtp(
     } catch {
       await Delivery.updateOne(
         { _id: id, otpVersion: updated.otpVersion, otpVerified: false },
-        { $unset: { otpHash: "", otpSalt: "" } },
+        {
+          $unset: { otpHash: "", otpSalt: "" },
+          $push: { audit: audit("DELIVERY_OTP_HANDOFF_FAILED", actor) },
+        },
       );
       throw new ApiError(
         503,
@@ -400,7 +401,12 @@ export async function verifyDeliveryOtp(id, code, actor, config) {
             d.otpChannel || (d.isDemo ? "DEMO_OTP" : "RECIPIENT_OTP"),
         },
         $unset: { otpHash: "", otpSalt: "" },
-        $push: { audit: audit("DELIVERY_VERIFIED", actor) },
+        $push: {
+          audit: audit("DELIVERY_VERIFIED", actor, {
+            before: { otpVerified: false },
+            after: { otpVerified: true },
+          }),
+        },
       }
     : {
         $inc: { otpAttempts: 1 },
@@ -515,7 +521,14 @@ export async function completeDelivery(id, litres, actor, config) {
         status: "COMPLETING",
         litresDelivered: litres,
         completionActorId: actor.id,
+        completionActorRole: actor.role,
         syncPending: true,
+      },
+      $push: {
+        audit: audit("DELIVERY_COMPLETION_STARTED", actor, {
+          before: { status: "ARRIVED" },
+          after: { status: "COMPLETING" },
+        }),
       },
     },
     { returnDocument: "after" },
@@ -528,9 +541,9 @@ export async function recoverDelivery(id, actor, config) {
   const d = await deliveryById(id, actor, config);
   if (!d.syncPending || !["COMPLETING", "DELIVERED"].includes(d.status))
     throw conflict("No interrupted completion needs recovery.");
-  return reconcileDelivery(d, actor);
+  return reconcileDelivery(d, actor, true);
 }
-async function reconcileDelivery(d, actor) {
+async function reconcileDelivery(d, actor, recovery = false) {
   // Replayable ordered projections on standalone MongoDB. Delivered litres are
   // written once on the Delivery record; dashboards never sum allocations.
   const a = await Allocation.findOne({
@@ -549,7 +562,10 @@ async function reconcileDelivery(d, actor) {
       {
         $set: { status: "DELIVERED", deliveredAt: new Date() },
         $push: {
-          audit: audit("DELIVERY_COMPLETED", { id: d.completionActorId }),
+          audit: audit("DELIVERY_COMPLETED", actor, {
+            before: { status: "COMPLETING" },
+            after: { status: "DELIVERED" },
+          }),
         },
       },
     );
@@ -559,7 +575,10 @@ async function reconcileDelivery(d, actor) {
     {
       $set: { status: "COMPLETED" },
       $push: {
-        audit: audit("DELIVERY_COMPLETED", { id: d.completionActorId }),
+        audit: audit("DELIVERY_COMPLETED", actor, {
+          before: { status: "ASSIGNED" },
+          after: { status: "COMPLETED" },
+        }),
       },
     },
   );
@@ -575,7 +594,15 @@ async function reconcileDelivery(d, actor) {
         observedAt: new Date(),
       },
       $inc: { revision: 1 },
-      $push: { audit: audit("DELIVERY_RESERVATION_RELEASED", actor) },
+      $push: {
+        audit: audit("DELIVERY_RESERVATION_RELEASED", actor, {
+          before: { balanceLitres: d.startingAvailableLitres },
+          after: {
+            status: remaining > 0 ? "AVAILABLE" : "UNAVAILABLE",
+            balanceLitres: remaining,
+          },
+        }),
+      },
     },
   );
   await Allocation.updateOne(
@@ -584,7 +611,18 @@ async function reconcileDelivery(d, actor) {
   );
   await Delivery.updateOne(
     { _id: d._id, status: "DELIVERED", syncPending: true },
-    { $set: { syncPending: false } },
+    {
+      $set: { syncPending: false },
+      ...(recovery
+        ? {
+            $push: {
+              audit: audit("DELIVERY_RECOVERED", actor, {
+                after: { status: "DELIVERED" },
+              }),
+            },
+          }
+        : {}),
+    },
   );
   return serializeDelivery(await Delivery.findById(d._id));
 }

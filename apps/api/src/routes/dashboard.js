@@ -2,6 +2,8 @@ import { listShortages } from "../services/shortageService.js";
 import { Router } from "express";
 import { datasetDemo } from "../config/demonstration.js";
 import { z } from "zod";
+import { parseAnalyticsQuery } from "../validation/analytics.js";
+import { createSubmissionLimiter } from "../middleware/submissionLimit.js";
 import { requireAdmin } from "../middleware/admin.js";
 import { ApiError } from "../middleware/errors.js";
 import {
@@ -24,14 +26,22 @@ export function createDashboardRouter(config, databaseStatus) {
     next();
   });
   router.use(requireAdmin(databaseStatus));
+  const analyticsLimit = createSubmissionLimiter({ max: 30, windowMs: 60000 });
+  router.use("/analytics", analyticsLimit);
   router.use((req, _res, next) => {
+    if (req.path === "/analytics")
+      req.analyticsQuery = parseAnalyticsQuery(req.query);
     req.demo =
       validate(
-        req.path === "/reports"
-          ? reportQuerySchema
-          : z
+        req.path === "/analytics"
+          ? z
               .object({ demo: z.enum(["true", "false"]).default("false") })
-              .strict(),
+              .passthrough()
+          : req.path === "/reports"
+            ? reportQuerySchema
+            : z
+                .object({ demo: z.enum(["true", "false"]).default("false") })
+                .strict(),
         req.query,
       ).demo === "true";
     req.demo = datasetDemo(config, req.demo);
@@ -68,7 +78,10 @@ export function createDashboardRouter(config, databaseStatus) {
     ["analytics", dashboardAnalytics],
   ])
     router.get(`/${path}`, async (req, res) =>
-      res.json({ success: true, data: await service(config, req.demo) }),
+      res.json({
+        success: true,
+        data: await service(config, req.demo, req.analyticsQuery),
+      }),
     );
   router.get("/shortages/:id", async (req, res) =>
     res.json({

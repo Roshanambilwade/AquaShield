@@ -16,6 +16,7 @@ export default function AdminLayout() {
             </NavLink>
             <NavLink to={`/admin/shortages${suffix}`}>Shortage zones</NavLink>
             <NavLink to={`/admin/analytics${suffix}`}>Analytics</NavLink>
+            <NavLink to={`/admin/audit${suffix}`}>Audit history</NavLink>
             <NavLink to={`/admin/predictions${suffix}`}>Early warning</NavLink>
             <NavLink to={`/admin/allocations${suffix}`}>Allocations</NavLink>
             <NavLink to={`/admin/tankers${suffix}`}>Tankers</NavLink>

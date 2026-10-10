@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { test, expect } from "@playwright/test";
 import { loadEnv } from "../../apps/api/src/config/env.js";
 import {
@@ -20,7 +21,10 @@ test.beforeAll(async () => {
 });
 test.afterAll(async () => {
   if (createdIds.length)
-    await Report.deleteMany({ _id: { $in: createdIds }, isDemo: false });
+    await Report.collection.deleteMany({
+      _id: { $in: createdIds.map((id) => new mongoose.Types.ObjectId(id)) },
+      isDemo: false,
+    });
   await detectShortages(loadEnv());
   for (const citizen of citizens) await citizen.cleanup();
   await disconnectDatabase();

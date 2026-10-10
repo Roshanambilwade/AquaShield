@@ -411,7 +411,8 @@ test("different allocation intents cannot double-reserve one tanker, and a reser
   const reserved = await Tanker.findById(a.tankerId);
   const winner = await Allocation.findById(reserved.activeAllocationId);
   // Simulate interruption after reservation but before finalizing the assignment.
-  await Allocation.updateOne(
+  // Raw fixture mutation simulates a crash; application journals forbid $pull.
+  await Allocation.collection.updateOne(
     { _id: winner._id },
     {
       $set: { status: "ASSIGNING" },

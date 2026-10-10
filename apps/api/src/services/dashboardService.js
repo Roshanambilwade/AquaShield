@@ -8,8 +8,10 @@ import { aiStatus } from "../config/ai.js";
 import User from "../models/User.js";
 import { serializeReport } from "./reportService.js";
 import { ApiError } from "../middleware/errors.js";
-import Allocation from "../models/Allocation.js";
-import { operationalAnalytics } from "./operationalAnalytics.js";
+import { municipalAnalytics } from "./analyticsService.js";
+import { parseAnalyticsQuery } from "../validation/analytics.js";
+import { analyticsBound } from "./analyticsBound.js";
+
 import { predictionSummary } from "./predictionService.js";
 
 const coordinates = z.object({
@@ -251,70 +253,12 @@ export async function dashboardMap(config, demo) {
   };
 }
 
-export async function dashboardAnalytics(config, demo) {
-  const [shortages, ops, allocations] = await Promise.all([
-    listShortages(config, demo),
-    operations(demo, config),
-    Allocation.find({ isDemo: demo })
-      .select("eventId status")
-      .limit(1001)
-      .lean(),
-  ]);
-  const grouped = await Report.aggregate([
-    { $match: { isDemo: demo } },
-    {
-      $group: {
-        _id: {
-          $dateToString: {
-            format: "%Y-%m-%dT%H:00:00.000Z",
-            date: "$createdAt",
-            timezone: "UTC",
-          },
-        },
-        count: { $sum: 1 },
-      },
-    },
-    { $sort: { _id: -1 } },
-    { $limit: 24 },
-  ]);
-  return {
-    operational: operationalAnalytics(
-      shortages.events,
-      ops,
-      allocations.length > 1000 ? null : allocations,
-    ),
-    severityDistribution: ["LOW", "MEDIUM", "HIGH", "CRITICAL"].map(
-      (level) => ({
-        level,
-        count: shortages.events.filter(
-          (e) => e.severityLevel === level && e.status !== "HISTORICAL",
-        ).length,
-      }),
-    ),
-    reportsByHour: grouped
-      .reverse()
-      .map((row) => ({ hour: row._id, count: row.count })),
-    evidence: {
-      eligibleHouseholds: shortages.events.reduce(
-        (sum, e) => sum + e.eligibleReportCount,
-        0,
-      ),
-      verifiedReports: shortages.events.reduce(
-        (sum, e) => sum + e.verifiedReportCount,
-        0,
-      ),
-      duplicateReports: shortages.events.reduce(
-        (sum, e) => sum + e.duplicateReportCount,
-        0,
-      ),
-      suspiciousReports: shortages.events.reduce(
-        (sum, e) => sum + e.suspiciousReportCount,
-        0,
-      ),
-    },
-    isDemo: demo,
-    note: "Severity distribution excludes historical events. Hourly counts include all submissions, including duplicates. Household totals may overlap across time windows.",
-  };
+export async function dashboardAnalytics(
+  config,
+  demo,
+  query = parseAnalyticsQuery({}),
+) {
+  return analyticsBound(() => municipalAnalytics(config, demo, query));
 }
 
 export async function dashboardDetail(id, config, demo) {

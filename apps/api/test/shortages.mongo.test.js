@@ -202,7 +202,9 @@ test("new geographic and time clusters create separate events; deleted evidence 
     await ShortageEvent.countDocuments({ isDemo: false, status: "HISTORICAL" }),
     1,
   );
-  await Report.deleteOne({ _id: response.body.data.id });
+  await Report.collection.deleteOne({
+    _id: new mongoose.Types.ObjectId(response.body.data.id),
+  });
   await detectShortages(config);
   assert.equal(
     await ShortageEvent.countDocuments({ isDemo: false, status: "SUPERSEDED" }),

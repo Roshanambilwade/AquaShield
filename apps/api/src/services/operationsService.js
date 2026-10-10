@@ -12,6 +12,7 @@ import {
 } from "./allocationEngine.js";
 import { runAgent } from "./ai/agentService.js";
 import { buildAllocationEvidence } from "./ai/allocationEvidence.js";
+import { auditEntry } from "./auditContext.js";
 
 const initialized = new WeakMap();
 export async function initializeOperations() {
@@ -30,10 +31,8 @@ export async function initializeOperations() {
     );
   return initialized.get(db);
 }
-const entry = (action, actor, reason) => ({
-  action,
-  actorId: actor.id,
-  at: new Date(),
+const entry = (action, actor, reason, transition) => ({
+  ...auditEntry(action, actor, transition),
   ...(reason ? { reason } : {}),
 });
 export const conflict = (
@@ -100,9 +99,20 @@ export async function saveTanker(id, input, actor, demo, revision) {
       await Tanker.create({
         ...input,
         isDemo: demo,
-        audit: [entry("TANKER_REGISTERED", actor)],
+        audit: [
+          entry("TANKER_REGISTERED", actor, null, {
+            after: {
+              status: input.status,
+              balanceLitres: input.availableLitres,
+            },
+          }),
+        ],
       }),
     );
+  const previous = await Tanker.findOne({ _id: id, isDemo: demo })
+    .select("status availableLitres revision")
+    .lean();
+  if (!previous || previous.revision !== revision) throw conflict();
   const result = await Tanker.findOneAndUpdate(
     {
       _id: id,
@@ -114,7 +124,15 @@ export async function saveTanker(id, input, actor, demo, revision) {
     {
       $set: input,
       $inc: { revision: 1 },
-      $push: { audit: entry("TANKER_UPDATED", actor) },
+      $push: {
+        audit: entry("TANKER_UPDATED", actor, null, {
+          before: {
+            status: previous?.status,
+            balanceLitres: previous?.availableLitres,
+          },
+          after: { status: input.status, balanceLitres: input.availableLitres },
+        }),
+      },
     },
     { returnDocument: "after", runValidators: true },
   );
@@ -140,8 +158,7 @@ export async function saveEvidence(id, input, actor, config, demo) {
         $set: { ...input, recordedBy: actor.id },
         $push: {
           audit: {
-            actorId: actor.id,
-            at: new Date(),
+            ...auditEntry("FAIRNESS_EVIDENCE_RECORDED", actor),
             demandLitres: input.demandLitres,
             recentDeliveredLitres: input.recentDeliveredLitres,
             source: input.source,
@@ -322,7 +339,11 @@ export async function recommendAllocation(
     evidence: snapshotForRecord(snapshot),
     recommendationEvidence: snapshotForRecord(snapshot),
     ai,
-    audit: [entry("RECOMMENDATION_GENERATED", actor)],
+    audit: [
+      entry("RECOMMENDATION_GENERATED", actor, null, {
+        after: { status: "RECOMMENDED" },
+      }),
+    ],
   });
   return { allocation: publicRecord(allocation), reused: false };
 }
@@ -339,17 +360,21 @@ async function reconcileRejected(current, actor, reason) {
   const claimed = await Allocation.findOneAndUpdate(
     {
       _id: current._id,
-      status: { $in: ["APPROVED", "ASSIGNING", "RECONCILING"] },
+      status: { $in: ["APPROVED", "ASSIGNING"] },
     },
     {
       $set: { status: "RECONCILING", rejectionReason: reason },
-      $push: { audit: entry("RECONCILIATION_STARTED", actor, reason) },
+      $push: {
+        audit: entry("RECONCILIATION_STARTED", actor, reason, {
+          after: { status: "RECONCILING" },
+        }),
+      },
     },
     { returnDocument: "after" },
   );
   if (!claimed) {
     const latest = await Allocation.findById(current._id);
-    if (latest?.status !== "REJECTED") throw conflict();
+    if (!["RECONCILING", "REJECTED"].includes(latest?.status)) throw conflict();
   }
   await Tanker.updateOne(
     {
@@ -360,7 +385,12 @@ async function reconcileRejected(current, actor, reason) {
     {
       $set: { activeAllocationId: null, status: "AVAILABLE" },
       $inc: { revision: 1 },
-      $push: { audit: entry("RESERVATION_RELEASED", actor) },
+      $push: {
+        audit: entry("RESERVATION_RELEASED", actor, null, {
+          before: { status: "ASSIGNED" },
+          after: { status: "AVAILABLE" },
+        }),
+      },
     },
   );
   const result = await Allocation.findOneAndUpdate(
@@ -372,7 +402,12 @@ async function reconcileRejected(current, actor, reason) {
         rejectedBy: actor.id,
         rejectedAt: new Date(),
       },
-      $push: { audit: entry("ALLOCATION_RECONCILED", actor, reason) },
+      $push: {
+        audit: entry("ALLOCATION_RECONCILED", actor, reason, {
+          before: { status: "RECONCILING" },
+          after: { status: "REJECTED" },
+        }),
+      },
     },
     { returnDocument: "after" },
   );
@@ -437,6 +472,7 @@ export async function decideAllocation(
             next === "APPROVED" ? "ALLOCATION_APPROVED" : "ALLOCATION_REJECTED",
             actor,
             reason,
+            { before: { status: current.status }, after: { status: next } },
           ),
         },
       },
@@ -499,7 +535,12 @@ export async function assignAllocation(id, actor, config, demo) {
         {
           $set: { status: "ASSIGNED", activeAllocationId: current._id },
           $inc: { revision: 1 },
-          $push: { audit: entry("TANKER_RESERVED", actor) },
+          $push: {
+            audit: entry("TANKER_RESERVED", actor, null, {
+              before: { status: "AVAILABLE" },
+              after: { status: "ASSIGNED" },
+            }),
+          },
         },
         { returnDocument: "after" },
       );
@@ -548,7 +589,12 @@ export async function assignAllocation(id, actor, config, demo) {
           assignedBy: actor.id,
           assignedAt: new Date(),
         },
-        $push: { audit: entry("TANKER_ASSIGNED", actor) },
+        $push: {
+          audit: entry("TANKER_ASSIGNED", actor, null, {
+            before: { status: "ASSIGNING" },
+            after: { status: "ASSIGNED" },
+          }),
+        },
       },
       { returnDocument: "after" },
     );

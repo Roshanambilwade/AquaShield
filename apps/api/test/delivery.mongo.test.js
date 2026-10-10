@@ -86,9 +86,9 @@ after(async () => {
 async function fixture({ live = false } = {}) {
   assert.equal(mongoose.connection.name, dbName);
   // Clean only this suite's generated isolated database, never the root database.
-  await Delivery.deleteMany({});
-  await Allocation.deleteMany({});
-  await Tanker.deleteMany({});
+  await Delivery.collection.deleteMany({});
+  await Allocation.collection.deleteMany({});
+  await Tanker.collection.deleteMany({});
   capturedCode = null;
   app = createApp(config, {
     deliveryDependencies: {
@@ -388,6 +388,16 @@ test("actual litres obey capacity and approved quantity; concurrent completion c
   ]);
   assert.equal(d.status, "DELIVERED");
   assert.equal(d.litresDelivered, 4500);
+  const completion = d.audit.find((a) => a.action === "DELIVERY_COMPLETED");
+  assert.equal(completion.actorRole, "OPERATOR");
+  assert.equal(String(completion.actorId), String(operator._id));
+  assert.equal(completion.before.status, "COMPLETING");
+  assert.equal(completion.after.status, "DELIVERED");
+  assert.ok(completion.correlationId);
+  assert.equal(
+    d.audit.filter((a) => a.action === "DELIVERY_COMPLETION_STARTED").length,
+    1,
+  );
   assert.equal(d.syncPending, false);
   assert.equal(
     d.audit.filter((a) => a.action === "DELIVERY_COMPLETED").length,
@@ -432,6 +442,13 @@ test("admin recovery safely resumes partial completion without double debit or d
   await call("post", `${f.path}/recover`, {}, token).expect(200);
   await call("post", `${f.path}/recover`, {}, token).expect(409);
   assert.equal((await Tanker.findById(f.tanker._id)).availableLitres, 5000);
+  const recovered = (await Delivery.findById(f.delivery._id)).audit.filter(
+    (a) => a.action === "DELIVERY_RECOVERED",
+  );
+  assert.equal(recovered.length, 1);
+  assert.equal(recovered[0].actorRole, "ADMIN");
+  assert.equal(recovered[0].outcome, "RECOVERED");
+  assert.equal(String(recovered[0].actorId), actor.id);
   assert.equal(
     (await Delivery.findById(f.delivery._id)).audit.filter(
       (a) => a.action === "DELIVERY_COMPLETED",

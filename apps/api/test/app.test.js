@@ -11,7 +11,7 @@ test("backend root and API index expose the completed phase metadata", async () 
   const root = await request(app).get("/").expect(200);
   assert.equal(root.body.data.api, "/api");
   const api = await request(app).get("/api").expect(200);
-  assert.equal(api.body.data.phase, 8);
+  assert.equal(api.body.data.phase, 10);
   assert.deepEqual(api.body.data.endpoints, {
     health: "/api/health",
     reports: "/api/reports",
@@ -23,6 +23,7 @@ test("backend root and API index expose the completed phase metadata", async () 
     operator: "/api/operator",
     deliveries: "/api/deliveries",
     predictions: "/api/predictions",
+    audit: "/api/audit",
   });
 });
 

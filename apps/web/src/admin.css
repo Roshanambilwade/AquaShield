@@ -580,3 +580,92 @@
   padding: 0.8rem;
   border-radius: 0.6rem;
 }
+.history-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: end;
+  margin-bottom: 1.5rem;
+}
+.history-filters label {
+  display: grid;
+  gap: 0.4rem;
+  flex: 1 1 220px;
+  min-width: 0;
+}
+.history-filters input,
+.history-filters select {
+  width: 100%;
+  min-width: 0;
+  padding: 0.65rem;
+  border: 1px solid #b5c9d8;
+  border-radius: 0.5rem;
+  background: white;
+  color: #12344a;
+}
+.history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 1.25rem;
+  margin: 1rem 0;
+}
+.metric-explanation {
+  padding: 1rem;
+  background: #f1f7fa;
+  border-radius: 0.6rem;
+}
+.audit-context {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 1rem;
+}
+.audit-context dd,
+.audit-id {
+  overflow-wrap: anywhere;
+}
+.audit-context dd {
+  margin: 0.4rem 0 0;
+}
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.admin-panel .table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+.admin-panel .table-scroll table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.admin-panel .table-scroll th,
+.admin-panel .table-scroll td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #dce5df;
+  vertical-align: top;
+}
+.admin-panel .table-scroll th {
+  background: #edf4ee;
+}
+.history-filters button,
+.pagination button {
+  padding: 10px 16px;
+  border: 1px solid #143f3f;
+  border-radius: 8px;
+  background: #143f3f;
+  color: white;
+  font: inherit;
+  cursor: pointer;
+}
+.pagination button:disabled {
+  background: #e5ece5;
+  color: #526b68;
+  border-color: #c0d3c3;
+  cursor: default;
+}

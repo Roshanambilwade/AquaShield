@@ -2,7 +2,7 @@
 
 An intelligence and decision layer for emergency water management, by **AquaSentinels** for Environmental Hacks — Heat & Water Track.
 
-**Phases 1–8, including Phase 6.5, are implemented locally; complete live Gemini execution remains unverified.** Phase 8 adds Gemini-independent numerical report-activity forecasts and audited early-warning alerts; see [formulas, APIs, data limits and verification](docs/phase8.md). Phase 7 adds persisted operator trips, deterministic route estimates, protected OTP verification, actual delivered litres, completion recovery, municipal history and private citizen response updates. See [Phase 7 behavior, demo, security and verification](docs/phase7.md), [Phase 6.5 accounts](docs/phase65.md), [Phase 6 operations](docs/phase6.md), [Phase 5 agents](docs/phase5.md), [Phase 4](docs/phase4.md) and [Phase 3 calculations](docs/phase3.md).
+**Phases 1–10, including Phase 6.5, are implemented locally; complete live Gemini execution remains unverified.** Phase 8 adds Gemini-independent numerical report-activity forecasts and audited early-warning alerts; see [formulas, APIs, data limits and verification](docs/phase8.md). Phase 7 adds persisted operator trips, deterministic route estimates, protected OTP verification, actual delivered litres, completion recovery, municipal history and private citizen response updates. See [Phase 7 behavior, demo, security and verification](docs/phase7.md), [Phase 6.5 accounts](docs/phase65.md), [Phase 6 operations](docs/phase6.md), [Phase 5 agents](docs/phase5.md), [Phase 4](docs/phase4.md) and [Phase 3 calculations](docs/phase3.md).
 
 Phase 8 verification: 171 unit/API tests, 92 MongoDB tests and 104 desktop/mobile
 browser tests passed, plus both development hostnames on isolated port 5175; lint/build passed. These tests use mocked providers or explicit demo mode.
@@ -13,6 +13,16 @@ liveness/readiness, safe runtime logs/shutdown, containers and locked clean buil
 Verification: 178 unit/API, 92 MongoDB, 104 desktop/mobile and two origin tests passed;
 lint/build/secret checks and both npm audits passed. Docker engine execution and external
 production checks remain pending. See the [readiness report](docs/phase9-deployment-readiness.md).
+
+Phase 10 extends municipal analytics with UTC/area filters, persisted activity and
+operational response metrics with explicit valid denominators. ADMIN-only audit
+search/detail reuses atomic workflow journals, adding safe actor/role/correlation,
+transition and outcome metadata. Historical unknowns remain unknown; saved report
+activity forecasts stay separate and require no Gemini call. See [metric formulas,
+audit coverage, limits, exact changed files and verification](docs/phase10.md).
+Verification: 185 unit/API, 103 MongoDB, 112 desktop/mobile and two development-origin
+tests passed; final targeted browser checks passed 28 tests. Lint, production build,
+secret exclusion and diff checks passed. No live inference or cloud deployment occurred.
 
 **Strategy:** AWS will host the functioning application; it is not a mandatory AI/LLM provider. Phase 5 integrates Strands Agents SDK with Google Gemini for four roles. All numeric facts remain deterministic backend calculations. On 10 October 2026, authorized live Crisis Detection, Logistics and Early Warning tests passed validation; Resource Allocation generation returned Google HTTP 503 and remains unverified. Bedrock is optional; AWS deployment has not been performed. See the [through-Phase-7 audit](docs/through-phase7-audit.md) and [honest demo guide](docs/demo.md).
 
@@ -252,7 +262,7 @@ Do not claim AWS deployment from configuration placeholders, mock output or loca
 Phase 9 prepares deployment configuration, health/readiness checks, safe runtime logs,
 container definitions and a clean locked build. See [deployment readiness, exact
 commands, file inventory and blockers](docs/phase9-deployment-readiness.md).
-Actual deployment and dynamic simulation remain deferred. Implementation stops after Phase 9.
+Actual deployment and dynamic simulation remain deferred. Implementation stops after Phase 10.
 
 ## Phase 7 API and verification
 

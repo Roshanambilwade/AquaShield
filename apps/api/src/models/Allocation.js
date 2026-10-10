@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { auditSchema, protectAuditTrail } from "./auditTrail.js";
 const ref = (name) => ({ type: mongoose.Schema.Types.ObjectId, ref: name });
 const schema = new mongoose.Schema(
   {
@@ -36,7 +37,7 @@ const schema = new mongoose.Schema(
     recommendationEvidence: mongoose.Schema.Types.Mixed,
     approvalEvidence: mongoose.Schema.Types.Mixed,
     ai: mongoose.Schema.Types.Mixed,
-    audit: [{ action: String, actorId: ref("User"), at: Date, reason: String }],
+    audit: [auditSchema({ reason: String })],
   },
   { timestamps: true, strict: "throw", autoCreate: false, autoIndex: false },
 );
@@ -50,4 +51,8 @@ schema.index(
 );
 schema.index({ createdBy: 1, requestId: 1 }, { unique: true });
 schema.index({ isDemo: 1, createdAt: -1 });
+schema.index({ isDemo: 1, eventId: 1, assignedAt: 1 });
+for (const field of ["approvedAt", "assignedAt", "rejectedAt"])
+  schema.index({ isDemo: 1, [field]: -1 });
+protectAuditTrail(schema);
 export default mongoose.model("Allocation", schema);

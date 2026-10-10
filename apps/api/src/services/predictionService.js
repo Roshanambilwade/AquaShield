@@ -1,4 +1,5 @@
 import Report from "../models/Report.js";
+import { auditMetadata } from "./auditContext.js";
 import Area from "../models/Area.js";
 import ShortageEvent from "../models/ShortageEvent.js";
 import Prediction from "../models/Prediction.js";
@@ -133,6 +134,8 @@ export async function reconcileAlert(result, predictionKey, actorId, now) {
         audit: [
           {
             type: "CREATED",
+            ...auditMetadata({ id: actorId }),
+            outcome: "SUCCESS",
             at: now,
             actorId,
             revision: 1,
@@ -193,6 +196,8 @@ export async function reconcileAlert(result, predictionKey, actorId, now) {
       $push: {
         audit: {
           type,
+          ...auditMetadata({ id: actorId }),
+          outcome: "SUCCESS",
           at: now,
           actorId,
           revision: a.revision + 1,
@@ -348,16 +353,21 @@ function presented(result, config, now) {
 }
 export async function predictionSummary(config, demo, now = new Date()) {
   const areas = await predictionAreas(demo);
+  const saved = await Prediction.aggregate([
+    {
+      $match: {
+        isDemo: demo,
+        areaId: { $in: areas.map((a) => a.id) },
+        horizonHours: predictionConfig(config).PREDICTION_WINDOW_HOURS,
+      },
+    },
+    { $sort: { areaId: 1, generatedAt: -1, _id: -1 } },
+    { $group: { _id: "$areaId", result: { $first: "$result" } } },
+  ]).option({ maxTimeMS: 5000, allowDiskUse: false });
+  const byArea = new Map(saved.map((p) => [p._id, p]));
   const results = [];
   for (const area of areas) {
-    const p = await Prediction.findOne({
-      isDemo: demo,
-      areaId: area.id,
-      horizonHours: predictionConfig(config).PREDICTION_WINDOW_HOURS,
-    })
-      .sort({ generatedAt: -1, _id: -1 })
-      .maxTimeMS(5000)
-      .lean();
+    const p = byArea.get(area.id);
     results.push(
       p
         ? presented(p.result, config, now)
@@ -459,6 +469,8 @@ export async function transitionAlert(
       $push: {
         audit: {
           type: status,
+          ...auditMetadata({ id: actorId }),
+          outcome: "SUCCESS",
           at: now,
           actorId,
           revision: revision + 1,

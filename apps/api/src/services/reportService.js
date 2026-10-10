@@ -4,6 +4,7 @@ import Report, { initializeReportStorage } from "../models/Report.js";
 import { ApiError } from "../middleware/errors.js";
 import { processPhoto } from "./photoService.js";
 import { demonstration } from "../config/demonstration.js";
+import { auditEntry } from "./auditContext.js";
 
 export function hashCitizenToken(token) {
   return createHash("sha256").update(token).digest("hex");
@@ -60,6 +61,9 @@ export async function createReport(input, citizen, config = {}) {
       sourceType: "CITIZEN_SUBMISSION",
       photo,
       hasPhoto: Boolean(photo),
+      audit: [
+        auditEntry("REPORT_CREATED", citizen, { after: { status: "PENDING" } }),
+      ],
     });
     return { report: serializeReport(report), created: true };
   } catch (error) {

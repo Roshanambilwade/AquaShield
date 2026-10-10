@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { auditSchema, protectAuditTrail } from "./auditTrail.js";
 const schema = new mongoose.Schema(
   {
     eventId: {
@@ -23,16 +24,15 @@ const schema = new mongoose.Schema(
     isDemo: { type: Boolean, required: true },
     seedOwner: { type: String, default: null },
     audit: [
-      {
-        actorId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        at: Date,
+      auditSchema({
         demandLitres: Number,
         recentDeliveredLitres: Number,
         source: String,
-      },
+      }),
     ],
   },
   { timestamps: true, strict: "throw", autoCreate: false, autoIndex: false },
 );
 schema.index({ eventId: 1 }, { unique: true });
+protectAuditTrail(schema);
 export default mongoose.model("AllocationEvidence", schema);
