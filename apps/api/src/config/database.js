@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { demonstration } from "./demonstration.js";
 
 mongoose.set("bufferCommands", false);
 
@@ -8,12 +9,15 @@ export async function connectDatabase(config, { dbName } = {}) {
   dbName = dbName || config.MONGODB_TEST_DB_NAME;
   if (dbName && !/^aquashield_[a-z0-9_]+_[a-f0-9]{32}$/.test(dbName))
     throw new Error("Refusing an unsafe test database name.");
+  const demoDb = demonstration(config) ? config.DEMO_DATABASE_NAME : undefined;
+  if (demoDb && !/^aquashield_demo(?:_[a-z0-9]+)*$/.test(demoDb))
+    throw new Error("Refusing an unsafe demonstration database name.");
   await mongoose.connect(config.MONGODB_URI, {
     serverSelectionTimeoutMS: config.MONGODB_CONNECT_TIMEOUT_MS,
     connectTimeoutMS: config.MONGODB_CONNECT_TIMEOUT_MS,
     socketTimeoutMS: config.MONGODB_CONNECT_TIMEOUT_MS,
     maxPoolSize: 10,
-    ...(dbName ? { dbName } : {}),
+    ...(dbName || demoDb ? { dbName: dbName || demoDb } : {}),
   });
 }
 

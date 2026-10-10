@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import Report, { initializeReportStorage } from "../models/Report.js";
 import { ApiError } from "../middleware/errors.js";
 import { processPhoto } from "./photoService.js";
+import { demonstration } from "../config/demonstration.js";
 
 export function hashCitizenToken(token) {
   return createHash("sha256").update(token).digest("hex");
@@ -24,6 +25,7 @@ export function serializeReport(report, includePhoto = false) {
     description: report.description,
     verificationStatus: report.verificationStatus,
     isDemo: report.isDemo,
+    sourceType: report.sourceType,
     hasPhoto: report.hasPhoto,
     createdAt: report.createdAt,
     updatedAt: report.updatedAt,
@@ -33,7 +35,7 @@ export function serializeReport(report, includePhoto = false) {
   return result;
 }
 
-export async function createReport(input, citizen) {
+export async function createReport(input, citizen, config = {}) {
   if (citizen?.role !== "CITIZEN" || !/^[a-f0-9]{24}$/i.test(citizen.id || ""))
     throw new ApiError(
       401,
@@ -54,6 +56,8 @@ export async function createReport(input, citizen) {
     const report = await Report.create({
       ...fields,
       ...identity,
+      isDemo: demonstration(config),
+      sourceType: "CITIZEN_SUBMISSION",
       photo,
       hasPhoto: Boolean(photo),
     });
@@ -66,11 +70,11 @@ export async function createReport(input, citizen) {
   }
 }
 
-export async function listReports(query, citizen) {
+export async function listReports(query, citizen, config = {}) {
   const filter =
     query.demo === "true"
-      ? { isDemo: true }
-      : { ownerId: citizen.id, isDemo: false };
+      ? { isDemo: true, ownerId: null }
+      : { ownerId: citizen.id, isDemo: demonstration(config) };
   const [reports, total] = await Promise.all([
     Report.find(filter)
       .sort({ createdAt: -1, _id: -1 })
@@ -93,9 +97,10 @@ export async function listReports(query, citizen) {
   };
 }
 
-export async function getReport(id, citizen, allowDemo = true) {
-  const allowed = allowDemo ? [{ isDemo: true }] : [];
-  if (citizen) allowed.push({ ownerId: citizen.id, isDemo: false });
+export async function getReport(id, citizen, allowDemo = true, config = {}) {
+  const allowed = allowDemo ? [{ isDemo: true, ownerId: null }] : [];
+  if (citizen)
+    allowed.push({ ownerId: citizen.id, isDemo: demonstration(config) });
   if (!allowed.length)
     throw new ApiError(
       404,

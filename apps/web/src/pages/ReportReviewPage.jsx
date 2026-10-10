@@ -9,7 +9,7 @@ import {
 export default function ReportReviewPage() {
   const { id } = useParams();
   const [params, setParams] = useSearchParams();
-  const demo = params.get("demo") === "true";
+  const demo = useEnvironment().demonstration || params.get("demo") === "true";
   const page = Math.max(1, Number(params.get("page")) || 1);
   const [state, setState] = useState({}),
     [attempt, setAttempt] = useState(0);
@@ -134,3 +134,4 @@ function Reporter({ reporter }) {
     </section>
   );
 }
+import { useEnvironment } from "../lib/environment.js";

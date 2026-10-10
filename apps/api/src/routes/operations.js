@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { datasetDemo, demonstration } from "../config/demonstration.js";
 import { z } from "zod";
 import { requireAdmin } from "../middleware/admin.js";
 import { createSubmissionLimiter } from "../middleware/submissionLimit.js";
@@ -46,6 +47,7 @@ export function createOperationsRouter(config, databaseStatus, aiDependencies) {
         z.object({ demo: z.enum(["true", "false"]).default("false") }).strict(),
         req.query,
       ).demo === "true";
+    req.demo = datasetDemo(config, req.demo);
     if (req.demo && config.NODE_ENV === "production")
       throw new ApiError(
         403,
@@ -196,7 +198,7 @@ export function createOperationsRouter(config, databaseStatus, aiDependencies) {
         .strict(),
       req.body,
     );
-    const user = await createOperator(input);
+    const user = await createOperator(input, { demo: demonstration(config) });
     ok(res, {
       operator: {
         id: String(user._id),
@@ -207,6 +209,12 @@ export function createOperationsRouter(config, databaseStatus, aiDependencies) {
     });
   });
   router.post("/demo/reset", async (req, res) => {
+    if (config.DEMONSTRATION_MODE)
+      throw new ApiError(
+        403,
+        "DEMO_RESET_DISABLED",
+        "Persistent demonstration records cannot be reset. The seed command only inserts missing records.",
+      );
     validate(
       z.object({ confirm: z.literal("RESET_DEMO_OPERATIONS") }).strict(),
       req.body,

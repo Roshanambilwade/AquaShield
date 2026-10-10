@@ -3,7 +3,7 @@ import useAdminData from "../hooks/useAdminData.js";
 import { AnalyticsPanel } from "../components/AdminDashboardPanels.jsx";
 export default function AnalyticsPage() {
   const [params] = useSearchParams();
-  const demo = params.get("demo") === "true";
+  const demo = useEnvironment().demonstration || params.get("demo") === "true";
   const state = useAdminData(`/dashboard/analytics?demo=${demo}`);
   return (
     <div className="page shortage-page">
@@ -18,3 +18,4 @@ export default function AnalyticsPage() {
     </div>
   );
 }
+import { useEnvironment } from "../lib/environment.js";

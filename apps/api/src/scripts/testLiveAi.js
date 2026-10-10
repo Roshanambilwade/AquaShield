@@ -13,8 +13,12 @@ import { directDiagnostic } from "../services/ai/directDiagnostic.js";
 import { roles } from "../services/ai/contracts.js";
 import { buildAllocationEvidence } from "../services/ai/allocationEvidence.js";
 import { rankAllocationEvents } from "../services/allocationEngine.js";
+import { connectDatabase, disconnectDatabase } from "../config/database.js";
+import { assertSeedTarget } from "../config/demonstration.js";
+import { persistedDemoAgentEvidence } from "../demo/agentEvidence.js";
 
-// Explicit live smoke command. Uses only fictional evidence and no database.
+// Explicit live smoke command. Default: fictional synthetic evidence, no DB.
+// --persisted-demo: guarded demo database, aggregate evidence only, read-only.
 // Diagnostic remains strict and single-attempt, independently of application retries.
 const config = { ...loadEnv(), DEMO_AI_MODE: false, AI_MAX_RETRIES: 0 };
 const role =
@@ -22,6 +26,7 @@ const role =
 if (!Object.hasOwn(roles, role))
   throw new Error("Choose --role=detect|allocate|logistics|predict.");
 const startedAt = Date.now();
+const persistedDemo = process.argv.includes("--persisted-demo");
 let stage = "CONFIGURATION";
 console.log(
   JSON.stringify({
@@ -31,6 +36,7 @@ console.log(
     keyConfigured: Boolean(config.GEMINI_API_KEY),
     realMode: !config.DEMO_AI_MODE,
     timeoutMs: config.AI_TIMEOUT_MS,
+    evidenceSource: persistedDemo ? "PERSISTED_DEMONSTRATION" : "SYNTHETIC",
   }),
 );
 if (!config.GEMINI_API_KEY || !config.GEMINI_MODEL_ID) {
@@ -40,6 +46,13 @@ if (!config.GEMINI_API_KEY || !config.GEMINI_MODEL_ID) {
 } else {
   try {
     requireAiConfiguration(config);
+    let persistedFacts;
+    if (persistedDemo) {
+      stage = "DEMO_EVIDENCE";
+      assertSeedTarget(config);
+      await connectDatabase(config);
+      persistedFacts = await persistedDemoAgentEvidence(role, config);
+    }
     if (
       process.argv.includes("--direct") ||
       process.argv.includes("--direct-stream")
@@ -98,7 +111,8 @@ if (!config.GEMINI_API_KEY || !config.GEMINI_MODEL_ID) {
         { demo: true },
       );
       const facts =
-        role === "allocate"
+        persistedFacts ||
+        (role === "allocate"
           ? buildAllocationEvidence(
               {
                 events,
@@ -110,7 +124,7 @@ if (!config.GEMINI_API_KEY || !config.GEMINI_MODEL_ID) {
               },
               config,
             )
-          : crisisFacts;
+          : crisisFacts);
       const generationStarted = Date.now();
       const result = await runAgent(
         role,
@@ -127,6 +141,12 @@ if (!config.GEMINI_API_KEY || !config.GEMINI_MODEL_ID) {
             }),
         },
       );
+      if (result.execution.method !== "GEMINI")
+        throw new ApiError(
+          502,
+          "AI_INVALID_OUTPUT",
+          "Live verification requires actual validated Gemini execution.",
+        );
       console.log(
         JSON.stringify({
           status: "VERIFIED_REAL_GEMINI",
@@ -152,5 +172,7 @@ if (!config.GEMINI_API_KEY || !config.GEMINI_MODEL_ID) {
       }),
     );
     process.exitCode = 1;
+  } finally {
+    if (persistedDemo) await disconnectDatabase();
   }
 }

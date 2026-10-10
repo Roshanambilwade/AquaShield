@@ -4,6 +4,8 @@ import { z } from "zod";
 import { detectionSchema } from "./detection.js";
 import { aiSchema } from "./ai.js";
 import { operationsSchema } from "./operations.js";
+import { demonstrationSchema } from "./demonstration.js";
+import { predictionSchema } from "./prediction.js";
 
 const rootEnvPath = fileURLToPath(new URL("../../../../.env", import.meta.url));
 
@@ -72,7 +74,12 @@ const schema = z
   })
   .and(detectionSchema)
   .and(aiSchema)
-  .and(operationsSchema);
+  .and(operationsSchema)
+  .and(demonstrationSchema)
+  .and(predictionSchema)
+  .refine((v) => !(v.DEMONSTRATION_MODE && v.NODE_ENV === "production"), {
+    path: ["DEMONSTRATION_MODE"],
+  });
 
 export function parseEnv(source) {
   // Explicit lists always win. Local defaults apply only outside production.

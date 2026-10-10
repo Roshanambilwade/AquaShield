@@ -5,6 +5,7 @@ import {
   WATER_LEVEL_OPTIONS,
   MAX_PHOTO_BYTES,
   LOCALITY_CENTERS,
+  DEMO_LOCALITY_CENTERS,
 } from "../../../../packages/shared/reportOptions.js";
 
 export const citizenTokenSchema = z.string().regex(/^[a-f0-9]{64}$/);
@@ -28,7 +29,9 @@ export const reportInputSchema = z
       .optional()
       .default(null),
     areaId: z
-      .enum(LOCALITY_CENTERS.map((area) => area.id))
+      .enum(
+        [...LOCALITY_CENTERS, ...DEMO_LOCALITY_CENTERS].map((area) => area.id),
+      )
       .nullable()
       .optional()
       .default(null),

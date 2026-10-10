@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { datasetDemo } from "../config/demonstration.js";
 import { z } from "zod";
 import { validate, reportIdSchema } from "../validation/report.js";
 import { ApiError } from "../middleware/errors.js";
@@ -18,6 +19,7 @@ export function createShortageRouter(config, databaseStatus) {
   router.use(async (req, res, next) => {
     res.set("Cache-Control", "no-store");
     req.shortageDemo = validate(querySchema, req.query).demo === "true";
+    req.shortageDemo = datasetDemo(config, req.shortageDemo);
     if (req.shortageDemo && config.NODE_ENV === "production")
       throw new ApiError(
         403,

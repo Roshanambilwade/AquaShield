@@ -18,6 +18,7 @@ import RegisterPage from "./pages/RegisterPage.jsx";
 import ReportReviewPage from "./pages/ReportReviewPage.jsx";
 import DeliveriesPage from "./pages/DeliveriesPage.jsx";
 import OperatorAssignmentPage from "./pages/OperatorAssignmentPage.jsx";
+import PredictionsPage from "./pages/PredictionsPage.jsx";
 
 export default function App() {
   return (
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="shortages" element={<ShortagesPage admin />} />
           <Route path="shortages/:id" element={<ShortageStatusPage admin />} />
           <Route path="analytics" element={<AnalyticsPage />} />
+          <Route path="predictions" element={<PredictionsPage />} />
           <Route path="tankers" element={<OperationsPage fleetOnly />} />
           <Route path="allocations" element={<OperationsPage />} />
           <Route path="deliveries" element={<DeliveriesPage />} />

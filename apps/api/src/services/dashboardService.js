@@ -10,6 +10,7 @@ import { serializeReport } from "./reportService.js";
 import { ApiError } from "../middleware/errors.js";
 import Allocation from "../models/Allocation.js";
 import { operationalAnalytics } from "./operationalAnalytics.js";
+import { predictionSummary } from "./predictionService.js";
 
 const coordinates = z.object({
   lat: z.number().min(-90).max(90),
@@ -123,9 +124,10 @@ function recommendedAction(event) {
 }
 
 export async function dashboardSummary(config, demo) {
-  const [shortages, ops] = await Promise.all([
+  const [shortages, ops, predictions] = await Promise.all([
     listShortages(config, demo),
     operations(demo, config),
+    predictionSummary(config, demo),
   ]);
   const times =
     ops.deliveries
@@ -166,10 +168,14 @@ export async function dashboardSummary(config, demo) {
       `Mean request-to-verified-delivery time; ${times.length} timed records.`,
     ),
     highRiskAreas: metric(
-      null,
+      predictions.results.some(
+        (r) => r.retrievalStatus === "CURRENT" && r.forecast,
+      )
+        ? predictions.highRiskAreas
+        : null,
       "areas",
       false,
-      "Forecasts are not configured. Emerging evidence is shown separately and is not a prediction.",
+      "Current supported HIGH/CRITICAL report-activity risk; unknown when history is inadequate, stale or not evaluated. Emerging evidence is separate.",
     ),
   };
   const recorded = await Report.find({ isDemo: demo })

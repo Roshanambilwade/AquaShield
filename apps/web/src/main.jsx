@@ -8,13 +8,16 @@ import "./reporting.css";
 import "./shortages.css";
 import "./admin.css";
 import AuthProvider from "./components/AuthProvider.jsx";
+import EnvironmentProvider from "./components/EnvironmentProvider.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <ErrorBoundary>
       <BrowserRouter>
         <AuthProvider>
-          <App />
+          <EnvironmentProvider>
+            <App />
+          </EnvironmentProvider>
         </AuthProvider>
       </BrowserRouter>
     </ErrorBoundary>

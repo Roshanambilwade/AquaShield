@@ -1,9 +1,10 @@
 import { useSearchParams } from "react-router-dom";
 import useAdminData from "../hooks/useAdminData.js";
 import TripCard from "../components/TripCard.jsx";
+import { useEnvironment } from "../lib/environment.js";
 export default function DeliveriesPage() {
-  const [params] = useSearchParams(),
-    demo = params.get("demo") === "true";
+  const [params] = useSearchParams();
+  const demo = useEnvironment().demonstration || params.get("demo") === "true";
   const { data, error, refresh } = useAdminData(`/deliveries?demo=${demo}`);
   return (
     <div className="page operations-page">

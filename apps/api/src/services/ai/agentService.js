@@ -43,7 +43,11 @@ export async function runAgent(
         ? await (
             await import("./logisticsEvidence.js")
           ).loadLogisticsEvidence(config, input)
-        : await evidenceLoader(config, input);
+        : role === "predict" && evidenceLoader === loadEvidence
+          ? await (
+              await import("./predictionEvidence.js")
+            ).loadPredictionEvidence(config, input)
+          : await evidenceLoader(config, input);
   if (signal?.aborted)
     throw new ApiError(499, "AI_CANCELLED", "The assessment was cancelled.");
   let advice,

@@ -25,6 +25,15 @@ export const LOCALITY_CENTERS = [
 ];
 
 export const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
+// Explicitly fictional sixth service zone; never offered as a live locality.
+export const DEMO_LOCALITY_CENTERS = [
+  {
+    id: "DEMO_AREA_06",
+    name: "Demonstration East Sector",
+    lat: 20.065,
+    lng: 73.855,
+  },
+];
 
 export function optionLabel(options, value) {
   return options.find((option) => option.value === value)?.label || value;

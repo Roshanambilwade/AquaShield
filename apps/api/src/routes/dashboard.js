@@ -1,5 +1,6 @@
 import { listShortages } from "../services/shortageService.js";
 import { Router } from "express";
+import { datasetDemo } from "../config/demonstration.js";
 import { z } from "zod";
 import { requireAdmin } from "../middleware/admin.js";
 import { ApiError } from "../middleware/errors.js";
@@ -33,6 +34,7 @@ export function createDashboardRouter(config, databaseStatus) {
               .strict(),
         req.query,
       ).demo === "true";
+    req.demo = datasetDemo(config, req.demo);
     if (req.demo && config.NODE_ENV === "production")
       throw new ApiError(
         403,

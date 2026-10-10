@@ -16,11 +16,13 @@ import {
   OperationalDetails,
 } from "../components/AdminDashboardPanels.jsx";
 import ShortageTable from "../components/ShortageTable.jsx";
+import { useEnvironment } from "../lib/environment.js";
 
 export default function ShortagesPage({ admin = false }) {
   const auth = useContext(AuthContext);
   const [params] = useSearchParams();
-  const demo = params.get("demo") === "true";
+  const environment = useEnvironment();
+  const demo = environment.demonstration || params.get("demo") === "true";
   const state = useShortages(demo, undefined, admin);
   const [revision, setRevision] = useState(0);
   const summary = useAdminData(
@@ -60,7 +62,7 @@ export default function ShortagesPage({ admin = false }) {
         <div>
           <p className="eyebrow">
             {admin
-              ? "Live water crisis command center"
+              ? "Municipal water crisis command center"
               : "Public aggregate evidence"}
           </p>
           <h1 className="page-title">Water crisis overview</h1>
@@ -69,12 +71,14 @@ export default function ShortagesPage({ admin = false }) {
           </p>
         </div>
         <div className="dashboard-actions">
-          <Link
-            className="button button-secondary"
-            to={`/${admin ? "admin" : "alerts"}${demo ? "" : "?demo=true"}`}
-          >
-            {demo ? "View citizen evidence" : "View simulated scenarios"}
-          </Link>
+          {!environment.demonstration && (
+            <Link
+              className="button button-secondary"
+              to={`/${admin ? "admin" : "alerts"}${demo ? "" : "?demo=true"}`}
+            >
+              {demo ? "View citizen evidence" : "View simulated scenarios"}
+            </Link>
+          )}
           {admin && (
             <button
               className="button"
@@ -88,8 +92,9 @@ export default function ShortagesPage({ admin = false }) {
       </div>
       {demo && (
         <p className="demo-note">
-          Demo environment · fictional data across five areas, observed on 8
-          October 2026. Scores are calculated from the seeded inputs.
+          Demo environment · simulated reports and municipal observations.
+          Scores are calculated from persisted inputs; unknown evidence remains
+          unknown.
         </p>
       )}
       <p className="evidence-note">

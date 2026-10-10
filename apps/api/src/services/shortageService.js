@@ -75,7 +75,10 @@ export function serializeShortage(
     "suspiciousReportIds",
   ])
     delete data[key];
-  if (publicView && !e.isDemo) {
+  // Account activity in the trusted demonstration environment has the same
+  // location/privacy boundary as live reports. Only legacy ownerless fixtures
+  // outside that environment retain the original public demo preview.
+  if (publicView && (!e.isDemo || config.DEMONSTRATION_MODE === true)) {
     if (
       (e.population?.householdCount ?? 0) < (config.PUBLIC_MIN_HOUSEHOLDS ?? 5)
     )
@@ -114,7 +117,7 @@ export async function listShortages(config, demo = false, publicView = false) {
   return {
     events,
     privacyNote: publicView
-      ? "Small live clusters are withheld; totals cover published aggregates only. Fictional demo data is exempt."
+      ? "Small live and demonstration-environment clusters are withheld; totals cover published aggregates only. Legacy public fictional fixtures are exempt."
       : null,
     summary: {
       activeShortages: events.filter((e) => e.status === "ACTIVE").length,

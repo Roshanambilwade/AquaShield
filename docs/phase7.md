@@ -186,6 +186,8 @@ shared multi-instance limits remain deployment hardening work.
 
 ## Exact local demo
 
+For the current persistent faculty dataset, use [demo-guide.md](demo-guide.md). It supplies accounts, nine tankers and service-created trips without resets. The procedure below is retained for the legacy isolated `?demo=true` fixture only; **Reset demo operations** is disabled in trusted `DEMONSTRATION_MODE`. Owned seeded reports now require their citizen session, and citizen portal handoff in that environment remains explicitly simulated `DEMO_OTP`.
+
 1. Start MongoDB and `npm run dev`. Provision an administrator with the existing
    `npm run admin:create` if needed. No default password is installed.
 2. Sign in at `/login`. Open `/admin/tankers?demo=true`, expand **Prepare or reset

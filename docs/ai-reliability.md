@@ -1,6 +1,6 @@
 # Gemini resilience and agent reliability
 
-This focused update preserves Phases 1–7 and the Gemini + Strands architecture. No live inference, provider change, deployment or Phase 8 implementation is part of this verification. Mocked success is not proof of live Gemini availability. The historical Resource Allocation live HTTP 503 remains recorded in the through-Phase-7 audit.
+The original focused reliability verification preserved Phases 1–7 and the Gemini + Strands architecture without live inference or deployment. Subsequent Phase 8 now supplies independent numerical services as documented below. Mocked success is not proof of live Gemini availability. The historical Resource Allocation live HTTP 503 remains recorded in the through-Phase-7 audit.
 
 ## Execution and evidence
 
@@ -23,7 +23,7 @@ Responses add `execution.method`, `providerAttempted`, `aiAnalysisCompleted`, `p
 | Crisis Detection | Presents existing severity, shortage confidence, report counts and population estimates. An active shortage with finite severity/confidence remains reviewable; insufficient/emerging evidence is marked `INSUFFICIENT_DATA`. No new verification claims. |
 | Resource Allocation | Uses the authoritative operational snapshot, fairness, eligible candidates and selected priority. Without a candidate, returns insufficient data. Recommendations still recheck freshness/eligibility after provider latency; explicit administrator approval and assignment remain separate. |
 | Logistics | Preserves persisted trip facts and deterministic distance/ETA estimates where available. Missing route inputs require manual review. No live GPS, traffic or arrival claims are generated. Operator transitions, OTP verification and actual-litre accounting do not call the model. |
-| Early Warning | Preserves available evidence and missing-input information. There is currently no numeric forecasting service; fallback is `INSUFFICIENT_DATA` with manual review, not a forecast. Phase 8 remains deferred. |
+| Early Warning | Phase 8 numerical services run independently of Gemini/Strands and persist supported report-activity forecasts/alerts. The optional role explains completed current results; outages retain their facts through RULE_BASED advice. Missing/stale historical evidence remains INSUFFICIENT_DATA. See [Phase 8](phase8.md). |
 
 Fallback prose is role-specific and contains no invented numeric facts. Both provider advice and fallback advice pass `validateAdvice()`. The provider's rejected text is discarded. No severity, confidence, fairness, population, distance, ETA or risk formula is duplicated or replaced.
 
@@ -78,3 +78,7 @@ These checks establish supported deterministic continuity, not live-provider hea
 - Dashboard status: `apps/web/src/components/AiRecommendationPanel.jsx`.
 - Tests: `apps/api/package.json`, `apps/api/test/aiReliability.test.js`, `ai.test.js`, `ai.mongo.test.js`, `operations.mongo.test.js`, `delivery.mongo.test.js`, `tests/e2e/phase5.spec.js`.
 - Documentation: `README.md`, `docs/phase5.md`, this file. The specification's twelve overrides and core deterministic services are unchanged.
+
+## Persistent scenario verification
+
+[The faculty guide](demo-guide.md) records four-role mocked success and simulated HTTP 503/RULE_BASED recovery using saved multi-area reports, fleet, authoritative fairness/eligibility snapshots and assigned/completed trip evidence. Tests assert read-only agent behavior, unchanged backend facts, rejected invented numerical prose, incomplete-data handling and no automatic approval/assignment. No provider/retry architecture was rewritten. The live diagnostic optionally accepts `--persisted-demo` for guarded aggregate evidence with zero application retries and no fallback; routine tests/seeding never run it. No live inference was made for this task, and historical live Resource Allocation HTTP 503 remains unverified.

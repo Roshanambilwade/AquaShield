@@ -6,7 +6,7 @@ import { OperationalDetails } from "../components/AdminDashboardPanels.jsx";
 export default function ShortageStatusPage({ admin = false }) {
   const { id } = useParams();
   const [params] = useSearchParams();
-  const demo = params.get("demo") === "true";
+  const demo = useEnvironment().demonstration || params.get("demo") === "true";
   const state = useShortages(demo, id, admin);
   return (
     <div className="page shortage-page">
@@ -36,3 +36,4 @@ export default function ShortageStatusPage({ admin = false }) {
     </div>
   );
 }
+import { useEnvironment } from "../lib/environment.js";

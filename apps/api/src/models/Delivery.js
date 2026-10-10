@@ -22,6 +22,7 @@ const schema = new mongoose.Schema(
     origin: { type: point, default: null },
     originObservedAt: { type: Date, default: null },
     isDemo: { type: Boolean, required: true },
+    seedKey: { type: String, default: null },
     status: {
       type: String,
       enum: [

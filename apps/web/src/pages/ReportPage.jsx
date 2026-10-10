@@ -1,13 +1,13 @@
 import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  LOCALITY_CENTERS,
   PROBLEM_OPTIONS,
   WATER_LEVEL_OPTIONS,
   MAX_PHOTO_BYTES,
 } from "../../../../packages/shared/reportOptions.js";
 import { submitReport } from "../lib/api.js";
 import CitizenAccess from "../components/CitizenAccess.jsx";
+import { useEnvironment } from "../lib/environment.js";
 
 const initial = {
   locality: "",
@@ -38,6 +38,7 @@ export default function ReportPage() {
   );
 }
 function ReportForm() {
+  const LOCALITY_CENTERS = useEnvironment().areas;
   const navigate = useNavigate();
   const [form, setForm] = useState(initial);
   const [photo, setPhoto] = useState(undefined);

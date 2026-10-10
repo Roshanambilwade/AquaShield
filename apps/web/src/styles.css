@@ -509,3 +509,170 @@ main:focus {
     font-size: 12px;
   }
 }
+.prediction-page {
+  display: grid;
+  gap: 1.25rem;
+}
+.prediction-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.85rem;
+}
+.prediction-overview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+.prediction-stat,
+.prediction-detail,
+.prediction-alert,
+.prediction-area-list {
+  background: #fff;
+  border: 1px solid #d4e3db;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  min-width: 0;
+}
+.prediction-stat {
+  display: grid;
+  gap: 0.5rem;
+}
+.prediction-stat strong {
+  font-size: 1.7rem;
+}
+.prediction-grid {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) minmax(0, 3fr);
+  gap: 1rem;
+}
+.prediction-area-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  align-self: start;
+}
+.prediction-area-list button {
+  display: grid;
+  gap: 0.2rem;
+  text-align: left;
+  background: #f5f8f6;
+  border: 1px solid #d4e3db;
+  padding: 0.7rem;
+  border-radius: 0.6rem;
+}
+.prediction-area-list button.selected {
+  border: 2px solid #28735c;
+  background: #e8f4ed;
+}
+.prediction-detail {
+  display: grid;
+  gap: 1rem;
+  overflow-wrap: anywhere;
+}
+.prediction-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 0;
+}
+.prediction-facts dt {
+  font-size: 0.85rem;
+  color: #526c63;
+}
+.prediction-facts dd {
+  margin: 0.2rem 0 0;
+  font-weight: 600;
+}
+.risk-label {
+  font-weight: 800;
+  padding: 0.6rem 1rem;
+  border-radius: 0.5rem;
+  background: #eef3ef;
+}
+.risk-critical {
+  background: #fbe9e9;
+  color: #912f2f;
+}
+.risk-high {
+  background: #fff1df;
+  color: #804407;
+}
+.risk-moderate {
+  background: #fffbdc;
+  color: #69531b;
+}
+.risk-low {
+  background: #e9f7ed;
+  color: #236043;
+}
+.prediction-chart {
+  margin: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+.prediction-bars {
+  height: 160px;
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  border-bottom: 1px solid #b6cec0;
+  padding-top: 20px;
+}
+.prediction-bar-column {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+  align-items: center;
+}
+.prediction-bar {
+  display: block;
+  width: 85%;
+  background: #39866a;
+  min-height: 2px;
+}
+.prediction-bar.forecast {
+  background: #d9eaff;
+  border: 2px dashed #315f99;
+}
+.prediction-bar.missing {
+  background: #e8e8e8;
+}
+.prediction-bars small {
+  font-size: 0.7rem;
+}
+.prediction-alerts {
+  display: grid;
+  gap: 1rem;
+}
+.prediction-alert {
+  display: grid;
+  gap: 0.6rem;
+}
+.prediction-page input,
+.prediction-page select {
+  font: inherit;
+  padding: 0.5rem;
+  max-width: 100%;
+  border: 1px solid #93b4a3;
+  border-radius: 0.4rem;
+}
+@media (max-width: 760px) {
+  .prediction-grid,
+  .prediction-overview,
+  .prediction-facts {
+    grid-template-columns: 1fr;
+  }
+  .prediction-area-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .prediction-area-list h2 {
+    grid-column: 1 / -1;
+  }
+  .prediction-bars {
+    gap: 0.2rem;
+  }
+}

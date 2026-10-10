@@ -194,3 +194,11 @@ Extended modules: `apps/api/src/models/Delivery.js`, `apps/api/src/routes/report
 
 Existing functions, security and regression tests were preserved. No new
 dependencies or key-bearing environment file edits. No phases beyond 7 started.
+
+## Persistent faculty dataset follow-up — 10 October 2026
+
+The guarded persistent demo seed and trusted environment/provenance integration are documented in [demo-guide.md](demo-guide.md), including generated credentials, initial counts, faculty workflow, freshness limits, complete changed-file inventory and observed verification. This follow-up preserves existing Phase 1–7 logic/security, reports and operational actions; no reset, Phase 8 or AWS work was performed. Current checks: 157 unit/API, 83 MongoDB and 98 desktop/mobile browser tests plus two development-origin checks passed; lint/build passed. These supersede the earlier test counts as current regression results, while the historical live-provider results above remain separate. All four roles were exercised with mocked success and HTTP 503 fallback against persisted scenario evidence. No new live Gemini inference was performed or claimed; optional strict `--persisted-demo` commands require authorization and model credentials.
+
+## Subsequent Phase 8 implementation
+
+The through-Phase-7 results above are historical. The separately authorized Phase 8 adds numerical report-activity forecasts, persisted audited alerts and a municipal dashboard independently of Gemini/Strands. Insufficient history stays unknown; no severity, fairness, allocation or delivery authority moved into AI. See [Phase 8 implementation and executed checks](phase8.md). No subsequent live Gemini request was made.

@@ -11,6 +11,8 @@ const schema = new mongoose.Schema(
     passwordHash: { type: String, required: true, select: false },
     disabled: { type: Boolean, default: false },
     emailVerifiedAt: { type: Date, default: null },
+    isDemo: { type: Boolean, default: false, immutable: true },
+    seedKey: { type: String, default: null, immutable: true },
   },
   { timestamps: true, strict: "throw", autoCreate: false, autoIndex: false },
 );

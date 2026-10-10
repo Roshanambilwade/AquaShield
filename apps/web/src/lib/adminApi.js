@@ -83,6 +83,10 @@ export async function adminRequest(
       "AI_INVALID_OUTPUT",
       "AI_NO_EVIDENCE",
       "AI_EVIDENCE_LIMIT",
+      "ALERT_NOT_FOUND",
+      "PREDICTION_NOT_FOUND",
+      "PREDICTION_CAPACITY",
+      "PREDICTION_TIMEOUT",
     ];
     throw new Error(
       known.includes(payload.code)

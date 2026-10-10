@@ -9,6 +9,7 @@ import { ApiError } from "../middleware/errors.js";
 import { conflict } from "./operationsService.js";
 import { validPoint, tripRoute } from "./routingService.js";
 import { generateOtp, matchesOtp } from "./deliveryOtp.js";
+import { demonstration } from "../config/demonstration.js";
 
 const initialized = new WeakMap();
 const audit = (action, actor) => ({
@@ -141,7 +142,7 @@ export async function deliveryById(id, actor, config, { secret = false } = {}) {
     _id: id,
     ...(actor.role === "OPERATOR" ? { operatorId: actor.id } : {}),
     ...(actor.role === "CITIZEN"
-      ? { recipientId: actor.id, isDemo: false }
+      ? { recipientId: actor.id, isDemo: demonstration(config) }
       : {}),
     ...(config.NODE_ENV === "production" ? { isDemo: false } : {}),
   };
@@ -256,7 +257,9 @@ export async function issueDeliveryOtp(
   const d = await deliveryById(id, actor, config);
   if (
     revealRecipient &&
-    (actor.role !== "CITIZEN" || d.isDemo || String(d.recipientId) !== actor.id)
+    (actor.role !== "CITIZEN" ||
+      (d.isDemo && !demonstration(config)) ||
+      String(d.recipientId) !== actor.id)
   )
     throw new ApiError(
       403,
@@ -422,20 +425,21 @@ export async function verifyDeliveryOtp(id, code, actor, config) {
 // Select the earliest eligible account-backed report server-side, once per trip.
 // Duplicate/suspicious or ownerless reports never authorize code access.
 export async function citizenDeliveryOtp(reportId, actor, config) {
+  const demo = demonstration(config);
   const report = await Report.findOne({
     _id: reportId,
     ownerId: actor.id,
-    isDemo: false,
+    isDemo: demo,
   });
   if (!report) throw new ApiError(404, "REPORT_NOT_FOUND", "Report not found.");
   const events = await ShortageEvent.find({
-    isDemo: false,
+    isDemo: demo,
     reportIds: report._id,
   })
     .select("reportIds")
     .lean();
   const allocation = await Allocation.findOne({
-    isDemo: false,
+    isDemo: demo,
     status: "ASSIGNED",
     eventId: { $in: events.map((e) => e._id) },
   }).sort({ assignedAt: -1 });
@@ -448,7 +452,7 @@ export async function citizenDeliveryOtp(reportId, actor, config) {
     );
     const reports = await Report.find({
       _id: { $in: event.reportIds },
-      isDemo: false,
+      isDemo: demo,
       ownerId: { $ne: null },
     })
       .sort({ createdAt: 1, _id: 1 })
@@ -479,8 +483,9 @@ export async function citizenDeliveryOtp(reportId, actor, config) {
   return {
     recipientOtp: result.recipientOtp,
     expiresAt: result.expiresAt,
-    notice:
-      "Citizen portal handoff. Share this code with the assigned operator only after observing the area delivery. Your identity and household receipt are not independently verified.",
+    notice: demo
+      ? "Demonstration recipient handoff. No SMS sent; simulated verification only, not independent household delivery proof."
+      : "Citizen portal handoff. Share this code with the assigned operator only after observing the area delivery. Your identity and household receipt are not independently verified.",
   };
 }
 export async function completeDelivery(id, litres, actor, config) {

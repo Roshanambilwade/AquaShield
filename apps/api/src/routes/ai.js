@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { datasetDemo } from "../config/demonstration.js";
 import { z } from "zod";
 import { requireAdmin } from "../middleware/admin.js";
 import { createSubmissionLimiter } from "../middleware/submissionLimit.js";
@@ -42,6 +43,7 @@ export function createAiRouter(config, databaseStatus, dependencies) {
             "DEMO_DISABLED",
             "Demo evidence is disabled in production.",
           );
+        input.demo = datasetDemo(config, input.demo);
         if (inFlight >= 2)
           throw new ApiError(
             429,

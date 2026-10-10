@@ -1,5 +1,6 @@
 import useAdminData from "../hooks/useAdminData.js";
 import AiRecommendationPanel from "./AiRecommendationPanel.jsx";
+import { Link } from "react-router-dom";
 
 export function AdminMetrics({ state }) {
   const labels = {
@@ -81,9 +82,15 @@ export function AdminPanels({ summary, analytics, demo, event }) {
             : "Emerging evidence is being loaded."}
         </p>
         <p className="evidence-note">
-          High-risk forecasts are unknown. Emerging reports are evidence of a
-          current problem, not a forecast.
+          Emerging reports describe current evidence. Numerical report-activity
+          forecasts require sufficient historical observations.
         </p>
+        <Link
+          className="button button-secondary"
+          to={`/admin/predictions${demo ? "?demo=true" : ""}`}
+        >
+          Review early warning
+        </Link>
       </section>
       <section
         className="admin-panel activity-panel"

@@ -2,9 +2,11 @@ import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../lib/authContext.js";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { PORTALS } from "../lib/portalAccess.js";
+import { useEnvironment } from "../lib/environment.js";
 
 export default function Layout() {
   const auth = useContext(AuthContext);
+  const environment = useEnvironment();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const { pathname } = useLocation();
@@ -82,6 +84,12 @@ export default function Layout() {
           </button>
           {error && <p role="alert">{error}</p>}
         </div>
+      )}
+      {environment.demonstration && (
+        <p className="demo-note" role="status">
+          AquaShield — Demonstration Environment · simulated scenarios and
+          account activity
+        </p>
       )}
       <main id="main-content" tabIndex={-1}>
         <Outlet />

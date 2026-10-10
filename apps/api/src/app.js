@@ -7,6 +7,7 @@ import { createShortageRouter } from "./routes/shortages.js";
 import { createAuthRouter } from "./routes/auth.js";
 import { createDashboardRouter } from "./routes/dashboard.js";
 import { createAiRouter } from "./routes/ai.js";
+import { createPredictionRouter } from "./routes/predictions.js";
 import { createDeliveryRouter } from "./routes/deliveries.js";
 import {
   createOperationsRouter,
@@ -51,6 +52,7 @@ export function createApp(
   app.use("/api/auth", createAuthRouter(config, databaseStatus));
   app.use("/api/dashboard", createDashboardRouter(config, databaseStatus));
   app.use("/api/ai", createAiRouter(config, databaseStatus, aiDependencies));
+  app.use("/api/predictions", createPredictionRouter(config, databaseStatus));
   app.use(
     "/api/operations",
     createOperationsRouter(config, databaseStatus, aiDependencies),
@@ -64,7 +66,7 @@ export function createApp(
   app.get("/", (_req, res) =>
     res.json({ success: true, data: { name: "AquaShield API", api: "/api" } }),
   );
-  app.use("/api", createApiRouter(databaseStatus));
+  app.use("/api", createApiRouter(databaseStatus, config));
   app.use(notFound);
   app.use(errorHandler);
   return app;

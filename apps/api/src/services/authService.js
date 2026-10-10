@@ -118,19 +118,26 @@ export async function authenticate(token, roles = ["ADMIN"]) {
     );
   return publicUser(user);
 }
-export async function createOperator({ email, password, name }) {
+export async function createOperator(
+  { email, password, name },
+  { demo = false } = {},
+) {
   await initializeAuthStorage();
   return User.create({
     email: email.toLowerCase(),
     name,
     passwordHash: await hashPassword(password),
     role: "OPERATOR",
+    isDemo: demo,
   });
 }
 export async function logoutAdmin(token) {
   await AdminSession.deleteOne({ tokenHash: tokenHash(token) });
 }
-export async function createCitizen({ email, password, name }) {
+export async function createCitizen(
+  { email, password, name },
+  { demo = false } = {},
+) {
   await initializeAuthStorage();
   try {
     const user = await User.create({
@@ -138,6 +145,7 @@ export async function createCitizen({ email, password, name }) {
       name,
       passwordHash: await hashPassword(password),
       role: "CITIZEN",
+      isDemo: demo,
     });
     return publicUser(user);
   } catch (error) {

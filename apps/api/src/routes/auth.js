@@ -11,6 +11,7 @@ import {
 } from "../services/authService.js";
 import { requireAdmin } from "../middleware/admin.js";
 import { registrationInput } from "../validation/auth.js";
+import { demonstration } from "../config/demonstration.js";
 export function createAuthRouter(config, databaseStatus) {
   const router = Router();
   router.use((_req, res, next) => {
@@ -34,7 +35,12 @@ export function createAuthRouter(config, databaseStatus) {
         );
       res
         .status(201)
-        .json({ success: true, data: { user: await createCitizen(input) } });
+        .json({
+          success: true,
+          data: {
+            user: await createCitizen(input, { demo: demonstration(config) }),
+          },
+        });
     },
   );
   router.post(

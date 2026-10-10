@@ -69,6 +69,13 @@ const reportSchema = new mongoose.Schema(
     verificationSource: { type: String, default: null },
     isDemo: { type: Boolean, default: false, immutable: true },
     hasPhoto: { type: Boolean, default: false },
+    sourceType: {
+      type: String,
+      enum: ["DEMO_SEED", "CITIZEN_SUBMISSION"],
+      default: "CITIZEN_SUBMISSION",
+      immutable: true,
+    },
+    seedKey: { type: String, default: null, immutable: true },
     photo: { type: photoSchema, select: false },
   },
   { timestamps: true, strict: "throw", autoCreate: false, autoIndex: false },

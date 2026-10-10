@@ -20,7 +20,7 @@
     "lint": "eslint .",
     "test": "npm run test -w @aquashield/api",
     "test:mongo": "npm run test:mongo -w @aquashield/api",
-    "test:ai:live": "npm run test:ai:live -w @aquashield/api",
+    "test:ai:live": "npm run test:ai:live -w @aquashield/api --",
     "test:e2e": "playwright test",
     "test:dev-origins": "playwright test --config playwright.dev.config.js",
     "seed:demo": "npm run seed:demo -w @aquashield/api",

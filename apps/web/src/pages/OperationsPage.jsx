@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { adminRequest } from "../lib/adminApi.js";
+import { useEnvironment } from "../lib/environment.js";
 
 const quantity = (value) =>
   value == null ? "Unknown" : `${value.toLocaleString()} L`;
@@ -8,7 +9,8 @@ const readNumber = (form, name) =>
   form.get(name) === "" ? null : Number(form.get(name));
 export default function OperationsPage({ fleetOnly = false }) {
   const [params, setParams] = useSearchParams();
-  const demo = params.get("demo") === "true";
+  const environment = useEnvironment();
+  const demo = environment.demonstration || params.get("demo") === "true";
   const suffix = `?demo=${demo}`;
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
@@ -133,7 +135,7 @@ export default function OperationsPage({ fleetOnly = false }) {
           <option value="demo">Simulated demo records</option>
         </select>
       </label>
-      {demo && (
+      {demo && !environment.demonstration && (
         <div className="demo-note">
           Simulated fleet, demand and delivery context. These are fictional
           records.

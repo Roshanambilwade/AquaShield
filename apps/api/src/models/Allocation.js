@@ -22,6 +22,7 @@ const schema = new mongoose.Schema(
     active: { type: Boolean, default: true },
     isDemo: { type: Boolean, required: true },
     requestId: { type: String, required: true },
+    seedKey: { type: String, default: null },
     createdBy: { ...ref("User"), required: true },
     approvedBy: ref("User"),
     approvedAt: Date,

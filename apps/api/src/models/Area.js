@@ -21,6 +21,7 @@ const schema = new mongoose.Schema(
       description: String,
     },
     isDemo: { type: Boolean, required: true },
+    seedKey: { type: String, default: null },
   },
   { timestamps: true, strict: "throw", autoCreate: false, autoIndex: false },
 );

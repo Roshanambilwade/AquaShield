@@ -6,10 +6,12 @@ import {
 import useReportData from "../hooks/useReportData.js";
 import ReportFeedback from "../components/ReportFeedback.jsx";
 import CitizenAccess from "../components/CitizenAccess.jsx";
+import { useEnvironment } from "../lib/environment.js";
 
 export default function ReportHistoryPage() {
   const [params] = useSearchParams();
-  return params.get("demo") === "true" ? (
+  const environment = useEnvironment();
+  return !environment.demonstration && params.get("demo") === "true" ? (
     <ReportHistory />
   ) : (
     <CitizenAccess>
@@ -19,7 +21,8 @@ export default function ReportHistoryPage() {
 }
 function ReportHistory() {
   const [params, setParams] = useSearchParams();
-  const demo = params.get("demo") === "true";
+  const environment = useEnvironment();
+  const demo = !environment.demonstration && params.get("demo") === "true";
   const candidatePage = Number(params.get("page") || 1);
   const page =
     Number.isInteger(candidatePage) &&
@@ -44,9 +47,11 @@ function ReportHistory() {
         <Link className="button" to="/report">
           Report water shortage
         </Link>
-        <Link to={demo ? "/my-reports" : "/my-reports?demo=true"}>
-          {demo ? "View my reports" : "View simulated demo reports"}
-        </Link>
+        {!environment.demonstration && (
+          <Link to={demo ? "/my-reports" : "/my-reports?demo=true"}>
+            {demo ? "View my reports" : "View simulated demo reports"}
+          </Link>
+        )}
       </div>
       <ReportFeedback {...state} />
       {state.data &&

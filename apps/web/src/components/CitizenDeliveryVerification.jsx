@@ -5,7 +5,11 @@ export default function CitizenDeliveryVerification({ report }) {
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  if (report.isDemo || report.responseStatus?.status !== "ARRIVED") return null;
+  if (
+    (report.isDemo && !report.canRequestDeliveryOtp) ||
+    report.responseStatus?.status !== "ARRIVED"
+  )
+    return null;
   async function issue() {
     setBusy(true);
     setResult(null);
@@ -30,8 +34,9 @@ export default function CitizenDeliveryVerification({ report }) {
         assigned operator after observing the area delivery.
       </p>
       <p>
-        This confirms account participation, not verified identity, measured
-        litres or receipt by every household. No SMS is sent.
+        {report.isDemo
+          ? "Demonstration code acceptance is simulated verification, not independent delivery proof. No SMS is sent."
+          : "This confirms account participation, not verified identity, measured litres or receipt by every household. No SMS is sent."}
       </p>
       <button className="button" disabled={busy} onClick={issue}>
         {busy ? "Requesting code…" : "Get recipient delivery code"}

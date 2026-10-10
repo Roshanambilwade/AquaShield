@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { datasetDemo } from "../config/demonstration.js";
 import { z } from "zod";
 import { requireAdmin } from "../middleware/admin.js";
 import { createSubmissionLimiter } from "../middleware/submissionLimit.js";
@@ -32,6 +33,7 @@ export function createDeliveryRouter(config, databaseStatus, { handoff } = {}) {
         z.object({ demo: z.enum(["true", "false"]).default("false") }).strict(),
         req.query,
       ).demo === "true";
+    req.demo = datasetDemo(config, req.demo);
     if (req.demo && config.NODE_ENV === "production")
       throw new ApiError(
         403,

@@ -57,6 +57,7 @@ export function buildEvidence(
       return {
         ref: `zone_${String.fromCharCode(65 + Math.floor(index / 26))}${String.fromCharCode(65 + (index % 26))}`,
         eventId: e.id,
+        areaId: e.areaId,
         area: e.areaName,
         calculatedAt: e.calculatedAt,
         status: e.status,
@@ -174,9 +175,10 @@ export function modelEvidence(facts) {
   // References rather than user-supplied area names or database identifiers.
   return {
     ...facts,
-    zones: facts.zones.map(({ eventId, area, ...safe }) => {
+    zones: facts.zones.map(({ eventId, area, areaId, ...safe }) => {
       void eventId;
       void area;
+      void areaId;
       return safe;
     }),
     fleet:
