@@ -56,7 +56,7 @@ export function buildAllocationEvidence(snapshot, config) {
   };
   facts.limitations = [
     "Human review required. Backend alone selects and assigns eligible tankers.",
-    "Unknown inputs remain unknown; no routing or delivery workflow is available.",
+    "Unknown inputs remain unknown; routing and delivery remain separate authorized workflows.",
   ];
   facts.evidenceVersion = createHash("sha256")
     .update(JSON.stringify(facts))

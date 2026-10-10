@@ -120,4 +120,6 @@ Paths below are relative to the repository root.
 
 ## Pre-Phase-7 remediation update
 
+For the subsequent focused resilience update, see [AI reliability](ai-reliability.md). It supersedes the historical single-attempt API behavior described above: operational APIs may return explicit rule-based evidence, while live diagnostics remain strict and never accept fallback as live success.
+
 See [the remediation report](remediation.md) for current public aggregation, bounded detection refresh, authoritative allocation advice, recovery policy, fleet eligibility, citizen response history, test isolation and agent verification. Earlier test counts in this document are historical phase snapshots. No live Gemini inference was run during remediation; demo and mocked-provider tests are not proof of live execution. Phase 7 and deployment remain outside this task.

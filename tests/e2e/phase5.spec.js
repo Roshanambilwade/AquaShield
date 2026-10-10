@@ -2,7 +2,64 @@ import { test, expect } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 import { prepareBrowserAdmin } from "../helpers/admin.js";
 import { seedDemoReports } from "../../apps/api/src/demo/seedReports.js";
+import { runAgent } from "../../apps/api/src/services/ai/agentService.js";
+import { loadEnv } from "../../apps/api/src/config/env.js";
 let admin;
+
+test("rule-based outage states remain distinct from Gemini and demo execution for every role", async ({
+  page,
+}) => {
+  await admin.signIn(page);
+  await page.goto("/admin?demo=true");
+  // Exercise actual backend fallback against the isolated database without
+  // adding API requests to the shared production rate-limiter window.
+  const config = {
+    ...loadEnv(),
+    DEMO_AI_MODE: false,
+    GEMINI_API_KEY: "mock-only",
+    GEMINI_MODEL_ID: "mock-model",
+    AI_MAX_RETRIES: 0,
+    AI_CIRCUIT_FAILURE_THRESHOLD: 20,
+  };
+  await page.route("**/api/ai/**", async (route) => {
+    const endpoint = new URL(route.request().url()).pathname.split("/").at(-1);
+    const role = endpoint === "recommend-allocation" ? "allocate" : endpoint;
+    const data = await runAgent(role, config, route.request().postDataJSON(), {
+      allowFallback: true,
+      invoke: async () => {
+        throw Object.assign(new Error("Mocked provider outage"), {
+          status: 503,
+        });
+      },
+    });
+    await route.fulfill({ status: 200, json: { success: true, data } });
+  });
+  const panel = page.getByLabel("AquaShield AI recommendation");
+  for (const role of ["detect", "allocate", "logistics", "predict"]) {
+    await panel.getByLabel("Agent role").selectOption(role);
+    await panel
+      .getByRole("button", { name: "Generate recommendation" })
+      .click();
+    await expect(panel).toContainText(
+      "Using rule-based assessment; AI explanation unavailable",
+    );
+    await expect(panel).toContainText("AI_PROVIDER_UNAVAILABLE");
+    await expect(panel).toContainText("Human review required");
+    await expect(panel).toContainText("No allocation approved");
+    await expect(panel).not.toContainText(
+      "Demo AI simulation — no Gemini execution",
+    );
+    if (role !== "detect")
+      await expect(panel).toContainText(
+        "Insufficient evidence; manual review required",
+      );
+  }
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+});
 test.beforeAll(async () => {
   admin = await prepareBrowserAdmin();
   await seedDemoReports();

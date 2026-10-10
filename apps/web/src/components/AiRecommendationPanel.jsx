@@ -47,6 +47,9 @@ export default function AiRecommendationPanel({ demo, event, configuration }) {
   const focus = result?.facts.zones.find(
     (z) => z.ref === (result.advice.priorityRef || result.facts.selectedRef),
   );
+  const ruleBased =
+    result?.execution.method === "RULE_BASED" ||
+    result?.execution.mode === "RULE_BASED";
   return (
     <section
       className="admin-panel ai-panel"
@@ -59,9 +62,11 @@ export default function AiRecommendationPanel({ demo, event, configuration }) {
         </div>
         <span className="phase-badge">
           {result
-            ? result.execution.isDemo
-              ? "Demo simulation"
-              : "Gemini via Strands"
+            ? ruleBased
+              ? "Rule-based assessment"
+              : result.execution.isDemo
+                ? "Demo simulation"
+                : "Gemini via Strands"
             : configuration?.status === "DEMO"
               ? "Demo mode"
               : configuration?.status === "READY"
@@ -69,7 +74,9 @@ export default function AiRecommendationPanel({ demo, event, configuration }) {
                 : "Not configured"}
         </span>
       </div>
-      <p>{configuration?.message || "Loading agent configuration…"}</p>
+      {!result && (
+        <p>{configuration?.message || "Loading agent configuration…"}</p>
+      )}
       <div className="ai-controls">
         <label>
           Agent role
@@ -129,13 +136,27 @@ export default function AiRecommendationPanel({ demo, event, configuration }) {
           <p
             className={result.execution.isDemo ? "demo-note" : "evidence-note"}
           >
-            {result.execution.isDemo
-              ? "Demo AI simulation — no Gemini execution."
-              : `Actual Google Gemini execution through Strands · ${result.execution.model}`}
+            {ruleBased
+              ? "Using rule-based assessment; AI explanation unavailable. Operational data remains available."
+              : result.execution.isDemo
+                ? "Demo AI simulation — no Gemini execution."
+                : `Actual Google Gemini execution through Strands · ${result.execution.model}`}
             {result.facts.dataIsDemo
               ? " Source evidence is fictional demo data."
               : " Source: current recorded evidence."}
           </p>
+          {result.assessmentStatus === "INSUFFICIENT_DATA" && (
+            <p role="status">Insufficient evidence; manual review required.</p>
+          )}
+          {result.execution.aiAnalysisCompleted && (
+            <p>AI analysis completed.</p>
+          )}
+          {ruleBased && (
+            <p className="evidence-note">
+              Reason: {result.execution.fallbackReasonCode}. No AI analysis was
+              completed. Review the backend facts and missing inputs below.
+            </p>
+          )}
           <h3>
             {result.agent} · {actions[result.advice.recommendedAction]}
           </h3>
@@ -238,6 +259,9 @@ export default function AiRecommendationPanel({ demo, event, configuration }) {
           </p>
           <small>
             Generated {new Date(result.generatedAt).toLocaleString()}.
+            {result.requestId
+              ? ` Assessment reference: ${result.requestId}.`
+              : ""}
             Recommendation confidence is uncalibrated and is not shown as a
             percentage. Refresh the assessment when evidence changes.
           </small>

@@ -104,15 +104,85 @@ test("strict validation rejects invented metrics, role/prompt/provider overrides
   await post("detect", { demo: false }, production).expect(403);
 });
 
-test("changed roles and revoked sessions cannot use AI; missing key is a controlled error", async () => {
+test("provider outage across all roles preserves persisted evidence, authorization and read-only behavior", async () => {
+  let calls = 0;
+  const target = createApp(
+    {
+      ...config,
+      DEMO_AI_MODE: false,
+      GEMINI_API_KEY: "mock-only",
+      GEMINI_MODEL_ID: "mock-model",
+      AI_MAX_RETRIES: 0,
+      AI_CIRCUIT_FAILURE_THRESHOLD: 1,
+    },
+    {
+      aiDependencies: {
+        invoke: async () => {
+          calls++;
+          throw Object.assign(new Error("PRIVATE_PROVIDER_DETAIL"), {
+            status: 503,
+          });
+        },
+      },
+    },
+  );
+  for (const role of ["detect", "allocate", "logistics", "predict"]) {
+    const data = (
+      await post(
+        role,
+        { demo: true, eventId: String(hero._id) },
+        target,
+      ).expect(200)
+    ).body.data;
+    assert.equal(data.execution.method, "RULE_BASED");
+    assert.equal(data.execution.aiAnalysisCompleted, false);
+    assert.equal(data.execution.isDemo, false);
+    assert.equal(data.facts.dataIsDemo, true);
+    assert.equal(data.approved, false);
+    assert.equal(data.humanReview, "REQUIRED");
+    assert.ok(data.requestId);
+    assert.equal(
+      data.execution.fallbackReasonCode,
+      role === "detect" ? "AI_PROVIDER_UNAVAILABLE" : "AI_CIRCUIT_OPEN",
+    );
+    assert.equal(
+      data.facts.zones.find((z) => z.area === "Panchavati").severity,
+      hero.severityScore,
+    );
+    for (const secret of [
+      "PRIVATE_PROVIDER_DETAIL",
+      "mock-only",
+      "reporterKeyHash",
+    ])
+      assert.equal(JSON.stringify(data).includes(secret), false);
+  }
+  assert.equal(calls, 1);
+  assert.equal(await Report.countDocuments(), 66);
+  assert.equal(
+    await mongoose.connection.db.collection("allocations").countDocuments(),
+    0,
+  );
+  assert.equal(
+    await mongoose.connection.db.collection("deliveries").countDocuments(),
+    0,
+  );
+  await request(target).post("/api/ai/detect").send({ demo: true }).expect(401);
+});
+
+test("changed roles and revoked sessions cannot use AI; missing key returns explicit rule-based evidence", async () => {
   await User.updateOne({ _id: user._id }, { $set: { role: "CITIZEN" } });
   await post("detect").expect(403);
   await User.updateOne({ _id: user._id }, { $set: { role: "ADMIN" } });
   const real = createApp({ ...config, DEMO_AI_MODE: false });
-  assert.equal(
-    (await post("detect", { demo: true }, real).expect(503)).body.code,
-    "AI_NOT_CONFIGURED",
-  );
+  const fallback = (await post("detect", { demo: true }, real).expect(200)).body
+    .data;
+  assert.equal(fallback.execution.fallbackReasonCode, "AI_NOT_CONFIGURED");
+  assert.equal(fallback.execution.mode, "RULE_BASED");
+  assert.equal(fallback.execution.isDemo, false);
+  assert.equal(fallback.execution.providerExecuted, false);
+  assert.equal(fallback.execution.attempts, 0);
+  assert.equal(fallback.facts.dataIsDemo, true); // Explicitly requested evidence source.
+  assert.equal(fallback.approved, false);
   await request(app)
     .post("/api/ai/detect")
     .set("Authorization", `Bearer ${"f".repeat(64)}`)

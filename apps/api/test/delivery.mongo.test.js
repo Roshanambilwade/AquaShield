@@ -217,6 +217,52 @@ test("trips enforce operator ownership, admin read-only controls and strict auth
     await call("post", `${f.path}/start`, body).expect(422);
   await call("post", `${f.path}/recover`, {}).expect(403);
 });
+
+test("a failed logistics explanation cannot block authorized trip, OTP, litre accounting or completion audit", async () => {
+  const f = await fixture();
+  let calls = 0;
+  app = createApp(
+    {
+      ...config,
+      DEMO_AI_MODE: false,
+      GEMINI_API_KEY: "mock-only",
+      GEMINI_MODEL_ID: "mock-model",
+      AI_MAX_RETRIES: 0,
+    },
+    {
+      aiDependencies: {
+        invoke: async () => {
+          calls++;
+          throw Object.assign(new Error("PRIVATE"), { status: 503 });
+        },
+      },
+    },
+  );
+  const result = await call(
+    "post",
+    "/api/ai/logistics",
+    { demo: true, eventId: f.event.id },
+    token,
+  ).expect(200);
+  assert.equal(result.body.data.execution.method, "RULE_BASED");
+  assert.equal(
+    result.body.data.execution.fallbackReasonCode,
+    "AI_PROVIDER_UNAVAILABLE",
+  );
+  await call("post", `${f.path}/start`, {}, otherToken).expect(404);
+  await verified(f);
+  await call("post", `${f.path}/complete`, { litresDelivered: 4000 }).expect(
+    200,
+  );
+  const stored = await Delivery.findById(f.delivery.id);
+  assert.equal(stored.status, "DELIVERED");
+  assert.equal(stored.litresDelivered, 4000);
+  assert.equal(
+    stored.audit.filter((a) => a.action === "DELIVERY_COMPLETED").length,
+    1,
+  );
+  assert.equal(calls, 1);
+});
 test("trip lifecycle rejects skipped/repeated states and persists tanker projections", async () => {
   const f = await fixture();
   await call("post", `${f.path}/arrive`, {}).expect(409);

@@ -48,6 +48,25 @@ export function sanitizeProviderError(error) {
     }
     const status = Number(current.status ?? payload?.code);
     const code = payload?.status ?? current.code;
+    if (current instanceof ApiError && current.code === "AI_TIMEOUT")
+      return failure(
+        "AI_TIMEOUT",
+        "The provider assessment timed out.",
+        [
+          "AGENT_DEADLINE",
+          "ATTEMPT_TIMEOUT",
+          "PROVIDER_OR_NETWORK_TIMEOUT",
+        ].includes(current.details?.category)
+          ? current.details.category
+          : "PROVIDER_OR_NETWORK_TIMEOUT",
+        status,
+      );
+    if (current instanceof ApiError && current.code === "AI_INVALID_OUTPUT")
+      return failure(
+        "AI_INVALID_OUTPUT",
+        "The assessment did not pass output validation.",
+        "OUTPUT_VALIDATION_FAILURE",
+      );
     if (current.name === "MaxTokensError")
       return failure(
         "AI_INVALID_OUTPUT",
@@ -97,7 +116,7 @@ export function sanitizeProviderError(error) {
         "INVALID_PROVIDER_REQUEST",
         status,
       );
-    if (status === 503 || code === "UNAVAILABLE")
+    if ([500, 502, 503].includes(status) || code === "UNAVAILABLE")
       return failure(
         "AI_PROVIDER_UNAVAILABLE",
         "Google is temporarily unavailable.",
@@ -146,6 +165,44 @@ export function sanitizeProviderError(error) {
     "Gemini could not complete the assessment. Check backend provider configuration or try again later.",
     "UNCLASSIFIED_PROVIDER_FAILURE",
   );
+}
+
+// Return only a duration. Never retain or log headers/provider payloads.
+// The pinned Google SDK may omit HTTP headers; Google RetryInfo is also supported.
+export function providerRetryAfterMs(error, now = Date.now()) {
+  const seen = new Set();
+  for (
+    let current = error, i = 0;
+    current && i < 6 && !seen.has(current);
+    current = current.cause, i++
+  ) {
+    seen.add(current);
+    const headers = current.headers || current.response?.headers;
+    const value =
+      headers?.get?.("retry-after") ??
+      headers?.["retry-after"] ??
+      headers?.["Retry-After"];
+    let ms;
+    if (typeof value === "string" && value.length <= 100) {
+      ms = /^\d+(?:\.\d+)?$/.test(value.trim())
+        ? Number(value) * 1000
+        : Date.parse(value) - now;
+    }
+    if (!Number.isFinite(ms)) {
+      try {
+        const details = JSON.parse(current.message)?.error?.details;
+        const delay = details?.find(
+          (d) => d?.["@type"] === "type.googleapis.com/google.rpc.RetryInfo",
+        )?.retryDelay;
+        if (typeof delay === "string" && /^\d+(?:\.\d+)?s$/.test(delay))
+          ms = Number(delay.slice(0, -1)) * 1000;
+      } catch {
+        /* Not a structured Google error. */
+      }
+    }
+    if (Number.isFinite(ms) && ms >= 0) return Math.ceil(ms);
+  }
+  return null;
 }
 
 function failure(code, message, category, status) {

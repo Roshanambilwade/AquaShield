@@ -227,10 +227,21 @@ async function explain(snapshot, config, dependencies) {
       "allocate",
       config,
       { demo: snapshot.isDemo },
-      { ...dependencies, evidenceLoader: async () => facts },
+      {
+        ...dependencies,
+        evidenceLoader: async () => facts,
+        allowFallback: true,
+      },
     );
     return {
-      execution: result.execution,
+      // Keep the saved allocation's established mode while adding the shared
+      // RULE_BASED method/provenance used by all assessment APIs.
+      execution:
+        result.execution.mode === "RULE_BASED"
+          ? { ...result.execution, mode: "DETERMINISTIC_ONLY" }
+          : result.execution,
+      failureCode: result.execution.fallbackReasonCode ?? undefined,
+      assessmentStatus: result.assessmentStatus,
       advice: result.advice,
       evidenceVersion: result.facts.evidenceVersion,
       requestId: result.requestId,
@@ -279,7 +290,17 @@ export async function recommendAllocation(
   const ai = input.useAi
     ? await explain(snapshot, config, dependencies)
     : {
-        execution: { mode: "DETERMINISTIC_ONLY", providerExecuted: false },
+        execution: {
+          mode: "DETERMINISTIC_ONLY",
+          method: "RULE_BASED",
+          providerExecuted: false,
+          providerAttempted: false,
+          aiAnalysisCompleted: false,
+          providerStatus: "NOT_REQUESTED",
+          fallbackReasonCode: null,
+          isDemo: false,
+          attempts: 0,
+        },
         message: "Deterministic recommendation; no agent requested.",
       };
   // Provider latency must never make the candidate stale at creation time.

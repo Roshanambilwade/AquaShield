@@ -117,6 +117,9 @@ test("provider diagnostics distinguish safe failure categories without leaking n
 });
 const real = {
   ...config,
+  // Existing strict provider/transport tests deliberately exercise one attempt;
+  // retries and circuits have dedicated concurrent policy coverage.
+  AI_MAX_RETRIES: 0,
   DEMO_AI_MODE: false,
   GEMINI_API_KEY: "unit-test-placeholder",
   GEMINI_MODEL_ID: "test-model",

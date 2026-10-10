@@ -15,6 +15,33 @@ export const aiSchema = z.object({
     .default("false")
     .transform((v) => v === "true"),
   AI_TIMEOUT_MS: z.coerce.number().int().min(1000).max(60000).default(15000),
+  AI_ATTEMPT_TIMEOUT_MS: z.coerce
+    .number()
+    .int()
+    .min(1000)
+    .max(60000)
+    .default(60000),
+  AI_MAX_RETRIES: z.coerce.number().int().min(0).max(2).default(1),
+  AI_RETRY_BASE_MS: z.coerce.number().int().min(50).max(5000).default(500),
+  AI_RETRY_MAX_DELAY_MS: z.coerce
+    .number()
+    .int()
+    .min(100)
+    .max(10000)
+    .default(5000),
+  AI_CIRCUIT_FAILURE_THRESHOLD: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(20)
+    .default(3),
+  AI_CIRCUIT_RESET_MS: z.coerce
+    .number()
+    .int()
+    .min(1000)
+    .max(300000)
+    .default(30000),
+  AI_MAX_CONCURRENT: z.coerce.number().int().min(1).max(4).default(2),
   AI_FAIRNESS_MAX_ADJUSTMENT: z.coerce.number().min(0).max(30).default(15),
 });
 

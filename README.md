@@ -4,13 +4,15 @@ An intelligence and decision layer for emergency water management, by **AquaSent
 
 **Phases 1–7, including Phase 6.5, are implemented locally; complete live Gemini execution remains unverified.** Phase 7 adds persisted operator trips, deterministic route estimates, protected OTP verification, actual delivered litres, completion recovery, municipal history and private citizen response updates. See [Phase 7 behavior, demo, security and verification](docs/phase7.md), [Phase 6.5 accounts](docs/phase65.md), [Phase 6 operations](docs/phase6.md), [Phase 5 agents](docs/phase5.md), [Phase 4](docs/phase4.md) and [Phase 3 calculations](docs/phase3.md).
 
-Latest through-Phase-7 checks: 137 unit tests, 75 MongoDB tests, 92 desktop/mobile
-browser tests and both development-origin tests passed; lint/build passed.
+Latest reliability checks: 155 unit/API tests, 78 MongoDB tests and 94 desktop/mobile
+browser tests passed; lint/build passed. These tests use mocked providers or explicit demo mode.
 See [requirement coverage, remaining blocker and manual citizen handoff](docs/through-phase7-audit.md).
 
 **Strategy:** AWS will host the functioning application; it is not a mandatory AI/LLM provider. Phase 5 integrates Strands Agents SDK with Google Gemini for four roles. All numeric facts remain deterministic backend calculations. On 10 October 2026, authorized live Crisis Detection, Logistics and Early Warning tests passed validation; Resource Allocation generation returned Google HTTP 503 and remains unverified. Bedrock is optional; AWS deployment has not been performed. See the [through-Phase-7 audit](docs/through-phase7-audit.md) and [honest demo guide](docs/demo.md).
 
 ## Completed
+
+Gemini outages now use bounded retries/circuit recovery and explicitly labeled rule-based assessments where backend evidence supports them. See [AI reliability, configuration and limits](docs/ai-reliability.md). No new live Gemini verification is claimed by this update.
 
 - JavaScript npm workspaces: React + Vite in `apps/web`; Node.js + Express in `apps/api`.
 - Responsive base layout, client-side routing, and a system status page.

@@ -59,6 +59,7 @@ export function createAiRouter(config, databaseStatus, dependencies) {
             success: true,
             data: await runAgent(role, config, input, {
               ...dependencies,
+              allowFallback: true,
               signal: controller.signal,
             }),
           });

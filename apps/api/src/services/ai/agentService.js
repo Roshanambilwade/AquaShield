@@ -6,16 +6,31 @@ import { roles, validateAdvice } from "./contracts.js";
 import { demoAdvice } from "./demo.js";
 import { PROMPT_VERSION } from "./prompts.js";
 import { sanitizeProviderError } from "./providerErrors.js";
+import { aiReliability } from "./reliability.js";
+import { ruleBasedAssessment } from "./ruleBased.js";
 
 export async function runAgent(
   role,
   config,
   input,
-  { evidenceLoader = loadEvidence, invoke, signal } = {},
+  {
+    evidenceLoader = loadEvidence,
+    invoke,
+    signal,
+    allowFallback = false,
+    reliability = aiReliability(config),
+  } = {},
 ) {
   if (!roles[role])
     throw new ApiError(422, "VALIDATION_ERROR", "Unknown agent role.");
-  requireAiConfiguration(config);
+  const requestId = randomUUID();
+  let unavailable;
+  try {
+    requireAiConfiguration(config);
+  } catch (error) {
+    if (!allowFallback || error.code !== "AI_NOT_CONFIGURED") throw error;
+    unavailable = error;
+  }
   const facts =
     role === "allocate" && evidenceLoader === loadEvidence
       ? (await import("./allocationEvidence.js")).buildAllocationEvidence(
@@ -31,64 +46,93 @@ export async function runAgent(
         : await evidenceLoader(config, input);
   if (signal?.aborted)
     throw new ApiError(499, "AI_CANCELLED", "The assessment was cancelled.");
-  let raw;
-  if (config.DEMO_AI_MODE) raw = demoAdvice(role, facts);
-  else {
-    const controller = new AbortController();
-    const cancel = () => controller.abort();
-    signal?.addEventListener("abort", cancel, { once: true });
-    let timer;
+  let advice,
+    attempts = 0,
+    circuitState = "CLOSED",
+    assessmentStatus = "REVIEW_REQUIRED";
+  if (config.DEMO_AI_MODE)
+    advice = validateAdvice(demoAdvice(role, facts), role, facts);
+  else if (!unavailable) {
     try {
       const provider = invoke || (await import("./provider.js")).invokeGemini;
-      if (signal?.aborted) controller.abort();
-      const timeout = new Promise((_, reject) => {
-        timer = setTimeout(() => {
-          reject(
-            new ApiError(
-              504,
-              "AI_TIMEOUT",
-              "The agent took too long. Please retry.",
-              { category: "AGENT_DEADLINE" },
-            ),
-          );
-          // Settle the explicit deadline before cancellation can cause an SDK
-          // cancelled/invalid-output result to race the timeout classification.
-          controller.abort();
-        }, config.AI_TIMEOUT_MS);
-      });
-      raw = await Promise.race([
-        provider({ config, role, facts, signal: controller.signal }),
-        timeout,
-      ]);
+      const result = await reliability.execute(
+        async ({ signal: attemptSignal, timeoutMs }) => {
+          const raw = await provider({
+            config: { ...config, AI_TIMEOUT_MS: timeoutMs },
+            role,
+            facts,
+            signal: attemptSignal,
+          });
+          return validateAdvice(raw, role, facts);
+        },
+        { signal, requestId, role },
+      );
+      advice = result.value;
+      attempts = result.attempts;
+      circuitState = result.circuitState;
     } catch (error) {
-      if (
-        error instanceof ApiError &&
-        ["AI_TIMEOUT", "AI_INVALID_OUTPUT"].includes(error.code)
-      )
-        throw error;
-      throw sanitizeProviderError(error);
-    } finally {
-      clearTimeout(timer);
-      signal?.removeEventListener("abort", cancel);
+      if (error.code === "AI_CANCELLED" || signal?.aborted)
+        throw new ApiError(
+          499,
+          "AI_CANCELLED",
+          "The assessment was cancelled.",
+        );
+      const safe =
+        error instanceof ApiError ? error : sanitizeProviderError(error);
+      if (!allowFallback) throw safe;
+      unavailable = safe;
     }
   }
-  const advice = validateAdvice(raw, role, facts);
+  if (unavailable) {
+    ({ advice, assessmentStatus } = ruleBasedAssessment(role, facts));
+    attempts = unavailable.details?.attempts ?? 0;
+    circuitState = reliability.snapshot().state;
+    console.info(
+      JSON.stringify({
+        event: "AI_RULE_BASED_ASSESSMENT",
+        requestId,
+        role,
+        reasonCode: unavailable.code,
+        attempts,
+        circuitState,
+      }),
+    );
+  }
   return {
-    requestId: randomUUID(),
+    requestId,
     generatedAt: new Date().toISOString(),
     agent: roles[role],
     role,
     execution: {
-      mode: config.DEMO_AI_MODE ? "DEMO_SIMULATION" : "REAL_GEMINI",
+      mode: config.DEMO_AI_MODE
+        ? "DEMO_SIMULATION"
+        : unavailable
+          ? "RULE_BASED"
+          : "REAL_GEMINI",
+      method: config.DEMO_AI_MODE
+        ? "DEMO"
+        : unavailable
+          ? "RULE_BASED"
+          : "GEMINI",
       isDemo: config.DEMO_AI_MODE,
-      providerExecuted: !config.DEMO_AI_MODE,
-      framework: config.DEMO_AI_MODE ? null : "Strands Agents SDK",
-      provider: config.DEMO_AI_MODE ? null : "Google Gemini",
-      model: config.DEMO_AI_MODE ? null : config.GEMINI_MODEL_ID,
+      providerExecuted: !config.DEMO_AI_MODE && !unavailable,
+      providerAttempted: attempts > 0,
+      aiAnalysisCompleted: !config.DEMO_AI_MODE && !unavailable,
+      providerStatus: config.DEMO_AI_MODE
+        ? "NOT_REQUESTED"
+        : unavailable?.code || "AVAILABLE",
+      fallbackReasonCode: unavailable?.code ?? null,
+      attempts,
+      circuitState,
+      framework:
+        config.DEMO_AI_MODE || unavailable ? null : "Strands Agents SDK",
+      provider: config.DEMO_AI_MODE || unavailable ? null : "Google Gemini",
+      model: config.DEMO_AI_MODE || unavailable ? null : config.GEMINI_MODEL_ID,
       promptVersion: PROMPT_VERSION,
     },
     facts,
     advice,
+    assessmentStatus,
     recommendationConfidence: null,
     humanReview: "REQUIRED",
     approved: false,

@@ -170,6 +170,7 @@ test("recommendations are idempotent, active shortage uniqueness is atomic, and 
 });
 test("AI modes preserve contracts and provider failures produce labeled deterministic recommendations", async () => {
   for (const failure of [
+    Object.assign(new Error("SECRET"), { status: 503 }),
     new ApiError(504, "AI_TIMEOUT", "timeout"),
     new Error("SECRET"),
     null,
@@ -200,6 +201,16 @@ test("AI modes preserve contracts and provider failures produce labeled determin
       failure ? "DETERMINISTIC_ONLY" : "DEMO_SIMULATION",
     );
     assert.equal(JSON.stringify(allocation).includes("SECRET"), false);
+    if (failure) {
+      assert.equal(allocation.ai.execution.method, "RULE_BASED");
+      assert.equal(allocation.ai.execution.aiAnalysisCompleted, false);
+      assert.equal(allocation.ai.execution.isDemo, false);
+      assert.ok(allocation.ai.requestId);
+      assert.equal(
+        (await Allocation.findById(allocation.id)).ai.failureCode,
+        allocation.ai.failureCode,
+      );
+    }
     await call("post", `allocations/${allocation.id}/reject`, {
       reason: "Testing alternate recommendation",
     }).expect(200);
@@ -634,4 +645,53 @@ test("F4 interrupted cancellation holds uniqueness until its conditional release
   }).expect(200);
   assert.equal((await Allocation.findById(a.id)).active, false);
   assert.equal((await Tanker.findById(tanker.id)).activeAllocationId, null);
+});
+
+test("provider outage recommendations still require explicit authorized approval and assignment", async () => {
+  await seedOperations(config, actor, { reset: true });
+  await User.updateOne({ _id: operator._id }, { $set: { disabled: false } });
+  await Tanker.updateOne(
+    { _id: tanker._id },
+    {
+      $set: {
+        operatorId: operator._id,
+        observedAt: new Date(),
+        availableLitres: 8000,
+      },
+    },
+  );
+  let calls = 0;
+  app = createApp(
+    {
+      ...config,
+      DEMO_AI_MODE: false,
+      GEMINI_API_KEY: "mock-only",
+      GEMINI_MODEL_ID: "mock-model",
+      AI_MAX_RETRIES: 0,
+    },
+    {
+      aiDependencies: {
+        invoke: async () => {
+          calls++;
+          throw Object.assign(new Error("PRIVATE"), { status: 503 });
+        },
+      },
+    },
+  );
+  const a = (await recommend({ useAi: true }).expect(200)).body.data.allocation;
+  assert.equal(a.ai.execution.method, "RULE_BASED");
+  assert.equal(a.ai.failureCode, "AI_PROVIDER_UNAVAILABLE");
+  await call("post", `allocations/${a.id}/assign`, {}).expect(409);
+  await call("post", `allocations/${a.id}/approve`, {}, operatorToken).expect(
+    403,
+  );
+  await call("post", `allocations/${a.id}/approve`, {}).expect(200);
+  await call("post", `allocations/${a.id}/assign`, {}).expect(200);
+  const stored = await Allocation.findById(a.id);
+  assert.equal(stored.status, "ASSIGNED");
+  assert.equal(
+    stored.audit.filter((e) => e.action === "TANKER_ASSIGNED").length,
+    1,
+  );
+  assert.equal(calls, 1);
 });

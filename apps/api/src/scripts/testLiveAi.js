@@ -15,7 +15,8 @@ import { buildAllocationEvidence } from "../services/ai/allocationEvidence.js";
 import { rankAllocationEvents } from "../services/allocationEngine.js";
 
 // Explicit live smoke command. Uses only fictional evidence and no database.
-const config = { ...loadEnv(), DEMO_AI_MODE: false };
+// Diagnostic remains strict and single-attempt, independently of application retries.
+const config = { ...loadEnv(), DEMO_AI_MODE: false, AI_MAX_RETRIES: 0 };
 const role =
   process.argv.find((arg) => arg.startsWith("--role="))?.slice(7) || "detect";
 if (!Object.hasOwn(roles, role))
