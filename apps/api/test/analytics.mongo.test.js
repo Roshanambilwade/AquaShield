@@ -1,3 +1,4 @@
+import { cleanupTestDatabase } from "./helpers/cleanup.js";
 import { before, after, test } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID, randomBytes } from "node:crypto";
@@ -5,7 +6,7 @@ import mongoose from "mongoose";
 import request from "supertest";
 import { createApp } from "../src/app.js";
 import { loadEnv } from "../src/config/env.js";
-import { connectDatabase, disconnectDatabase } from "../src/config/database.js";
+import { connectDatabase } from "../src/config/database.js";
 import {
   createAdmin,
   createOperator,
@@ -78,14 +79,7 @@ before(async () => {
     },
   });
 });
-after(async () => {
-  if (
-    mongoose.connection.name === dbName &&
-    /^aquashield_phase10_test_[a-f0-9]{32}$/.test(dbName)
-  )
-    await mongoose.connection.dropDatabase();
-  await disconnectDatabase();
-});
+after(() => cleanupTestDatabase(dbName));
 test("analytics date window is inclusive/exclusive and isolates demo data and area groupings", async () => {
   const d = (await analytics().expect(200)).body.data;
   assert.equal(d.reports.total, 4);

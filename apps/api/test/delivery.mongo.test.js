@@ -1,10 +1,11 @@
+import { cleanupTestDatabase } from "./helpers/cleanup.js";
 import { before, after, test } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID, randomBytes } from "node:crypto";
 import mongoose from "mongoose";
 import request from "supertest";
 import { loadEnv } from "../src/config/env.js";
-import { connectDatabase, disconnectDatabase } from "../src/config/database.js";
+import { connectDatabase } from "../src/config/database.js";
 import { createApp } from "../src/app.js";
 import {
   createAdmin,
@@ -75,14 +76,7 @@ before(async () => {
   await seedOperations(config, actor);
   await initializeDeliveries();
 });
-after(async () => {
-  if (
-    mongoose.connection.name === dbName &&
-    /^aquashield_delivery_test_[a-f0-9]{32}$/.test(dbName)
-  )
-    await mongoose.connection.dropDatabase();
-  await disconnectDatabase();
-});
+after(() => cleanupTestDatabase(dbName));
 async function fixture({ live = false } = {}) {
   assert.equal(mongoose.connection.name, dbName);
   // Clean only this suite's generated isolated database, never the root database.

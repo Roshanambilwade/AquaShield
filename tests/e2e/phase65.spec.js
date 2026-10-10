@@ -1,12 +1,11 @@
+import { cleanupTestDatabase } from "../../apps/api/test/helpers/cleanup.js";
 import { test, expect } from "@playwright/test";
 import { randomUUID, randomBytes } from "node:crypto";
-import mongoose from "mongoose";
 import { mkdir } from "node:fs/promises";
 import { createApp } from "../../apps/api/src/app.js";
 import { loadEnv } from "../../apps/api/src/config/env.js";
 import {
   connectDatabase,
-  disconnectDatabase,
 } from "../../apps/api/src/config/database.js";
 import { createAdmin } from "../../apps/api/src/services/authService.js";
 import User from "../../apps/api/src/models/User.js";
@@ -39,9 +38,7 @@ test.afterAll(async () => {
     server.closeAllConnections();
     await new Promise((resolve) => server.close(resolve));
   }
-  if (mongoose.connection.name === dbName)
-    await mongoose.connection.dropDatabase();
-  await disconnectDatabase();
+  await cleanupTestDatabase(dbName);
 });
 async function forward(page) {
   await page.route("**/api/**", async (route) => {

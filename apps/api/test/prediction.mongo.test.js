@@ -1,3 +1,4 @@
+import { cleanupTestDatabase } from "./helpers/cleanup.js";
 import { before, after, test } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID, randomBytes, createHash } from "node:crypto";
@@ -93,14 +94,7 @@ before(async () => {
     await Report.insertMany(rows);
   }
 });
-after(async () => {
-  if (
-    mongoose.connection.name === dbName &&
-    /^aquashield_phase8_test_[a-f0-9]{32}$/.test(dbName)
-  )
-    await mongoose.connection.dropDatabase();
-  await disconnectDatabase();
-});
+after(() => cleanupTestDatabase(dbName));
 test("all numerical routes enforce ADMIN authorization for anonymous/citizen/operator", async () => {
   for (const [method, path, body] of [
     ["get", "/api/predictions"],

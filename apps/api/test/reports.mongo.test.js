@@ -1,8 +1,8 @@
+import { cleanupTestDatabase } from "./helpers/cleanup.js";
 import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import request from "supertest";
-import mongoose from "mongoose";
 import sharp from "sharp";
 import { loadEnv } from "../src/config/env.js";
 import { connectDatabase, disconnectDatabase } from "../src/config/database.js";
@@ -39,12 +39,7 @@ before(async () => {
   token = (await citizenSession(config)).token;
   otherToken = (await citizenSession(config)).token;
 });
-after(async () => {
-  // Only remove the unique database created by this test, never the app database.
-  if (mongoose.connection.name === databaseName)
-    await mongoose.connection.dropDatabase();
-  await disconnectDatabase();
-});
+after(() => cleanupTestDatabase(databaseName));
 
 test("submission persists through a new MongoDB connection and HTTP history/detail", async () => {
   const payload = input();

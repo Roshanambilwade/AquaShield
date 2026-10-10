@@ -1,7 +1,7 @@
+import { cleanupTestDatabase } from "./helpers/cleanup.js";
 import { before, after, test } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID, randomBytes } from "node:crypto";
-import mongoose from "mongoose";
 import request from "supertest";
 import { createApp } from "../src/app.js";
 import { loadEnv } from "../src/config/env.js";
@@ -78,11 +78,7 @@ before(async () => {
     await loginAdmin(operator.email, password, config, ["OPERATOR"])
   ).token;
 });
-after(async () => {
-  if (mongoose.connection.name === databaseName)
-    await mongoose.connection.dropDatabase();
-  await disconnectDatabase();
-});
+after(() => cleanupTestDatabase(databaseName));
 test("registration assigns CITIZEN, stores scrypt only and uses shared login/me/logout", async () => {
   const input = {
     name: "Registered resident",

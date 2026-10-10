@@ -1,12 +1,11 @@
+import { cleanupTestDatabase } from "../../apps/api/test/helpers/cleanup.js";
 import { test, expect } from "@playwright/test";
 import { randomUUID, randomBytes } from "node:crypto";
-import mongoose from "mongoose";
 import request from "supertest";
 import { createApp } from "../../apps/api/src/app.js";
 import { loadEnv } from "../../apps/api/src/config/env.js";
 import {
   connectDatabase,
-  disconnectDatabase,
 } from "../../apps/api/src/config/database.js";
 import {
   createAdmin,
@@ -59,12 +58,7 @@ test.afterAll(async () => {
     server.closeAllConnections();
     await new Promise((resolve) => server.close(resolve));
   }
-  if (
-    mongoose.connection.name === dbName &&
-    /^aquashield_remediation_test_[a-f0-9]{32}$/.test(dbName)
-  )
-    await mongoose.connection.dropDatabase();
-  await disconnectDatabase();
+  await cleanupTestDatabase(dbName);
 });
 
 test("F5 citizen submission, municipal approval/assignment, renewed history and account isolation", async ({

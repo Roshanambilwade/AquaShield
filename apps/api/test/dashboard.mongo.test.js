@@ -1,3 +1,4 @@
+import { cleanupTestDatabase } from "./helpers/cleanup.js";
 import { before, after, test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
@@ -37,11 +38,7 @@ before(async () => {
   token = (await loginAdmin(email, password, config)).token;
   await seedDemoReports(config);
 });
-after(async () => {
-  if (mongoose.connection.name === databaseName)
-    await mongoose.connection.dropDatabase();
-  await disconnectDatabase();
-});
+after(() => cleanupTestDatabase(databaseName));
 
 test("admin login, me and logout use hashed revocable sessions with no password disclosure", async () => {
   const login = await request(app)

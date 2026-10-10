@@ -181,6 +181,54 @@ test("client validation and failed submission preserve the form for retry", asyn
   await submitAndRemember(page);
 });
 
+test("a lost response after Mongo commit can be retried without a duplicate report or creation audit", async ({
+  page,
+}) => {
+  await fillReport(page);
+  let committedId, submissionId;
+  await page.route("**/api/reports", async (route) => {
+    if (route.request().method() !== "POST") return route.continue();
+    submissionId = route.request().postDataJSON().submissionId;
+    const response = await route.fetch();
+    expect(response.status()).toBe(201);
+    committedId = (await response.json()).data.id;
+    ownedIds.push(committedId);
+    // The API committed, but the browser loses the acknowledgement.
+    await route.abort("connectionfailed");
+  });
+  await page
+    .getByRole("button", { name: "Submit report", exact: true })
+    .click();
+  await expect(page.getByRole("alert")).toContainText(
+    "Your details are still here",
+  );
+  await expect(
+    page.getByLabel("How many people are in your household?"),
+  ).toHaveValue("5");
+  await page.unroute("**/api/reports");
+  const result = page.waitForResponse(
+    (r) => r.url().endsWith("/api/reports") && r.request().method() === "POST",
+  );
+  await page
+    .getByRole("button", { name: "Submit report", exact: true })
+    .click();
+  const retry = await result;
+  expect(retry.status()).toBe(200);
+  expect(retry.request().postDataJSON().submissionId).toBe(submissionId);
+  expect((await retry.json()).data.id).toBe(committedId);
+  expect(await Report.countDocuments({ submissionId })).toBe(1);
+  const stored = await Report.findById(committedId);
+  expect(
+    stored.audit.filter((a) => a.action === "REPORT_CREATED"),
+  ).toHaveLength(1);
+  await expect(page).toHaveURL(
+    new RegExp(`/report/success\\?id=${committedId}$`),
+  );
+  await page.getByRole("link", { name: "Track this report" }).click();
+  await page.reload();
+  await expect(page.getByText(committedId, { exact: true })).toBeVisible();
+});
+
 test("device capture works and denied permission offers manual selection", async ({
   page,
   context,

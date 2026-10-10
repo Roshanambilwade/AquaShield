@@ -1,7 +1,7 @@
+import { cleanupTestDatabase } from "./helpers/cleanup.js";
 import { before, after, test } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID, randomBytes } from "node:crypto";
-import mongoose from "mongoose";
 import request from "supertest";
 import { loadEnv } from "../src/config/env.js";
 import { connectDatabase, disconnectDatabase } from "../src/config/database.js";
@@ -65,14 +65,7 @@ before(async () => {
   citizenToken = await logIn("citizen-01");
   strangerToken = await logIn("citizen-16");
 });
-after(async () => {
-  if (
-    mongoose.connection.name === dbName &&
-    /^aquashield_demo_test_[a-f0-9]{32}$/.test(dbName)
-  )
-    await mongoose.connection.dropDatabase();
-  await disconnectDatabase();
-});
+after(() => cleanupTestDatabase(dbName));
 test("persisted scenario uses service transitions, valid relationships and verified delivered-water accounting", async () => {
   assert.deepEqual(result.totals, {
     citizens: 16,

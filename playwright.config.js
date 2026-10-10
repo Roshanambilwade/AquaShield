@@ -2,13 +2,17 @@ import { defineConfig } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
+import "./scripts/testEnvironment.js";
 
 // Shared by the test server and fixtures; never seed the normal root database.
 process.env.NODE_ENV = "test";
 process.env.DEMO_AI_MODE = "true";
 process.env.GEMINI_API_KEY = "";
 process.env.ROUTING_BASE_URL = "";
-process.env.MONGODB_TEST_DB_NAME ||= `aquashield_browser_test_${randomUUID().replaceAll("-", "")}`;
+// Only workers inherit the run's generated database. Ignore caller-supplied
+// database names: teardown must never claim ownership of a pre-existing target.
+if (process.env.TEST_WORKER_INDEX === undefined)
+  process.env.MONGODB_TEST_DB_NAME = `aquashield_browser_test_${randomUUID().replaceAll("-", "")}`;
 
 const localTemp = fileURLToPath(new URL("./.local/tmp/", import.meta.url));
 mkdirSync(localTemp, { recursive: true });

@@ -1,3 +1,4 @@
+import { cleanupTestDatabase } from "./helpers/cleanup.js";
 import { before, after, test } from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes, randomUUID } from "node:crypto";
@@ -42,11 +43,7 @@ before(async () => {
   adminToken = (await loginAdmin("phase3-test@example.test", password, config))
     .token;
 });
-after(async () => {
-  if (mongoose.connection.name === databaseName)
-    await mongoose.connection.dropDatabase();
-  await disconnectDatabase();
-});
+after(() => cleanupTestDatabase(databaseName));
 
 test("three independent citizen submissions persist and create one updated ACTIVE event", async () => {
   for (let i = 0; i < 3; i += 1) {
