@@ -103,6 +103,27 @@ export default function ShortagesPage({ admin = false }) {
         assignments. An assignment does not confirm delivery or field
         verification.
       </p>
+      {admin && (
+        <div className="dashboard-context">
+          <p>
+            Current severity describes recorded shortage evidence. Confidence
+            describes whether a genuine shortage exists; estimated population
+            remains approximate. Forecasts describe future report activity.
+          </p>
+          <nav className="context-links" aria-label="Municipal next steps">
+            {[
+              ["reports", "Review evidence"],
+              ["allocations", "Review fair allocation"],
+              ["deliveries", "Inspect trips"],
+              ["predictions", "Explore report-activity forecasts"],
+            ].map(([path, label]) => (
+              <Link key={path} to={`/admin/${path}${demo ? "?demo=true" : ""}`}>
+                {label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+      )}
       {admin && <AdminMetrics state={summary} />}
       {state.loading && (
         <p role="status" className="empty-card">
@@ -147,8 +168,9 @@ export default function ShortagesPage({ admin = false }) {
             <div className="empty-card">
               <h2>No shortage evidence yet.</h2>
               <p>
-                Submit household reports to build a local evidence cluster, or
-                seed the simulated scenarios with npm run seed:demo.
+                Review incoming household reports and their verification status.
+                A shortage zone appears when enough supported evidence is
+                available.
               </p>
               <Link
                 className="button button-secondary"
@@ -247,8 +269,9 @@ export default function ShortagesPage({ admin = false }) {
             </>
           )}
           <p className="evidence-note">
-            Emerging zones indicate limited evidence of a current problem; no
-            future risk score or forecast is calculated in this phase.
+            Emerging zones indicate limited evidence of a current problem.
+            Numerical report-activity forecasts are evaluated separately on the
+            early-warning dashboard.
             Population totals are approximate and may overlap across separate
             time-window events.
           </p>

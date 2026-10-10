@@ -51,7 +51,10 @@ function OperatorAssignments() {
           <section className="admin-panel">
             <h2>Your tanker</h2>
             {!data.tankers.length && (
-              <p>No tanker is linked to your account.</p>
+              <p>
+                No tanker is linked to your account. Contact the municipal team
+                to link your assigned tanker, then refresh assignments.
+              </p>
             )}
             {data.tankers.map((t) => (
               <p key={t.id}>
@@ -66,7 +69,12 @@ function OperatorAssignments() {
           </section>
           <section className="admin-panel">
             <h2>Trip controls and delivery history</h2>
-            {!data.deliveries?.length && <p>No trips recorded yet.</p>}
+            {!data.deliveries?.length && (
+              <p>
+                No trips recorded yet. Trips appear after the municipal team
+                approves and assigns a tanker.
+              </p>
+            )}
             <div className="operations-cards">
               {data.deliveries?.map((d) => (
                 <TripCard

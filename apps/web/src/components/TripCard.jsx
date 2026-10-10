@@ -5,6 +5,8 @@ export default function TripCard({ delivery, admin = false, onChange }) {
   const [detail, setDetail] = useState(null),
     [issuedDelivery, setIssuedDelivery] = useState(null),
     [error, setError] = useState(""),
+    [routeError, setRouteError] = useState(""),
+    [detailAttempt, setDetailAttempt] = useState(0),
     [busy, setBusy] = useState(false),
     [code, setCode] = useState(""),
     [demoCode, setDemoCode] = useState(""),
@@ -14,13 +16,33 @@ export default function TripCard({ delivery, admin = false, onChange }) {
     const controller = new AbortController();
     adminRequest(`/deliveries/${delivery.id}`, { signal: controller.signal })
       .then((data) => {
-        if (!controller.signal.aborted) setDetail(data);
+        if (!controller.signal.aborted) {
+          setDetail(data);
+          setRouteError("");
+        }
       })
       .catch((e) => {
-        if (!controller.signal.aborted) setError(e.message);
+        if (!controller.signal.aborted) setRouteError(e.message);
       });
     return () => controller.abort();
-  }, [delivery.id, delivery.status, delivery.otpVerified]);
+  }, [delivery.id, delivery.status, delivery.otpVerified, detailAttempt]);
+  async function refreshSavedState() {
+    setBusy(true);
+    try {
+      const saved = await adminRequest(`/deliveries/${delivery.id}`);
+      setDetail(saved);
+      setRouteError("");
+      await onChange();
+      setIssuedDelivery(null);
+      setDemoCode("");
+      setCode("");
+      setError("");
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
   async function act(action, body = {}) {
     setBusy(true);
     setError("");
@@ -55,7 +77,22 @@ export default function TripCard({ delivery, admin = false, onChange }) {
         {d.isDemo ? "Fictional demo trip" : "Recorded trip"}
       </p>
       <h3>{d.areaName || "Unknown area"} delivery</h3>
-      <p className="status-badge degraded">{d.status}</p>
+      <p className={`status-badge trip-status-${d.status.toLowerCase()}`}>
+        {d.status}
+      </p>
+      <p className="trip-next-step">
+        {d.status === "ASSIGNED"
+          ? "Next: the assigned operator starts the trip."
+          : d.status === "EN_ROUTE"
+            ? "Next: record arrival when the tanker reaches the destination."
+            : d.status === "ARRIVED"
+              ? d.otpVerified
+                ? "Next: record the actual delivered quantity within the permitted limit."
+                : "Next: verify the authorized recipient code before recording delivery."
+              : d.status === "DELIVERED"
+                ? "Delivery recorded. Review the quantity and audit history below."
+                : "Review the recorded state with the municipal team."}
+      </p>
       <p>Delivery {d.id}</p>
       <p>
         Planned water:{" "}
@@ -69,7 +106,22 @@ export default function TripCard({ delivery, admin = false, onChange }) {
           ? `${d.destination.lat}, ${d.destination.lng} (approximate)`
           : "Unknown"}
       </p>
-      {!route && !error && <p role="status">Loading route information…</p>}
+      {!route && !routeError && <p role="status">Loading route information…</p>}
+      {routeError && (
+        <div className="report-error" role="alert">
+          <p>Route information unavailable: {routeError}</p>
+          <button
+            className="button button-secondary"
+            onClick={() => {
+              setRouteError("");
+              setDetail(null);
+              setDetailAttempt((value) => value + 1);
+            }}
+          >
+            Retry route information
+          </button>
+        </div>
+      )}
       {route && (
         <div className="trip-route">
           <p>
@@ -145,7 +197,23 @@ export default function TripCard({ delivery, admin = false, onChange }) {
               : "Recorded verification; method unknown"
           : "Not verified"}
       </p>
-      {error && <p role="alert">{error}</p>}
+      {busy && <p role="status">Waiting for confirmation from the server…</p>}
+      {error && (
+        <div className="report-error" role="alert">
+          <p>{error}</p>
+          <p>
+            An action may already have been saved. Refresh the saved state
+            before trying another action.
+          </p>
+          <button
+            className="button button-secondary"
+            disabled={busy}
+            onClick={refreshSavedState}
+          >
+            Refresh saved trip
+          </button>
+        </div>
+      )}
       {!admin && (
         <div className="trip-actions">
           {d.status === "ASSIGNED" && (
@@ -263,14 +331,14 @@ export default function TripCard({ delivery, admin = false, onChange }) {
         <summary>Trip timestamps and audit history</summary>
         <dl>
           {[
-            "assignedAt",
-            "startedAt",
-            "arrivedAt",
-            "verifiedAt",
-            "deliveredAt",
-          ].map((key) => (
+            ["assignedAt", "Assigned"],
+            ["startedAt", "Trip started"],
+            ["arrivedAt", "Arrival recorded"],
+            ["verifiedAt", "OTP accepted"],
+            ["deliveredAt", "Delivery recorded"],
+          ].map(([key, label]) => (
             <div key={key}>
-              <dt>{key}</dt>
+              <dt>{label}</dt>
               <dd>{d[key] ? new Date(d[key]).toLocaleString() : "Unknown"}</dd>
             </div>
           ))}

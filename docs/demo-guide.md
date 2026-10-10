@@ -1,22 +1,23 @@
-# Persistent faculty demonstration through Phase 7
+# Persistent faculty demonstration — Phase 12 presentation guide
 
-The faculty dataset is stored in MongoDB, not rendered from frontend placeholders. It reuses the existing severity, confidence, population estimation, fairness, eligibility, authentication, trip and delivery services. All households, field checks, weather, capacities and deliveries in this scenario are simulated. Population is approximate; unknown data remains unknown. The interface displays **AquaShield — Demonstration Environment**. Phase 8, AWS deployment and numerical forecasting are outside this task.
+The faculty dataset is stored in MongoDB, not rendered from frontend placeholders. It reuses the existing severity, confidence, population estimation, fairness, eligibility, authentication, trip and delivery services. All households, field checks, weather, capacities and deliveries in this scenario are simulated. Population is approximate; unknown data remains unknown. The interface displays **AquaShield — Demonstration Environment**. Phase 8 adds deterministic report-activity forecasting; AWS deployment and live-provider verification are separate activities.
 
-## Safe startup and seed
+## Repeatable startup (already provisioned dataset)
 
 Use Node 22.13+, the installed MongoDB service and the repository's existing root `.env`. Do not replace that file. From the repository root, in the same PowerShell session used to start the application:
 
 ```powershell
 $env:NODE_ENV='development'
 $env:DEMONSTRATION_MODE='true'
-$env:DEMO_SEED_ENABLED='true'
+$env:DEMO_SEED_ENABLED='false'
 $env:DEMO_DATABASE_NAME='aquashield_demo'
 $env:DEMO_AI_MODE='true'
-npm run seed:demo
 npm run dev
 ```
 
-`MONGODB_URI` still chooses the configured MongoDB server/credentials, but demonstration mode explicitly selects `aquashield_demo` as the database. Ordinary application records in the normal `aquashield` database remain separate. Use a development MongoDB server/account; never point this procedure at production. The command refuses production mode, missing enable flags, an unsafe database name, a disconnected database or an actual connected database name that differs from the configured target. Allowed demo names match `aquashield_demo` with optional lowercase alphanumeric suffixes separated by underscores. UUID test overrides require `NODE_ENV=test` and the existing guarded test-name pattern. Environment flags are parsed as explicit `true`/`false` strings.
+`MONGODB_URI` still chooses the configured MongoDB server/credentials, but demonstration mode explicitly selects `aquashield_demo` as the database. Ordinary application records in the normal `aquashield` database remain separate. Use a development MongoDB server/account; never point this procedure at production. The first-time seed command refuses production mode, missing enable flags, an unsafe database name, a disconnected database or an actual connected database name that differs from the configured target. Allowed demo names match `aquashield_demo` with optional lowercase alphanumeric suffixes separated by underscores. UUID test overrides require `NODE_ENV=test` and the existing guarded test-name pattern. Environment flags are parsed as explicit `true`/`false` strings.
+
+For first-time provisioning only, deliberately set DEMO_SEED_ENABLED=true, run npm run seed:demo, then set DEMO_SEED_ENABLED=false again before startup. Do not rerun the seed for repeat presentations. Startup does not change the presentation clock or automatically generate activity.
 
 The seed uses stable account emails, report IDs/submission IDs, fleet identifiers and allocation request IDs. Missing records are inserted; existing source records, accounts, approvals, operator actions, tanker balances, audits and submissions are preserved. Derived shortage assessments may be recalculated from the saved reports. There are no collection clears, database drops or automatic resets in this command. The old reset UI/API is disabled in the persistent demonstration environment. Counts only are printed. Neither startup nor seeding calls Gemini, routing or external messaging.
 
@@ -55,7 +56,7 @@ Panchavati remains the hero area; Satpur, Indira Nagar, Nashik Road and Adgaon u
 
 ## Faculty walkthrough
 
-1. Seed and start using the command above. Keep credential contents and session tokens off camera. Sign in as `admin` and open `/admin` without needing `?demo=true`.
+1. Start using the command above without reseeding. Keep credential contents and session tokens off camera. Sign in as `admin` and open `/admin` without needing `?demo=true`.
 2. Compare areas on the map/table: severity, shortage confidence, approximate people affected, verified versus pending/excluded evidence. Open shortage details. View `/admin/reports` for authorized report/source review and `/admin/analytics` for report activity, response and delivery records.
 3. Open `/admin/tankers`. Inspect all nine tankers and their linked operators, recorded water/capacity, availability and observation freshness. Operator names in the fleet identify the matching key in your local credential file. Unavailable/stale/unknown records are not eligible merely because they exist.
 4. Open `/admin/allocations`. A saved RECOMMENDED scene is present. Fill its **Rejection reason** and reject it to demonstrate review, then select **Request allocation recommendation**. Alternatively approve the existing recommendation directly. Do not request a second active recommendation for the same event. The backend selects the current priority and eligible tanker using stored fairness evidence.
@@ -67,7 +68,7 @@ Panchavati remains the hero area; Satpur, Indira Nagar, Nashik Road and Adgaon u
 10. Sign in as a seeded citizen with reports in that area. `/my-reports` and the individual report status show the permitted area response; this does not claim delivery to every household. Account-owned seeded reports are private. The legacy public `/my-reports?demo=true` preview deliberately excludes owned reports.
 11. Register a new citizen at `/register`. Registration alone creates zero reports and requests no location. Sign in, open `/report`, explicitly choose a locality center or request device location using its button. Denied location permission has manual alternatives. Enter household size, conditions and optional evidence, then submit. It becomes a PENDING, `CITIZEN_SUBMISSION`, account-owned demo-database record and participates in the same assessments. Repeat reports are not automatically independent verified emergencies.
 12. Open **Track this report**, refresh, sign out and sign in again. Confirm it remains in `/my-reports`. Another citizen cannot read it. Administrators can review it through `/admin/reports`; public alerts withhold small clusters and generalize coordinates.
-13. Stop/restart the application with the same demonstration flags to confirm the dataset remains. Rerun `npm run seed:demo`; inserted counts should be zero for a complete seed, operational actions and new submissions remain, and nothing is reset or deleted.
+13. Stop/restart the application with the same demonstration flags to confirm the dataset remains. Do not rerun the seed just to demonstrate persistence; inspect the saved trip and citizen report after restart.
 
 For an owned citizen handoff, the earliest eligible account-backed reporter for an arrived trip is its designated recipient. Only that account can obtain **Get recipient delivery code** from its report status page. Enter it as the assigned operator; acceptance in this environment remains `DEMO_OTP`. Other accounts cannot obtain the code, and the UI never exposes private staff details in citizen status. This route does not require SMS.
 
@@ -199,3 +200,17 @@ Additional corrected source file: `apps/web/src/pages/ReportHistoryPage.jsx`. In
 ## Phase 8 numerical early warning
 
 Open `/admin/predictions` as ADMIN and select **Evaluate current evidence**. This calculates and persists report-activity forecasts/alerts without Gemini or Strands. The existing 48-report faculty scenario intentionally lacks complete multi-day history: expect `INSUFFICIENT_DATA`, not an invented forecast. No timestamps or existing data are rewritten. Supported-forecast/alert demonstrations use explicit disposable synthetic browser fixtures: `npx playwright test tests/e2e/phase8.spec.js`. This is implementation verification, not real forecast accuracy. See [Phase 8 formulas, APIs, uncertainty and verification](phase8.md). Optional Early Warning explanation now consumes completed, current results when available; this does not alter the historical mocked/live verification table above.
+
+## Phase 12 concise presentation run sheet
+
+1. Start with the session flags above and npm run dev; privately obtain the already provisioned account credentials from .local/demo-credentials.json. Keep credentials and OTPs off recordings.
+2. Citizen: /citizen/login → /report. Explain explicit location consent/manual locality selection, household size and optional photo. Submit once, follow Track this report, and show /my-reports after refresh. A lost response preserves the submission identity for a safe retry.
+3. Administrator: /login → /admin. Compare Panchavati with other areas. Explain operational severity, confidence that a shortage exists, approximate population, and verified versus pending evidence. Follow Review evidence to /admin/reports; missing/old evidence remains visible as such.
+4. Review /admin/tankers and /admin/allocations. Request a recommendation, inspect fairness and exclusions, then explicitly Approve allocation and Assign approved tanker. If no eligible current tanker/evidence exists, explain the restriction; use existing municipal forms to record honest simulated observations, without resets or forced approvals.
+5. Sign in as the linked operator at /login?returnTo=/operator. Start trip → Mark arrived → Generate demo OTP → Verify delivery OTP → enter a permitted simulated quantity → Complete delivery. Next-step text follows the saved trip state. On a network/action error, Refresh saved trip reads the saved state before another action; it does not replay the operation. Route distance/ETA are estimates, not live GPS/traffic.
+6. Administrator: /admin/deliveries, /admin/tankers, /admin/analytics and /admin/audit show persisted quantities, balances and history. Citizen: /my-reports → individual status shows the permitted area response; this is not proof of delivery to every household.
+7. Administrator: /admin/predictions → Evaluate current evidence. Forecast target is approximate report activity over the displayed horizon, not physical water depletion. Inadequate history returns INSUFFICIENT_DATA. For a supported synthetic forecast, run npm run test:e2e -- tests/e2e/phase8.spec.js in the separate disposable test environment.
+8. Controlled Gemini outage demonstration: npm run test:e2e -- tests/e2e/phase5.spec.js --grep "rule-based outage states". This injects HTTP 503 failures into the existing four-role test fixture, validates RULE_BASED/INSUFFICIENT_DATA labels and preserves human approval. It uses isolated test records, no real API key and no live Gemini requests. This proves tested fallback behavior, not live-provider availability. Review .local/qa/phase5-* screenshots generated by that test.
+9. Stop npm run dev with Ctrl+C. Restart with the same flags to inspect persisted data. Do not advance clocks, reset records or reseed between presentations.
+
+Presentation preparation: use browser zoom 100%, check desktop and mobile navigation, and verify source timestamps before describing data as current. Street-map tiles may require network access; stored coordinates and the schematic remain usable. The full offline verification command is npm run verify. It includes unit/API, MongoDB, lint, build, secret/config checks, desktop/mobile browser flows and both development origins, without live Gemini inference.

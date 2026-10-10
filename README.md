@@ -250,6 +250,8 @@ Crisis Detection explains evidence/verification; Resource Allocation explains ba
 
 Later phases require explicit authorization. Bedrock remains optional. The complete Phase 5 file inventory, API contract, limitations and test results are in [docs/phase5.md](docs/phase5.md).
 
+Phase 12 preserves the backend and data while refining shared controls/focus/navigation, dashboard drill-downs, trip guidance and read-only recovery after uncertain actions. The faculty guide starts existing records without reseeding. Verification passed 193 unit/API, 106 MongoDB, 116 desktop/mobile browser and 2 origin tests; lint, build, secret and configuration checks passed. See [the file inventory, visual review and limitations](docs/phase12.md) and [the faculty presentation sequence](docs/demo-guide.md#phase-12-concise-presentation-run-sheet).
+
 ## AWS deployment strategy — planned, not deployed
 
 The AWS requirement is real application hosting with tested public frontend/backend URLs and database persistence, demonstrated in the final video. Prefer **AWS Amplify Hosting** for the existing static React/Vite frontend and **AWS App Runner** for the Express backend, with **MongoDB Atlas** allowed as the external database. Final service/configuration selection remains subject to account eligibility, runtime, build, routing, secrets and network compatibility checks; no cloud resources are provisioned in this task.
@@ -263,7 +265,7 @@ Do not claim AWS deployment from configuration placeholders, mock output or loca
 Phase 9 prepares deployment configuration, health/readiness checks, safe runtime logs,
 container definitions and a clean locked build. See [deployment readiness, exact
 commands, file inventory and blockers](docs/phase9-deployment-readiness.md).
-Actual deployment and dynamic simulation remain deferred. Implementation stops after Phase 11. Live AI diagnostics are separate opt-in commands, never part of `npm run verify`; see docs/ai-reliability.md and docs/demo-guide.md.
+Actual deployment and dynamic simulation remain deferred. Phase 12 adds frontend presentation polish and a repeatable faculty walkthrough; see [Phase 12 changes and verification](docs/phase12.md). Further phases are not started. Live AI diagnostics are separate opt-in commands, never part of `npm run verify`; see docs/ai-reliability.md and docs/demo-guide.md.
 
 ## Phase 7 API and verification
 

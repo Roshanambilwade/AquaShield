@@ -9,7 +9,47 @@ export default function Layout() {
   const environment = useEnvironment();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
+  useEffect(() => {
+    const titles = {
+      "/": "Overview",
+      "/report": "Report water shortage",
+      "/my-reports": "My reports",
+      "/login": new URLSearchParams(search)
+        .get("returnTo")
+        ?.startsWith("/operator")
+        ? "Operator sign in"
+        : "Municipal sign in",
+      "/citizen/login": "Citizen sign in",
+      "/register": "Register",
+      "/admin": "Municipal overview",
+      "/admin/shortages": "Shortage evidence",
+      "/admin/analytics": "Municipal analytics",
+      "/admin/audit": "Audit history",
+      "/admin/predictions": "Early warning",
+      "/admin/tankers": "Tanker fleet",
+      "/admin/allocations": "Fair allocation",
+      "/admin/deliveries": "Trips and deliveries",
+      "/admin/reports": "Citizen evidence review",
+      "/operator": "Your assignments",
+      "/alerts": "Local alerts",
+      "/status": "System status",
+      "/report/success": "Report submitted",
+    };
+    const section = pathname.startsWith("/report/")
+      ? "Report status"
+      : pathname.startsWith("/admin/reports/")
+        ? "Citizen evidence review"
+        : pathname.startsWith("/admin/audit/")
+          ? "Audit record"
+          : pathname.startsWith("/operator/assignment/")
+            ? "Assigned job"
+            : pathname.includes("/shortages/") ||
+                pathname.startsWith("/alerts/")
+              ? "Shortage details"
+              : "Page not found";
+    document.title = `${titles[pathname] || section} | AquaShield`;
+  }, [pathname, search]);
   useEffect(() => {
     window.scrollTo(0, 0);
     document.getElementById("main-content")?.focus();

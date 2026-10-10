@@ -5,9 +5,7 @@ import request from "supertest";
 import { mkdir } from "node:fs/promises";
 import { createApp } from "../../apps/api/src/app.js";
 import { loadEnv } from "../../apps/api/src/config/env.js";
-import {
-  connectDatabase,
-} from "../../apps/api/src/config/database.js";
+import { connectDatabase } from "../../apps/api/src/config/database.js";
 import {
   createAdmin,
   createOperator,
@@ -85,6 +83,9 @@ test.afterEach(async ({ page }) => {
 });
 async function signIn(page, email, secret = password, path = "/login") {
   await page.goto(path);
+  if (path.includes("returnTo=/operator")) {
+    await expect(page).toHaveTitle("Operator sign in | AquaShield");
+  }
   await page.getByLabel("Email", { exact: true }).fill(email);
   await page.getByLabel("Password", { exact: true }).fill(secret);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
@@ -104,7 +105,78 @@ async function progress(page, { demo }) {
     .filter({ hasText: demo ? "Fictional demo trip" : "Recorded trip" })
     .first();
   await expect(card).toContainText("ASSIGNED");
-  await card.getByRole("button", { name: "Start trip", exact: true }).click();
+  await expect(card).toContainText(
+    "Next: the assigned operator starts the trip.",
+  );
+  await expect(page).toHaveTitle(
+    page.url().includes("/operator/assignment/")
+      ? "Assigned job | AquaShield"
+      : "Your assignments | AquaShield",
+  );
+  if (demo) {
+    const failRouteInformation = async (route) => {
+      await route.fulfill({
+        status: 503,
+        json: { success: false, message: "Route temporarily unavailable." },
+      });
+    };
+    await page.route("**/api/deliveries/*", failRouteInformation);
+    await page.reload();
+    await expect(card.getByRole("alert")).toContainText(
+      "Route information unavailable",
+    );
+    await expect(
+      card.getByRole("button", { name: "Start trip", exact: true }),
+    ).toBeEnabled();
+    await page.unroute("**/api/deliveries/*", failRouteInformation);
+    await card
+      .getByRole("button", { name: "Retry route information", exact: true })
+      .click();
+    await expect(card.getByRole("alert")).toHaveCount(0);
+    await expect(card).toContainText("Estimated ETA:");
+    let starts = 0;
+    const loseAcknowledgement = async (route) => {
+      starts += 1;
+      const url = new URL(route.request().url());
+      const response = await route.fetch({
+        url: `${origin}${url.pathname}${url.search}`,
+      });
+      expect(response.status()).toBe(200);
+      await route.abort("failed");
+    };
+    await page.route("**/api/deliveries/*/start", loseAcknowledgement);
+    await card.getByRole("button", { name: "Start trip", exact: true }).click();
+    await expect(card.getByRole("alert")).toContainText(
+      "An action may already have been saved",
+    );
+    await page.route("**/api/deliveries/*", failRouteInformation);
+    const failedRead = page.waitForResponse(
+      (response) =>
+        new URL(response.url()).pathname.startsWith("/api/deliveries/") &&
+        response.request().method() === "GET" &&
+        response.status() === 503,
+    );
+    await card
+      .getByRole("button", { name: "Refresh saved trip", exact: true })
+      .click();
+    await failedRead;
+    await expect(
+      card.getByRole("button", { name: "Refresh saved trip", exact: true }),
+    ).toBeEnabled();
+    await expect(card.getByRole("alert")).toContainText(
+      "An action may already have been saved",
+    );
+    expect(starts).toBe(1);
+    await page.unroute("**/api/deliveries/*", failRouteInformation);
+    await card
+      .getByRole("button", { name: "Refresh saved trip", exact: true })
+      .click();
+    await expect(card).toContainText("EN_ROUTE");
+    expect(starts).toBe(1);
+    await page.unroute("**/api/deliveries/*/start", loseAcknowledgement);
+  } else {
+    await card.getByRole("button", { name: "Start trip", exact: true }).click();
+  }
   await expect(card).toContainText("EN_ROUTE");
   await page.reload();
   await expect(card).toContainText("EN_ROUTE");
@@ -144,6 +216,10 @@ async function progress(page, { demo }) {
     .getByRole("button", { name: "Complete delivery", exact: true })
     .click();
   await expect(card).toContainText("DELIVERED");
+  await expect(card.locator(".trip-status-delivered")).toHaveText("DELIVERED");
+  await expect(card).toContainText(
+    "Delivery recorded. Review the quantity and audit history below.",
+  );
   await expect(card).toContainText("Actual delivered: 3500 L");
   await page.reload();
   await expect(card).toContainText("DELIVERED");

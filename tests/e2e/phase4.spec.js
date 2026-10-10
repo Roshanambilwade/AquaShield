@@ -70,6 +70,16 @@ test("command center shows eight honest KPIs, Panchavati, activity, analytics an
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/admin?demo=true");
   const metrics = page.getByLabel("Command center metrics");
+  await expect(page).toHaveTitle("Municipal overview | AquaShield");
+  const nextSteps = page.getByRole("navigation", {
+    name: "Municipal next steps",
+  });
+  await expect(
+    nextSteps.getByRole("link", { name: "Review fair allocation" }),
+  ).toHaveAttribute("href", "/admin/allocations?demo=true");
+  await expect(
+    nextSteps.getByRole("link", { name: "Explore report-activity forecasts" }),
+  ).toHaveAttribute("href", "/admin/predictions?demo=true");
   await expect(metrics.locator("article")).toHaveCount(8);
   await expect(
     metrics.getByLabel("Active Shortages", { exact: true }),

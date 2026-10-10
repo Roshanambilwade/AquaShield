@@ -1,0 +1,140 @@
+/* Shared presentation rules; severity and numerical definitions remain unchanged. */
+:root {
+  --civic-ink: #153b3b;
+  --civic-muted: #526763;
+  --civic-focus: #1c6557;
+  --civic-border: #b8ccc3;
+  --civic-radius: 8px;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+button:not(.button) {
+  padding: 8px 14px;
+  border: 1px solid var(--civic-border);
+  border-radius: var(--civic-radius);
+  color: var(--civic-ink);
+  background: #fff;
+}
+button,
+.button,
+select,
+input:not([type="checkbox"]):not([type="radio"]) {
+  min-height: 44px;
+}
+input,
+select,
+textarea {
+  max-width: 100%;
+}
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--civic-focus);
+  outline-offset: 3px;
+}
+.admin-toolbar :where(a, button):focus-visible {
+  outline-color: #e4f3b3;
+}
+summary {
+  cursor: pointer;
+  padding-block: 12px;
+}
+.site-header nav {
+  gap: 8px 18px;
+}
+.site-header nav a,
+.admin-toolbar nav a,
+.context-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.admin-toolbar nav {
+  gap: 4px 20px;
+}
+.citizen-session {
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.citizen-session button {
+  color: var(--civic-ink);
+  background: #fff;
+  border: 1px solid var(--civic-border);
+  border-radius: var(--civic-radius);
+  padding: 8px 16px;
+}
+.dashboard-context {
+  margin-block: 0 24px;
+  color: var(--civic-muted);
+}
+.dashboard-context p {
+  max-width: 90ch;
+}
+.context-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+}
+.context-links a {
+  color: #155e50;
+  text-underline-offset: 4px;
+  font-weight: 600;
+}
+.trip-next-step {
+  color: var(--civic-ink);
+  font-weight: 600;
+}
+.trip-status-assigned {
+  color: #24566d;
+  background: #e5eff7;
+}
+.trip-status-en_route {
+  color: #714b0b;
+  background: #fff1d4;
+}
+.trip-status-arrived {
+  color: #643874;
+  background: #f0e8f5;
+}
+.trip-status-delivered {
+  color: #245c43;
+  background: #e1f0e7;
+}
+.operation-card,
+.admin-panel,
+.metric-card {
+  min-width: 0;
+}
+.operation-card p,
+.citizen-session span,
+.report-error {
+  overflow-wrap: anywhere;
+}
+.table-scroll {
+  overscroll-behavior-inline: contain;
+}
+@media (max-width: 600px) {
+  .site-header nav {
+    gap: 4px 14px;
+  }
+  .admin-toolbar nav {
+    gap: 4px 16px;
+  }
+  .context-links {
+    gap: 4px 16px;
+  }
+  .trip-actions form {
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

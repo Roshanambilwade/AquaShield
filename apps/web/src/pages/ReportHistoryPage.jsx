@@ -131,7 +131,7 @@ function ReportHistory() {
             <h2>{demo ? "No demo reports yet." : "No reports here yet."}</h2>
             <p>
               {demo
-                ? "Run npm run seed:demo to add simulated reports."
+                ? "No simulated reports match this view. Submit a report through the normal reporting form; existing records are preserved."
                 : "When you submit a water problem, your report will appear here."}
             </p>
             <Link className="button button-secondary" to="/report">
