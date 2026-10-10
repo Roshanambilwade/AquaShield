@@ -8,6 +8,12 @@ Phase 8 verification: 171 unit/API tests, 92 MongoDB tests and 104 desktop/mobil
 browser tests passed, plus both development hostnames on isolated port 5175; lint/build passed. These tests use mocked providers or explicit demo mode.
 See [requirement coverage, remaining blocker and manual citizen handoff](docs/through-phase7-audit.md).
 
+Phase 9 prepares future deployment without deploying: production configuration guards,
+liveness/readiness, safe runtime logs/shutdown, containers and locked clean builds.
+Verification: 178 unit/API, 92 MongoDB, 104 desktop/mobile and two origin tests passed;
+lint/build/secret checks and both npm audits passed. Docker engine execution and external
+production checks remain pending. See the [readiness report](docs/phase9-deployment-readiness.md).
+
 **Strategy:** AWS will host the functioning application; it is not a mandatory AI/LLM provider. Phase 5 integrates Strands Agents SDK with Google Gemini for four roles. All numeric facts remain deterministic backend calculations. On 10 October 2026, authorized live Crisis Detection, Logistics and Early Warning tests passed validation; Resource Allocation generation returned Google HTTP 503 and remains unverified. Bedrock is optional; AWS deployment has not been performed. See the [through-Phase-7 audit](docs/through-phase7-audit.md) and [honest demo guide](docs/demo.md).
 
 ## Completed
@@ -243,7 +249,10 @@ Verify the existing npm-workspace/root-lockfile build, `apps/web/dist`, Node.js 
 
 Do not claim AWS deployment from configuration placeholders, mock output or local-only screenshots. Publish actual service names, tested URLs and results only after successful public health/auth/report/dashboard/persistence checks. Bedrock calls and AWS model credentials are not required. Local Gemini integration does not prove AWS hosting; later hosting must also verify any agent-service build, protected internal boundary, Gemini outbound connectivity and backend-only secret injection. Local AWS CLI authentication is currently unavailable; verify deployment account access separately in that later phase.
 
-Implementation stops after Phase 8. No Phase 9, deployment or dynamic simulation is performed.
+Phase 9 prepares deployment configuration, health/readiness checks, safe runtime logs,
+container definitions and a clean locked build. See [deployment readiness, exact
+commands, file inventory and blockers](docs/phase9-deployment-readiness.md).
+Actual deployment and dynamic simulation remain deferred. Implementation stops after Phase 9.
 
 ## Phase 7 API and verification
 

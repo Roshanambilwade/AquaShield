@@ -24,7 +24,9 @@
     "test:e2e": "playwright test",
     "test:dev-origins": "playwright test --config playwright.dev.config.js",
     "seed:demo": "npm run seed:demo -w @aquashield/api",
-    "admin:create": "npm run admin:create -w @aquashield/api"
+    "admin:create": "npm run admin:create -w @aquashield/api",
+    "config:check": "node apps/api/src/scripts/checkConfig.js",
+    "security:check": "node scripts/checkSecrets.js"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

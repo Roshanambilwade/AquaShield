@@ -160,6 +160,7 @@ test("production permits only its explicit origin, including on report preflight
     parseEnv({
       NODE_ENV: "production",
       CORS_ORIGIN: "https://aquashield.example",
+      MONGODB_URI: "mongodb+srv://fixture:fixture@db.example/aquashield",
     }),
   );
   await request(production)

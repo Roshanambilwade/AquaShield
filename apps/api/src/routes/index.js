@@ -1,5 +1,8 @@
 import { Router } from "express";
-import { createHealthController } from "../controllers/healthController.js";
+import {
+  createHealthController,
+  livenessController,
+} from "../controllers/healthController.js";
 import { demonstration } from "../config/demonstration.js";
 import {
   LOCALITY_CENTERS,
@@ -45,5 +48,7 @@ export function createApiRouter(databaseStatus, config = {}) {
     }),
   );
   router.get("/health", createHealthController(databaseStatus));
+  router.get("/health/live", livenessController);
+  router.get("/health/ready", createHealthController(databaseStatus, config));
   return router;
 }

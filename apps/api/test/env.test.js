@@ -60,6 +60,7 @@ test("production requires an explicit allowlist and never adds development origi
     parseEnv({
       NODE_ENV: "production",
       CORS_ORIGIN: "https://aquashield.example",
+      MONGODB_URI: "mongodb+srv://fixture:fixture@db.example/aquashield",
     }).CORS_ORIGIN,
     ["https://aquashield.example"],
   );

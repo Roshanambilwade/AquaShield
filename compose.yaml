@@ -1,0 +1,28 @@
+# LOCAL smoke setup only: HTTP is bound to loopback. Cloud deployment is deferred.
+# Use --env-file .local/containers.env; never supply a production database here.
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      NODE_ENV: development
+      PORT: 5000
+      MONGODB_URI: ${MONGODB_URI:?Supply a disposable local MongoDB connection}
+      CORS_ORIGIN: http://localhost:8080,http://127.0.0.1:8080
+      DEMONSTRATION_MODE: "false"
+      DEMO_SEED_ENABLED: "false"
+      DEMO_AI_MODE: "false"
+      AI_PROVIDER: gemini
+    init: true
+    stop_grace_period: 15s
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+    init: true

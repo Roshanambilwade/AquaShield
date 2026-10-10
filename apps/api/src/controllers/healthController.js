@@ -1,4 +1,4 @@
-export function createHealthController(databaseStatus) {
+export function createHealthController(databaseStatus, config) {
   return async function healthController(_req, res) {
     const database = await databaseStatus();
     const healthy = database === "connected";
@@ -13,9 +13,31 @@ export function createHealthController(databaseStatus) {
         service: "aquashield-api",
         status: healthy ? "ok" : "degraded",
         database,
+        ...(config
+          ? {
+              ai: {
+                provider: "gemini",
+                configured: Boolean(
+                  config.AI_PROVIDER === "gemini" &&
+                  config.GEMINI_API_KEY &&
+                  config.GEMINI_MODEL_ID,
+                ),
+                mode: config.DEMO_AI_MODE ? "DEMO" : "REAL",
+                availability: "NOT_PROBED",
+                requiredForReadiness: false,
+              },
+            }
+          : {}),
         uptimeSeconds: Math.floor(process.uptime()),
         timestamp: new Date().toISOString(),
       },
     });
   };
+}
+
+export function livenessController(_req, res) {
+  res.set("Cache-Control", "no-store").json({
+    success: true,
+    data: { service: "aquashield-api", status: "alive" },
+  });
 }

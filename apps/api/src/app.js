@@ -25,6 +25,14 @@ export function createApp(
 ) {
   const app = express();
   app.disable("x-powered-by");
+  app.use((_req, res, next) => {
+    res.set({
+      "X-Content-Type-Options": "nosniff",
+      "X-Frame-Options": "DENY",
+      "Referrer-Policy": "no-referrer",
+    });
+    next();
+  });
   app.use(
     cors({
       origin(origin, callback) {

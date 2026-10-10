@@ -1207,7 +1207,7 @@ Planning notes or local tests are not deployment proof. Keep public live-app evi
 
 # 49. DOCKER — WHERE PRACTICAL
 
-Keep local npm commands working. In the authorized deployment phase, create a backend container if required by the selected AWS hosting approach; a frontend container is optional because Amplify can host static build artifacts.
+Keep local npm commands working. Phase 9 prepares backend and static frontend container definitions plus a local-only Compose configuration without deployment, seeding or new database services. Container execution remains unverified until a Docker engine is available. Amplify can host static build artifacts without a frontend container. Pin and scan approved base-image digests before actual deployment; see docs/phase9-deployment-readiness.md.
 
 Optional local docker-compose services: web, api, mongodb and redis only if useful. If SDK compatibility requires an isolated agent service, package its build and protected internal connection during later deployment. A separate container is a deployment choice, not a requirement to convert the JavaScript app or use Bedrock.
 
@@ -1494,7 +1494,9 @@ If supported SDK integration requires TypeScript, keep all .ts sources, tsconfig
 
 Phase 5 extends existing configuration and .env.example with backend-only Gemini and demo settings. Preserve NODE_ENV, PORT, MONGODB_URI/timeouts, exact CORS_ORIGIN, public VITE_API_BASE_URL, ADMIN_SESSION_HOURS, provisioning and deterministic weights/thresholds. Current sessions do not use JWT_SECRET.
 
-Phase 5 validates server-only AI_PROVIDER=gemini, GEMINI_API_KEY (blank in examples), configurable GEMINI_MODEL_ID, DEMO_AI_MODE=false when absent (the local .env.example explicitly uses true), and bounded provider/tool timeout/retry settings. Prefer the explicit Google provider; legacy STRANDS_MODE is not a provider selector. The updated template selects AI_PROVIDER=gemini. Older ignored .env files may still contain AI_PROVIDER=bedrock; update those locally before real execution. BEDROCK_MODEL_ID/AWS model credentials are optional and not required for MVP Gemini use.
+Phase 5 validates server-only AI_PROVIDER=gemini, GEMINI_API_KEY (blank in examples), configurable GEMINI_MODEL_ID, DEMO_AI_MODE=false by default and in .env.example, and bounded provider/tool timeout/retry settings. Prefer the explicit Google provider; legacy STRANDS_MODE is not a provider selector. Older ignored .env files may still contain AI_PROVIDER=bedrock; update those locally before real execution. No AWS model credentials are required for MVP Gemini use.
+
+Phase 9 rejects production demo/seed/test overrides, non-Gemini provider selection, unauthenticated/non-TLS or demo/test MongoDB targets and non-HTTPS CORS origins. Production requires an explicit authenticated MongoDB URI with a named live database and an exact HTTPS allowlist. Gemini credentials remain optional for numerical operations. Frontend builds accept /api only with a real reverse proxy, or an HTTPS backend /api URL; public secret variables are rejected. Sessions remain opaque MongoDB bearer tokens, with no JWT secret or cookie configuration. See docs/phase9-deployment-readiness.md.
 
 With DEMO_AI_MODE=true, allow a missing Gemini key and make no provider calls. With demo mode false, a missing key, incompatible model or failed provider returns an explicit agent-unavailable/error state; do not silently simulate, default to Bedrock or break the existing deterministic application. Live Gemini verification requires a real backend key, but offline tests must not.
 
@@ -1655,7 +1657,7 @@ Avoid unsupported claims of exact affected population, exact remaining water, pe
 
 # 74. IMPLEMENTATION ORDER
 
-Latest phase-specific prompts control scope. Preserve Phases 1–7, including Phase 6.5 and persistent-demo changes. The latest Phase 8 request authorizes Gemini-independent numerical report-activity forecasts, quality/uncertainty, persistent audited alerts, secured APIs and dashboard only. No live inference, deployment, dynamic simulation or automatic commits. Complete live Gemini acceptance remains separately unverified. Stop after Phase 8.
+Latest phase-specific prompts control scope. Preserve Phases 1–8, including Phase 6.5 and persistent-demo records. The latest Phase 9 request authorizes deployment readiness preparation only: configuration, safe runtime/health checks, container definitions, offline regression/security/build verification and documentation. No live inference, cloud changes, deployment, production migration, database reset, dynamic simulation, later-phase development or automatic commits. Complete live Gemini acceptance remains separately unverified. Stop after Phase 9.
 
 ## PHASE 1 — Foundation (complete)
 React/JavaScript/Vite, Express/JavaScript, MongoDB/Mongoose, configuration, routing/layout, health and errors.
@@ -1684,10 +1686,12 @@ Database-backed ASSIGNED → EN_ROUTE → ARRIVED → DELIVERED workflow, determ
 ## PHASE 8 — Numerical early warning and report-activity prediction
 Deterministic JavaScript feature extraction, quality gates, non-overlapping windows, bounded EWMA, uncalibrated activity-risk classification, uncertainty, past-only backtesting, persisted auditable alerts and ADMIN dashboard/APIs. Gemini/Strands may explain completed results only; outages must never prevent numerical calculation, retrieval or persistence. Insufficient history returns INSUFFICIENT_DATA. No live inference without authorization. See docs/phase8.md.
 
-Separate AWS deployment and deployment hardening remain later work: verify account/service eligibility, runtime/build/network/secrets, Amplify plus eligible App Runner or justified AWS alternative, Atlas and public workflows. No AWS AI prerequisite.
+Separate AWS deployment remains later work: verify account/service eligibility, deployed runtime/network/secrets, Amplify plus eligible App Runner or justified AWS alternative, Atlas and public workflows. Phase 9 prepares local configuration/build/health checks without proving cloud compatibility. No AWS AI prerequisite.
 
-## PHASE 9 — Verified demo and final documentation (later)
-Reproducible labeled data, real Gemini and clearly separate demo-mode evidence, screenshots/results, actual AWS URLs/persistence in the final video and explicit limitations.
+## PHASE 9 — Deployment readiness preparation
+Validate production configuration and secret exclusions, preserve current authentication and data, separate liveness/readiness/optional AI availability, bound graceful shutdown, prepare compatible reproducible containers and clean builds, run offline regressions/security checks and document pending deployment requirements. Preserve all demo records and numerical Phase 8 independence. No AWS deployment, cloud changes, migrations, resets, live inference or Phase 10. See docs/phase9-deployment-readiness.md for observed verification and blockers.
+
+Verified final demo, simulation, polish and actual AWS deployment remain separate explicitly authorized later tasks. Preserve labeled data, distinguish real Gemini from demo output, and show actual public URLs/persistence only after deployment is tested.
 
 ## Optional future enhancement
 Add Bedrock or other provider/hosting adapters only when requested. They do not gate local Gemini work, deterministic calculations or MVP acceptance.

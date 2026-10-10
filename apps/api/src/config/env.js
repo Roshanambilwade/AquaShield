@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import mongoose from "mongoose";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { detectionSchema } from "./detection.js";
@@ -15,6 +16,12 @@ const schema = z
       .enum(["development", "test", "production"])
       .default("development"),
     PORT: z.coerce.number().int().min(1).max(65535).default(5000),
+    SHUTDOWN_TIMEOUT_MS: z.coerce
+      .number()
+      .int()
+      .min(1000)
+      .max(30000)
+      .default(10000),
     MONGODB_TEST_DB_NAME: z
       .string()
       .regex(/^aquashield_[a-z0-9_]+_[a-f0-9]{32}$/)
@@ -77,8 +84,58 @@ const schema = z
   .and(operationsSchema)
   .and(demonstrationSchema)
   .and(predictionSchema)
-  .refine((v) => !(v.DEMONSTRATION_MODE && v.NODE_ENV === "production"), {
-    path: ["DEMONSTRATION_MODE"],
+  .superRefine((v, ctx) => {
+    if (v.NODE_ENV !== "production") return;
+    const reject = (field) =>
+      ctx.addIssue({
+        code: "custom",
+        path: [field],
+        message: "Unsafe production configuration",
+      });
+    for (const field of [
+      "DEMONSTRATION_MODE",
+      "DEMO_SEED_ENABLED",
+      "DEMO_AI_MODE",
+      "MONGODB_TEST_DB_NAME",
+    ]) {
+      if (v[field]) reject(field);
+    }
+    if (v.AI_PROVIDER !== "gemini") reject("AI_PROVIDER");
+    if (v.CORS_ORIGIN.some((origin) => !origin.startsWith("https://")))
+      reject("CORS_ORIGIN");
+    try {
+      // The installed driver's parser supports replica-set host lists.
+      // Construction parses only; no connection or DNS request is made.
+      const clientOptions = new mongoose.mongo.MongoClient(v.MONGODB_URI)
+        .options;
+      const db = clientOptions.dbName;
+      const options = [
+        ...new URLSearchParams(v.MONGODB_URI.split("?")[1] || ""),
+      ].map(([key, value]) => [key.toLowerCase(), value.toLowerCase()]);
+      const tls = clientOptions.tls === true;
+      const insecure = options.some(
+        ([key, value]) =>
+          (["tls", "ssl"].includes(key) && value === "false") ||
+          ([
+            "tlsinsecure",
+            "tlsallowinvalidcertificates",
+            "tlsallowinvalidhostnames",
+          ].includes(key) &&
+            value === "true"),
+      );
+      if (
+        !clientOptions.credentials?.username ||
+        !clientOptions.credentials?.password ||
+        !tls ||
+        insecure ||
+        !/^[a-zA-Z0-9_-]+$/.test(db) ||
+        /(?:^|_)(demo|test)(?:_|$)/i.test(db) ||
+        ["admin", "local", "config"].includes(db)
+      )
+        reject("MONGODB_URI");
+    } catch {
+      reject("MONGODB_URI");
+    }
   });
 
 export function parseEnv(source) {

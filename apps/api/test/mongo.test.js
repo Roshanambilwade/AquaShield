@@ -21,9 +21,15 @@ test("real MongoDB connection and ping power the HTTP health endpoint", async ()
   const app = createApp(config);
   const { body } = await request(app).get("/api/health").expect(200);
   assert.equal(body.data.database, "connected");
+  await request(app).get("/api/health/live").expect(200);
+  const ready = await request(app).get("/api/health/ready").expect(200);
+  assert.equal(ready.body.data.database, "connected");
+  assert.equal(ready.body.data.ai.availability, "NOT_PROBED");
   // Read-only: Phase 1 creates no domain collections or test records.
   await disconnectDatabase();
   assert.equal(await getDatabaseStatus(), "disconnected");
   const unavailable = await request(app).get("/api/health").expect(503);
   assert.equal(unavailable.body.code, "DATABASE_UNAVAILABLE");
+  await request(app).get("/api/health/live").expect(200);
+  await request(app).get("/api/health/ready").expect(503);
 });
