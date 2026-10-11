@@ -9,6 +9,33 @@ import { parseEnv } from "../src/config/env.js";
 import { createApp } from "../src/app.js";
 import { startRuntime } from "../src/runtime.js";
 import { cleanupTestDatabase } from "./helpers/cleanup.js";
+import { webcrypto } from "node:crypto";
+import { createRequestId } from "../../web/src/lib/requestId.js";
+
+test("HTTP request IDs remain valid unique UUIDs without randomUUID", () => {
+  const provider = {
+    getRandomValues: webcrypto.getRandomValues.bind(webcrypto),
+  };
+  const ids = Array.from({ length: 100 }, () => createRequestId(provider));
+  assert.equal(new Set(ids).size, ids.length);
+  for (const id of ids)
+    assert.match(
+      id,
+      /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/,
+    );
+});
+
+test("secure-origin request IDs use the native UUID generator", () => {
+  const expected = "f93af7ef-499b-4f57-9d14-f743656a2284";
+  assert.equal(createRequestId({ randomUUID: () => expected }), expected);
+});
+
+test("request IDs fail closed when secure randomness is unavailable", () => {
+  assert.throws(
+    () => createRequestId({}),
+    /Secure random generation is unavailable/,
+  );
+});
 
 test("cleanup rejects shared targets and always disconnects even when dropping the owned database fails", async () => {
   const expected = `aquashield_cleanup_test_${"a".repeat(32)}`;

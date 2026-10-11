@@ -1,3 +1,4 @@
+import { createRequestId } from "../lib/requestId.js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { adminRequest } from "../lib/adminApi.js";
@@ -95,7 +96,7 @@ export default function OperationsPage({ fleetOnly = false }) {
     if (result) setEditing(null);
   }
   async function recommend() {
-    requestId.current ||= crypto.randomUUID();
+    requestId.current ||= createRequestId();
     const result = await mutate(
       "allocations/recommend",
       {

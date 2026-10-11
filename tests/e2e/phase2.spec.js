@@ -73,6 +73,27 @@ async function submitAndRemember(page) {
   return body.data.id;
 }
 
+test("citizen submits without crypto.randomUUID on an HTTP origin", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window.crypto, "randomUUID", {
+      value: undefined,
+      configurable: true,
+    });
+  });
+  const errors = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await fillReport(page);
+  const id = await submitAndRemember(page);
+  expect(await Report.exists({ _id: id })).toBeTruthy();
+  await page.goto(`/report/${id}`);
+  await expect(
+    page.getByText("Browser flow test: household water shortage."),
+  ).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
 test("citizen submits with photo; MongoDB, history, and status retain the report", async ({
   page,
 }, testInfo) => {

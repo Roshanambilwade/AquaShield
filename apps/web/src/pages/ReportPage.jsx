@@ -1,3 +1,4 @@
+import { createRequestId } from "../lib/requestId.js";
 import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -48,13 +49,13 @@ function ReportForm() {
   const [fields, setFields] = useState({});
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const submissionId = useRef(crypto.randomUUID());
+  const submissionId = useRef(createRequestId());
   const photoAttempt = useRef(0);
   const locationAttempt = useRef(0);
   const busy = submitting || photoLoading || locating;
 
   function change(name, value) {
-    submissionId.current = crypto.randomUUID();
+    submissionId.current = createRequestId();
     setForm((previous) => ({
       ...previous,
       [name]: value,
@@ -74,7 +75,7 @@ function ReportForm() {
     const center = LOCALITY_CENTERS.find((value) => value.id === id);
     if (!center) return;
     locationAttempt.current += 1;
-    submissionId.current = crypto.randomUUID();
+    submissionId.current = createRequestId();
     setForm((previous) => ({
       ...previous,
       locality: center.name,
@@ -102,7 +103,7 @@ function ReportForm() {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         if (attempt !== locationAttempt.current) return;
-        submissionId.current = crypto.randomUUID();
+        submissionId.current = createRequestId();
         setForm((previous) => ({
           ...previous,
           lat: String(position.coords.latitude),
@@ -134,7 +135,7 @@ function ReportForm() {
     setPhoto(undefined);
     setPhotoLoading(false);
     setFields((previous) => ({ ...previous, photo: "" }));
-    submissionId.current = crypto.randomUUID();
+    submissionId.current = createRequestId();
     if (!file) return;
     if (
       !["image/jpeg", "image/png"].includes(file.type) ||
@@ -452,7 +453,7 @@ function ReportForm() {
                 onClick={() => {
                   setPhoto(undefined);
                   photoAttempt.current += 1;
-                  submissionId.current = crypto.randomUUID();
+                  submissionId.current = createRequestId();
                   document.getElementById("photo").value = "";
                 }}
               >
