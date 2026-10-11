@@ -6,12 +6,8 @@ export default function WorkspacePage({ audience }) {
       <p className="eyebrow">{audience}</p>
       <h1 className="page-title">Your workspace starts here.</h1>
       <div className="empty-card">
-        <span className="phase-badge">Phase 1 foundation</span>
-        <h2>A shared foundation for the response.</h2>
-        <p>
-          This workspace is being prepared. Operational tools and account access
-          will be introduced in later phases.
-        </p>
+        <h2>Choose your workspace.</h2>
+        <p>Sign in to access the tools available to your account.</p>
         <Link className="button button-secondary" to="/status">
           View system status <span aria-hidden="true">↗</span>
         </Link>

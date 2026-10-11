@@ -7,7 +7,7 @@ const workspaces = [
   {
     number: "01",
     label: "For communities",
-    title: "A voice for every household.",
+    title: "Report and track water concerns.",
     text: "A shared place for residents to raise water concerns and follow the response.",
     to: "/report",
     action: "Report water shortage",
@@ -15,7 +15,7 @@ const workspaces = [
   {
     number: "02",
     label: "For municipal teams",
-    title: "Clarity when it matters.",
+    title: "Review evidence and coordinate support.",
     text: "A workspace for understanding local need and coordinating emergency resources.",
     to: "/admin",
     action: "Explore workspace",
@@ -23,7 +23,7 @@ const workspaces = [
   {
     number: "03",
     label: "For tanker operators",
-    title: "Connect the last mile.",
+    title: "Manage your assigned deliveries.",
     text: "A dedicated space for the teams bringing emergency water to communities.",
     to: "/operator",
     action: "Explore workspace",
@@ -61,6 +61,11 @@ export default function HomePage() {
                 <Link to="/my-reports" className="button button-secondary">
                   Track my report
                 </Link>
+                {auth.user?.role === "CITIZEN" && (
+                  <Link to="/my-alerts" className="button button-secondary">
+                    Check My Alerts
+                  </Link>
+                )}
               </>
             )}
             {auth.user && auth.user.role !== "CITIZEN" && (
@@ -73,34 +78,44 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
-        <div className="water-art" aria-hidden="true">
-          <div className="orbit orbit-one" />
-          <div className="orbit orbit-two" />
-          <div className="water-drop">
-            <svg viewBox="0 0 180 220">
-              <path
-                d="M90 10C70 45 25 95 25 140a65 65 0 0 0 130 0C155 95 110 45 90 10Z"
-                fill="currentColor"
-              />
-              <path
-                d="M55 145a35 35 0 0 0 35 35"
-                fill="none"
-                stroke="#d1efdb"
-                strokeWidth="7"
-                strokeLinecap="round"
-              />
-            </svg>
-          </div>
-          <span className="art-caption">Water connects us.</span>
-        </div>
+        <aside className="response-guide" aria-label="How AquaShield works">
+          <p className="eyebrow">From household to municipal response</p>
+          <h2>One clear path to help.</h2>
+          <ol>
+            <li>
+              <span aria-hidden="true">01</span>
+              <div>
+                <h3>Share your situation</h3>
+                <p>Report your household’s water problem and service area.</p>
+              </div>
+            </li>
+            <li>
+              <span aria-hidden="true">02</span>
+              <div>
+                <h3>Follow the assessment</h3>
+                <p>
+                  Track submitted evidence and the recorded response in My
+                  Reports.
+                </p>
+              </div>
+            </li>
+            <li>
+              <span aria-hidden="true">03</span>
+              <div>
+                <h3>Stay informed</h3>
+                <p>
+                  Select your area in My Alerts for relevant municipal updates.
+                </p>
+              </div>
+            </li>
+          </ol>
+        </aside>
       </section>
       <section className="foundation-note" aria-label="Project availability">
-        <span className="phase-badge">Phases 1–7</span>
         <p>
-          Citizen reporting and shortage evidence are available. Municipal teams
-          can review evidence, approve allocations and assign eligible tankers.
-          Assigned operators can record trips and demo OTP delivery. Forecasts
-          remain future work.
+          Report household water concerns, follow municipal assessment and view
+          relevant area updates. Emergency allocations remain subject to
+          municipal review.
         </p>
       </section>
       <section className="workspace-section" aria-labelledby="workspace-title">

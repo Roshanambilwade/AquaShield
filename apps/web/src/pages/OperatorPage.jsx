@@ -35,6 +35,11 @@ function OperatorAssignments() {
     <div className="page operations-page">
       <p className="eyebrow">Tanker operator</p>
       <h1 className="page-title">Your assignments</h1>
+      <nav className="operator-nav" aria-label="Assignment sections">
+        <a href="#operator-tanker">Your tanker</a>
+        <a href="#operator-trips">Trips and delivery history</a>
+        <a href="#operator-jobs">Assigned jobs</a>
+      </nav>
       <button
         className="button button-secondary"
         onClick={() => {
@@ -48,7 +53,7 @@ function OperatorAssignments() {
       {!data && !error && <p role="status">Loading assignments…</p>}
       {data && (
         <>
-          <section className="admin-panel">
+          <section className="admin-panel" id="operator-tanker">
             <h2>Your tanker</h2>
             {!data.tankers.length && (
               <p>
@@ -67,7 +72,7 @@ function OperatorAssignments() {
               </p>
             ))}
           </section>
-          <section className="admin-panel">
+          <section className="admin-panel" id="operator-trips">
             <h2>Trip controls and delivery history</h2>
             {!data.deliveries?.length && (
               <p>
@@ -87,7 +92,7 @@ function OperatorAssignments() {
               ))}
             </div>
           </section>
-          <section className="admin-panel">
+          <section className="admin-panel" id="operator-jobs">
             <h2>Current assignments</h2>
             {!data.assignments.length && (
               <p>No assignment has been approved and assigned to you.</p>

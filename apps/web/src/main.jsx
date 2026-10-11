@@ -8,6 +8,7 @@ import "./reporting.css";
 import "./shortages.css";
 import "./admin.css";
 import "./polish.css";
+import "./product.css";
 import AuthProvider from "./components/AuthProvider.jsx";
 import EnvironmentProvider from "./components/EnvironmentProvider.jsx";
 

@@ -410,7 +410,7 @@ function ReportForm() {
           </div>
           <p className="form-hint">
             Count only the people in your household. Wider neighborhood impact
-            will be estimated by the system in a later phase.
+            is estimated separately from household size.
           </p>
         </fieldset>
         <fieldset disabled={submitting}>

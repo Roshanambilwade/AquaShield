@@ -11,8 +11,17 @@ export default function ShortageMap({
   selectedId,
   onSelect,
   admin = false,
-  layers,
+  layers: suppliedLayers,
 }) {
+  const [eligibleOnly, setEligibleOnly] = useState(false);
+  const layers = suppliedLayers && {
+    ...suppliedLayers,
+    tankers: eligibleOnly
+      ? suppliedLayers.tankers.filter(
+          (tanker) => tanker.eligibility?.eligible === true,
+        )
+      : suppliedLayers.tankers,
+  };
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [reportsVisible, setReportsVisible] = useState(false);
@@ -51,6 +60,14 @@ export default function ShortageMap({
           <label>
             <input
               type="checkbox"
+              checked={eligibleOnly}
+              onChange={(e) => setEligibleOnly(e.target.checked)}
+            />
+            Eligible tankers only
+          </label>
+          <label>
+            <input
+              type="checkbox"
               checked={risksVisible}
               onChange={(e) => setRisksVisible(e.target.checked)}
             />
@@ -59,7 +76,7 @@ export default function ShortageMap({
         </div>
         <p className="map-layer-note">
           {layers
-            ? `${layers.reports.length} report locations available${layers.reportsTruncated ? " (latest 500; truncated)" : ""}. ${layers.tankerDataAvailable ? `${layers.tankers.length} tanker locations recorded.` : "Tanker locations unknown."} Forecast layers are not configured.`
+            ? `${layers.reports.length} report locations available${layers.reportsTruncated ? " (latest 500; truncated)" : ""}. ${layers.tankerDataAvailable ? `${layers.tankers.length} tanker locations recorded.` : "Tanker locations unknown."} Recorded locations; no live tracking.`
             : "Loading authorized map layers…"}
         </p>
         <Suspense fallback={<p role="status">Loading street map…</p>}>
@@ -176,6 +193,14 @@ export default function ShortageMap({
             <label>
               <input
                 type="checkbox"
+                checked={eligibleOnly}
+                onChange={(e) => setEligibleOnly(e.target.checked)}
+              />
+              Eligible tankers only
+            </label>
+            <label>
+              <input
+                type="checkbox"
                 checked={risksVisible}
                 onChange={(e) => setRisksVisible(e.target.checked)}
               />
@@ -193,7 +218,7 @@ export default function ShortageMap({
       {admin && (
         <p className="map-layer-note">
           {layers
-            ? `${layers.reports.length} report locations available${layers.reportsTruncated ? " (latest 500; truncated)" : ""}. ${layers.tankerDataAvailable ? `${layers.tankers.length} tanker locations recorded.` : "Tanker locations unknown."} Forecast layers are not configured.`
+            ? `${layers.reports.length} report locations available${layers.reportsTruncated ? " (latest 500; truncated)" : ""}. ${layers.tankerDataAvailable ? `${layers.tankers.length} tanker locations recorded.` : "Tanker locations unknown."} Recorded locations; no live tracking.`
             : "Loading authorized map layers…"}
         </p>
       )}

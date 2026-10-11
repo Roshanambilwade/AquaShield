@@ -10,6 +10,7 @@ export default function AdminLayout() {
     <RoleGuard role="ADMIN">
       <div className="admin-shell">
         <div className="admin-toolbar">
+          <p className="sidebar-label">Municipal command center</p>
           <nav aria-label="Administrator navigation">
             <NavLink to={`/admin${suffix}`} end>
               Overview
@@ -24,10 +25,14 @@ export default function AdminLayout() {
               Trips and deliveries
             </NavLink>
             <NavLink to={`/admin/reports${suffix}`}>Citizen reports</NavLink>
-            <NavLink to={`/admin/advisories${suffix}`}>Citizen advisories</NavLink>
+            <NavLink to={`/admin/advisories${suffix}`}>
+              Citizen advisories
+            </NavLink>
           </nav>
         </div>
-        <Outlet />
+        <div className="admin-content">
+          <Outlet />
+        </div>
       </div>
     </RoleGuard>
   );

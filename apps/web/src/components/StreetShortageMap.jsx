@@ -126,6 +126,17 @@ export default function StreetShortageMap({
             </p>
             <p>Shortage confidence: {event.confidenceScore}%</p>
             <p>
+              {event.reportCount ?? "Unknown"} reports ·{" "}
+              {event.verifiedReportCount ?? "Unknown"} verified
+            </p>
+            <p>Status: {event.status}</p>
+            <p>
+              Assessment:{" "}
+              {event.calculatedAt
+                ? new Date(event.calculatedAt).toLocaleString()
+                : "Unknown"}
+            </p>
+            <p>
               Approximate affected population: ~
               {event.estimatedAffectedPopulation}
             </p>

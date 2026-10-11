@@ -3,9 +3,7 @@ import { test, expect } from "@playwright/test";
 import { randomUUID, randomBytes } from "node:crypto";
 import { mkdir } from "node:fs/promises";
 import { loadEnv } from "../../apps/api/src/config/env.js";
-import {
-  connectDatabase,
-} from "../../apps/api/src/config/database.js";
+import { connectDatabase } from "../../apps/api/src/config/database.js";
 import { createApp } from "../../apps/api/src/app.js";
 import { seedPersistentDemo } from "../../apps/api/src/demo/persistentSeed.js";
 import { accountDefinitions } from "../../apps/api/src/demo/scenario.js";
@@ -72,7 +70,9 @@ test("persistent scenario: admin approval, owned operator trip, demo OTP, accoun
   await signIn(page, "admin", "/login");
   await expect(page).toHaveURL(/\/admin$/);
   await expect(
-    page.getByText(/AquaShield — Demonstration Environment/),
+    page.getByText("Demonstration Environment · simulated data", {
+      exact: true,
+    }),
   ).toBeVisible();
   await expect(
     page.getByText("Panchavati", { exact: true }).first(),

@@ -94,16 +94,16 @@ function Inbox() {
       <ul className="report-list">
         {inbox.data?.notifications.map((a) => (
           <li key={a.id}>
-            <article className="report-card">
+            <article
+              className={`report-card ${a.unread ? "notice-unread" : "notice-read"}`}
+            >
               <h2>{a.title}</h2>
               <p>
                 {a.areaName} · {a.category.replaceAll("_", " ")} · {a.status} ·{" "}
                 {a.unread ? "Unread" : "Read"}
               </p>
               {a.isDemo && (
-                <p className="demo-note">
-                  Simulated demonstration advisory; no real emergency claim.
-                </p>
+                <p className="demo-note">Simulated demonstration advisory</p>
               )}
               <p>{a.message}</p>
               <p>

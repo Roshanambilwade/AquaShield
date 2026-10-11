@@ -14,6 +14,7 @@ import {
   AdminPanels,
   DataFeedback,
   OperationalDetails,
+  DecisionQueue,
 } from "../components/AdminDashboardPanels.jsx";
 import ShortageTable from "../components/ShortageTable.jsx";
 import { useEnvironment } from "../lib/environment.js";
@@ -37,12 +38,23 @@ export default function ShortagesPage({ admin = false }) {
     admin ? `/dashboard/analytics?demo=${demo}` : null,
     revision,
   );
-  const [selectedId, setSelectedId] = useState(null);
+  const [selectedId, setSelectedId] = useState(undefined);
+  const [areaFilter, setAreaFilter] = useState("");
+  const [severityFilter, setSeverityFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [running, setRunning] = useState(false);
   const [actionError, setActionError] = useState("");
+  const visibleEvents = (state.data?.events || []).filter(
+    (event) =>
+      event.areaName.toLowerCase().includes(areaFilter.trim().toLowerCase()) &&
+      (!severityFilter || event.severityLevel === severityFilter) &&
+      (!statusFilter || event.status === statusFilter),
+  );
   const selected =
-    state.data?.events.find((e) => e.id === selectedId) ||
-    state.data?.events[0];
+    selectedId === null
+      ? null
+      : visibleEvents.find((event) => event.id === selectedId) ||
+        visibleEvents[0];
   async function detect() {
     setRunning(true);
     setActionError("");
@@ -67,7 +79,7 @@ export default function ShortagesPage({ admin = false }) {
           </p>
           <h1 className="page-title">Water crisis overview</h1>
           <p className="page-intro">
-            Local evidence, transparent confidence, and deterministic severity.
+            Locate urgent needs, assess evidence and coordinate the response.
           </p>
         </div>
         <div className="dashboard-actions">
@@ -92,24 +104,18 @@ export default function ShortagesPage({ admin = false }) {
       </div>
       {demo && (
         <p className="demo-note">
-          Demo environment · simulated reports and municipal observations.
-          Scores are calculated from persisted inputs; unknown evidence remains
-          unknown.
+          Simulated reports and municipal observations · calculated from
+          recorded inputs.
         </p>
       )}
-      <p className="evidence-note">
-        Public evidence protects small household groups. Authorized municipal
-        staff can review private evidence and manage approved tanker
-        assignments. An assignment does not confirm delivery or field
-        verification.
-      </p>
+      {!admin && (
+        <p className="evidence-note">
+          Public evidence protects small household groups. Population estimates
+          are approximate; an assignment does not confirm delivery.
+        </p>
+      )}
       {admin && (
         <div className="dashboard-context">
-          <p>
-            Current severity describes recorded shortage evidence. Confidence
-            describes whether a genuine shortage exists; estimated population
-            remains approximate. Forecasts describe future report activity.
-          </p>
           <nav className="context-links" aria-label="Municipal next steps">
             {[
               ["reports", "Review evidence"],
@@ -202,11 +208,87 @@ export default function ShortagesPage({ admin = false }) {
             </div>
           ) : (
             <>
+              <section
+                className="map-filters"
+                aria-label="Shortage map filters"
+              >
+                <label>
+                  Map area
+                  <input
+                    aria-label="Map area"
+                    value={areaFilter}
+                    placeholder="Search an area"
+                    onChange={(e) => {
+                      setAreaFilter(e.target.value);
+                      setSelectedId(undefined);
+                    }}
+                  />
+                </label>
+                <label>
+                  Map severity
+                  <select
+                    aria-label="Map severity"
+                    value={severityFilter}
+                    onChange={(e) => {
+                      setSeverityFilter(e.target.value);
+                      setSelectedId(undefined);
+                    }}
+                  >
+                    <option value="">All severities</option>
+                    {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((level) => (
+                      <option key={level}>{level}</option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Map event status
+                  <select
+                    aria-label="Map event status"
+                    value={statusFilter}
+                    onChange={(e) => {
+                      setStatusFilter(e.target.value);
+                      setSelectedId(undefined);
+                    }}
+                  >
+                    <option value="">All statuses</option>
+                    {[
+                      ...new Set(
+                        state.data.events.map((event) => event.status),
+                      ),
+                    ].map((status) => (
+                      <option key={status}>{status}</option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  className="button button-secondary"
+                  onClick={() => setSelectedId(null)}
+                  disabled={!selected}
+                >
+                  Clear selection
+                </button>
+                <button
+                  className="button button-secondary"
+                  onClick={() => {
+                    setAreaFilter("");
+                    setSeverityFilter("");
+                    setStatusFilter("");
+                    setSelectedId(undefined);
+                  }}
+                >
+                  Reset map filters
+                </button>
+                <p role="status">
+                  {visibleEvents.length} of {state.data.events.length} shortage
+                  zones shown. Filters apply to zones; report and tanker layers
+                  show recorded locations.
+                </p>
+              </section>
               <div className="detection-grid">
                 <div>
                   {admin && <DataFeedback state={map} label="map layers" />}
                   <ShortageMap
-                    events={state.data.events}
+                    events={visibleEvents}
                     selectedId={selected?.id}
                     onSelect={setSelectedId}
                     admin={admin}
@@ -214,7 +296,13 @@ export default function ShortagesPage({ admin = false }) {
                   />
                 </div>
                 <div className="zone-list" aria-label="Shortage zones">
-                  {state.data.events.map((e) => (
+                  {!visibleEvents.length && (
+                    <p className="empty-card">
+                      No shortage zones match these filters. Reset the map
+                      filters to see available evidence.
+                    </p>
+                  )}
+                  {visibleEvents.map((e) => (
                     <button
                       className={`zone-card ${selected?.id === e.id ? "selected" : ""}`}
                       key={e.id}
@@ -244,7 +332,7 @@ export default function ShortagesPage({ admin = false }) {
               </div>
               {selected && (
                 <div className="event-panel">
-                  <ShortageDetails event={selected} />
+                  <ShortageDetails event={selected} compact={admin} />
                   {admin && (
                     <OperationalDetails
                       id={selected.id}
@@ -262,7 +350,7 @@ export default function ShortagesPage({ admin = false }) {
               )}
               {admin && (
                 <ShortageTable
-                  events={state.data.events}
+                  events={visibleEvents}
                   onSelect={setSelectedId}
                 />
               )}
@@ -271,12 +359,12 @@ export default function ShortagesPage({ admin = false }) {
           <p className="evidence-note">
             Emerging zones indicate limited evidence of a current problem.
             Numerical report-activity forecasts are evaluated separately on the
-            early-warning dashboard.
-            Population totals are approximate and may overlap across separate
-            time-window events.
+            early-warning dashboard. Population totals are approximate and may
+            overlap across separate time-window events.
           </p>
         </>
       )}
+      {admin && <DecisionQueue state={analytics} demo={demo} />}
       {admin && (
         <AdminPanels
           summary={summary}

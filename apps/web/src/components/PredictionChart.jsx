@@ -34,6 +34,19 @@ export default function PredictionChart({ result }) {
         Solid: recorded activity · Dashed: estimate · ?: unknown observation
         window
       </p>
+      {!!rows.length && (
+        <p className="chart-range">
+          Observed windows (UTC):{" "}
+          {new Date(rows[0].start).toLocaleString(undefined, {
+            timeZone: "UTC",
+          })}{" "}
+          —{" "}
+          {new Date(rows[rows.length - 1].start).toLocaleString(undefined, {
+            timeZone: "UTC",
+          })}
+          . Full window values are available below.
+        </p>
+      )}
       <details>
         <summary>Accessible chart data</summary>
         <div className="table-scroll">

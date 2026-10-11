@@ -44,7 +44,7 @@ export default function PredictionsPage() {
   }
   return (
     <div className="page shortage-page prediction-page">
-      <p className="eyebrow">Municipal early warning · deterministic backend</p>
+      <p className="eyebrow">Municipal early warning</p>
       <h1 className="page-title">Report activity forecasts</h1>
       <p>
         Identify changes in recorded water-problem reports. Predictions estimate

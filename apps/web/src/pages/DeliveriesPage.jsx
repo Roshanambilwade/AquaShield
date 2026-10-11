@@ -20,11 +20,15 @@ export default function DeliveriesPage() {
           OPERATOR can verify a delivery from Your assignments. Sign out and
           sign in with the operator account linked to the assigned tanker.
         </p>
-        <p>
-          Start trip → Mark arrived → Verify delivery OTP → Record actual litres
-          and Complete delivery. Verification controls appear after ARRIVED;
-          completed trips show their saved verification and audit history.
-        </p>
+        <details>
+          <summary>How delivery verification works</summary>
+          <p>
+            Start trip → Mark arrived → Verify delivery OTP → Record actual
+            litres and Complete delivery. Verification controls appear after
+            ARRIVED; completed trips show their saved verification and audit
+            history.
+          </p>
+        </details>
         <p>
           {demo
             ? "In the fictional demonstration, the operator selects Generate demo OTP after arrival. This is simulated evidence, not independent delivery proof."

@@ -30,14 +30,17 @@ export function AdminMetrics({ state }) {
                     ? "Unknown"
                     : `${metric.kind === "ESTIMATE" ? "~" : ""}${value.toLocaleString()}${key === "waterDelivered" ? " L" : key === "averageResponseTime" ? " min" : ""}`}
               </strong>
-              <small>
-                {metric?.note ||
-                  (value == null
-                    ? "Data unavailable"
-                    : state.data?.isDemo
-                      ? "Simulated records"
-                      : "Recorded evidence")}
-              </small>
+              <details className="metric-note">
+                <summary>About this metric</summary>
+                <small>
+                  {metric?.note ||
+                    (value == null
+                      ? "Data unavailable"
+                      : state.data?.isDemo
+                        ? "Simulated records"
+                        : "Recorded evidence")}
+                </small>
+              </details>
             </article>
           );
         })}
@@ -68,12 +71,6 @@ export function DataFeedback({ state, label }) {
 export function AdminPanels({ summary, analytics, demo, event }) {
   return (
     <div className="admin-panels">
-      <AiRecommendationPanel
-        key={`${demo}:${event?.id}:${event?.calculatedAt}`}
-        demo={demo}
-        event={event}
-        configuration={summary.data?.ai}
-      />
       <section className="admin-panel">
         <h2>Areas requiring attention</h2>
         <p>
@@ -118,8 +115,74 @@ export function AdminPanels({ summary, analytics, demo, event }) {
           ))}
         </ol>
       </section>
+      <AiRecommendationPanel
+        key={`${demo}:${event?.id}:${event?.calculatedAt}`}
+        demo={demo}
+        event={event}
+        configuration={summary.data?.ai}
+      />
       <AnalyticsPanel state={analytics} />
     </div>
+  );
+}
+
+export function DecisionQueue({ state, demo }) {
+  const data = state.data;
+  const countStates = (rows, statuses) =>
+    rows
+      ?.filter((row) => statuses.includes(row.status))
+      .reduce((sum, row) => sum + row.count, 0);
+  const entries = [
+    [
+      "Reports awaiting review",
+      data?.reports?.pendingVerification,
+      "reports",
+      "Review submitted evidence",
+    ],
+    [
+      "Recommendations awaiting review",
+      countStates(data?.allocations?.states, ["RECOMMENDED"]),
+      "allocations",
+      "Review allocation decisions",
+    ],
+    [
+      "Active trips",
+      countStates(data?.deliveries?.states, [
+        "ASSIGNED",
+        "EN_ROUTE",
+        "ARRIVED",
+        "COMPLETING",
+      ]),
+      "deliveries",
+      "Inspect active trips",
+    ],
+  ];
+  return (
+    <section className="decision-queue" aria-label="Pending municipal work">
+      <h2>Next decisions</h2>
+      <p className="evidence-note">
+        Current state of records created in the analytics reporting window;
+        these are not all-time queue totals.
+      </p>
+      <DataFeedback state={state} label="pending work" />
+      <div className="decision-items">
+        {entries.map(([label, count, route, action]) => (
+          <article key={route}>
+            <strong>
+              {state.loading
+                ? "…"
+                : count == null
+                  ? "Unknown"
+                  : count.toLocaleString()}
+            </strong>
+            <span>{label}</span>
+            <Link to={`/admin/${route}${demo ? "?demo=true" : ""}`}>
+              {action} →
+            </Link>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }
 

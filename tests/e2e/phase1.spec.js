@@ -33,7 +33,10 @@ test("overview has no browser errors or horizontal overflow", async ({
     "A coordinated response.",
   );
   await expect(page.getByLabel("Project availability")).toContainText(
-    "Phases 1–7",
+    "Emergency allocations remain subject to municipal review",
+  );
+  await expect(page.getByLabel("Project availability")).not.toContainText(
+    /Phase\s*\d/i,
   );
   await expect(page.getByRole("navigation")).toBeVisible();
   expect(

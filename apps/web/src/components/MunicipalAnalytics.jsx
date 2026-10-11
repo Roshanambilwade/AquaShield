@@ -15,6 +15,15 @@ function Timing({ label, data }) {
           {data.distribution.map((b) => (
             <li key={b.label}>
               {b.label.replaceAll("_", " ")}: {b.count}
+              <meter
+                min="0"
+                max={Math.max(
+                  1,
+                  ...data.distribution.map((bucket) => bucket.count),
+                )}
+                value={b.count}
+                aria-label={`${label}: ${b.label.replaceAll("_", " ")} recorded timings`}
+              />
             </li>
           ))}
         </ul>

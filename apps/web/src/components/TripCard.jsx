@@ -93,7 +93,6 @@ export default function TripCard({ delivery, admin = false, onChange }) {
                 ? "Delivery recorded. Review the quantity and audit history below."
                 : "Review the recorded state with the municipal team."}
       </p>
-      <p>Delivery {d.id}</p>
       <p>
         Planned water:{" "}
         {d.plannedLitres == null ? "Unknown" : `${d.plannedLitres} L`} · Actual
@@ -330,6 +329,7 @@ export default function TripCard({ delivery, admin = false, onChange }) {
       )}
       <details>
         <summary>Trip timestamps and audit history</summary>
+        <p>Delivery reference: {d.id}</p>
         <dl>
           {[
             ["assignedAt", "Assigned"],
