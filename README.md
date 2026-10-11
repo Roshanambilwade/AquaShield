@@ -6,7 +6,7 @@ AquaShield connects household water-shortage reports with municipal assessment, 
 
 Built by **AquaSentinels** for **Environmental Hacks — Heat & Water Track**.
 
-**Website:** [Open AquaShield](http://3.111.33.20/) · [Demo login accounts](DEMO_ACCESS.md). The project owner provided this AWS address; hosted workflows and demo account access have not yet been independently verified.
+**Website:** [Open AquaShield](http://3.111.33.20/) · [Judge login accounts](DEMO_ACCESS.md). Six dedicated judging accounts have passed hosted login and identity checks; full hosted operational workflows remain separately subject to verification.
 
 ## Why AquaShield exists
 
@@ -111,7 +111,7 @@ Simulation controls support start, pause, resume, step, speed and stop. Fifteen 
 
 **Refresh saved simulation** reloads stored evidence and operational results. It does not advance or restart the scenario. A stopped/finished run is terminal. Another independent run requires a new isolated simulation database with matching configuration, preserving the previous run. A same-database New simulation run feature is not implemented. One backend instance is supported per simulation database.
 
-Generated credential files remain ignored in `.local`. Selected synthetic simulation accounts are intentionally published in [Demo access](DEMO_ACCESS.md); their AWS login access is not verified. There is no production simulation mode or automatic startup seeding.
+Generated simulation credential files remain ignored in `.local`. Separate judging accounts for the deployed database are intentionally published in [Demo access](DEMO_ACCESS.md), with verified hosted login and explicit permission/testing limitations. There is no production simulation mode or automatic startup seeding.
 
 ## Architecture
 
@@ -225,7 +225,7 @@ Live Gemini diagnostics are separate opt-in tests that may consume quota or incu
 
 Hosting preparation targets **AWS Amplify Hosting** for the static frontend and **AWS App Runner** for the backend, subject to account/service compatibility. **MongoDB Atlas** can remain the database. AWS hosting is separate from AI; Bedrock and AWS model credentials are not required.
 
-The repository includes frontend build configuration, backend container configuration, health/readiness handling, production validation and a release checklist. Atlas connection and isolated simulation preparation have been verified in the developer workspace. The project owner reports an AWS deployment at [http://3.111.33.20/](http://3.111.33.20/). Hosted authentication, persistence and end-to-end workflows have not yet been independently verified; the hosting address alone does not establish completion of the release checklist. The supplied address uses HTTP; enable HTTPS before transmitting private credentials or real citizen information.
+The repository includes frontend build configuration, backend container configuration, health/readiness handling, production validation and a release checklist. Atlas connection and isolated simulation preparation have been verified in the developer workspace. The AWS deployment is available at [http://3.111.33.20/](http://3.111.33.20/). Six judging accounts were persisted in Atlas and passed hosted login, identity and logout checks; the administrator fleet read also passed. Full hosted end-to-end operational workflows have not been independently verified by that account-provisioning check. The supplied address uses HTTP; enable HTTPS before transmitting private credentials or real citizen information.
 
 Hosted builds need an actual API URL or a configured reverse proxy; Vite's development proxy is absent on static hosting. Database/Gemini secrets belong in backend runtime configuration. Production requires exact hosted-origin CORS, restricted database access and verified authentication/persistence workflows. Review proxy/rate-limit and multi-instance behavior before scaling.
 
