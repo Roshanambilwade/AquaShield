@@ -11,6 +11,7 @@ export function testEnvironment(source) {
     DEMO_AI_MODE: "true",
     DEMONSTRATION_MODE: "false",
     DEMO_SEED_ENABLED: "false",
+    FORECAST_DEMO_ENABLED: "false",
     ROUTING_BASE_URL: "",
   };
 }

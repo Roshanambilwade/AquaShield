@@ -9,6 +9,8 @@ export default function PredictionsPage() {
   const [params] = useSearchParams(),
     env = useEnvironment();
   const demo = env.demonstration || params.get("demo") === "true";
+  const [inputSource, setInputSource] = useState("REPORT_HISTORY");
+  const sourceSuffix = `demo=${demo}&source=${inputSource}`;
   const [refresh, setRefresh] = useState(0),
     [selected, setSelected] = useState(""),
     [busy, setBusy] = useState(false),
@@ -18,9 +20,9 @@ export default function PredictionsPage() {
     [history, setHistory] = useState(null),
     [page, setPage] = useState(1),
     [status, setStatus] = useState("");
-  const summary = useAdminData(`/predictions?demo=${demo}`, refresh);
+  const summary = useAdminData(`/predictions?${sourceSuffix}`, refresh);
   const alerts = useAdminData(
-    `/predictions/alerts?demo=${demo}&page=${page}&limit=10${status ? `&status=${status}` : ""}`,
+    `/predictions/alerts?${sourceSuffix}&page=${page}&limit=10${status ? `&status=${status}` : ""}`,
     refresh,
   );
   const results = summary.data?.results || [];
@@ -54,6 +56,33 @@ export default function PredictionsPage() {
           forecast validation.
         </p>
       )}
+      <label>
+        Prediction history source{" "}
+        <select
+          value={inputSource}
+          disabled={busy}
+          onChange={(e) => {
+            setInputSource(e.target.value);
+            setHistory(null);
+            setBacktest(null);
+            setPage(1);
+            setSuccess("");
+          }}
+        >
+          <option value="REPORT_HISTORY">Available report history</option>
+          {demo && (
+            <option value="SYNTHETIC_FORECAST">
+              Prepared synthetic forecast history
+            </option>
+          )}
+        </select>
+      </label>
+      {inputSource === "SYNTHETIC_FORECAST" && (
+        <p className="demo-note">
+          Prediction over synthetic demonstration observations. Separate from
+          operational reports and decisions; not real-world forecast accuracy.
+        </p>
+      )}
       <div className="prediction-actions">
         <button
           className="button button-primary"
@@ -61,7 +90,7 @@ export default function PredictionsPage() {
           onClick={() =>
             perform(
               () =>
-                adminRequest(`/predictions/evaluate?demo=${demo}`, {
+                adminRequest(`/predictions/evaluate?${sourceSuffix}`, {
                   method: "POST",
                   body: {},
                 }),
@@ -256,7 +285,7 @@ export default function PredictionsPage() {
                       perform(async () => {
                         setHistory(
                           await adminRequest(
-                            `/predictions/areas/${result.areaId}/history?demo=${demo}&limit=10`,
+                            `/predictions/areas/${result.areaId}/history?${sourceSuffix}&limit=10`,
                           ),
                         );
                       }, "Saved forecast history loaded.")
@@ -270,7 +299,7 @@ export default function PredictionsPage() {
                       perform(async () => {
                         setBacktest(
                           await adminRequest(
-                            `/predictions/backtest?demo=${demo}`,
+                            `/predictions/backtest?${sourceSuffix}`,
                             { method: "POST", body: { areaId: result.areaId } },
                           ),
                         );
@@ -368,6 +397,7 @@ export default function PredictionsPage() {
             <AlertControls
               alert={a}
               demo={demo}
+              inputSource={inputSource}
               busy={busy}
               perform={perform}
             />
@@ -401,7 +431,8 @@ export default function PredictionsPage() {
     </div>
   );
 }
-function AlertControls({ alert, demo, busy, perform }) {
+function AlertControls({ alert, demo, inputSource, busy, perform }) {
+  const sourceSuffix = `demo=${demo}&source=${inputSource}`;
   const [note, setNote] = useState("");
   if (alert.status === "RESOLVED")
     return (
@@ -429,7 +460,7 @@ function AlertControls({ alert, demo, busy, perform }) {
           perform(
             () =>
               adminRequest(
-                `/predictions/alerts/${alert.id}/${action}?demo=${demo}`,
+                `/predictions/alerts/${alert.id}/${action}?${sourceSuffix}`,
                 {
                   method: "POST",
                   body: { revision: alert.revision, note: note.trim() },

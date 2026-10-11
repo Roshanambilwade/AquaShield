@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { adminRequest } from "../lib/adminApi.js";
 import { useEnvironment } from "../lib/environment.js";
+import TankerObservation from "../components/TankerObservation.jsx";
 
 const quantity = (value) =>
   value == null ? "Unknown" : `${value.toLocaleString()} L`;
@@ -233,9 +234,11 @@ export default function OperationsPage({ fleetOnly = false }) {
                       <li key={reason}>{reason}</li>
                     ))}
                   </ul>
+                  <p>Allocation eligibility: {t.eligibility.eligible ? "Eligible" : "Ineligible"}. Status alone does not establish readiness.</p>
+                  {environment.demonstration && <TankerObservation tanker={t} busy={busy} mutate={mutate} />}
                   <button
                     className="button button-secondary"
-                    disabled={busy || t.status === "ASSIGNED"}
+                    disabled={busy || !!t.activeAllocationId || !["AVAILABLE", "UNAVAILABLE"].includes(t.status)}
                     onClick={() => setEditing(t)}
                   >
                     Edit {t.identifier}

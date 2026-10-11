@@ -4,9 +4,7 @@ import { randomUUID, randomBytes } from "node:crypto";
 import { mkdir } from "node:fs/promises";
 import { createApp } from "../../apps/api/src/app.js";
 import { loadEnv } from "../../apps/api/src/config/env.js";
-import {
-  connectDatabase,
-} from "../../apps/api/src/config/database.js";
+import { connectDatabase } from "../../apps/api/src/config/database.js";
 import { createAdmin } from "../../apps/api/src/services/authService.js";
 import Allocation from "../../apps/api/src/models/Allocation.js";
 import Tanker from "../../apps/api/src/models/Tanker.js";
@@ -162,4 +160,51 @@ test("admin recommendation, rejection, approval, assignment and operator visibil
     path: `.local/qa/phase6-operator-${info.project.name}.png`,
     fullPage: true,
   });
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await page.goto("/login");
+  await page.getByLabel("Email", { exact: true }).fill("admin@phase6.test");
+  await page.getByLabel("Password", { exact: true }).fill(password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page).toHaveURL(/\/admin$/);
+  await page.goto("/admin/tankers?demo=true");
+  await page.getByLabel("Identifier", { exact: true }).fill("AUDIT-T01");
+  await page
+    .getByLabel("Display name", { exact: true })
+    .fill("Audit registration");
+  await page.getByLabel("Total capacity (L)", { exact: true }).fill("2000");
+  await page
+    .getByLabel("Available water (L, blank if unknown)", { exact: true })
+    .fill("2001");
+  await page.getByRole("button", { name: "Save tanker", exact: true }).click();
+  await expect(page.getByRole("alert")).toBeVisible();
+  expect(await Tanker.countDocuments({ identifier: "AUDIT-T01" })).toBe(0);
+  await page
+    .getByLabel("Available water (L, blank if unknown)", { exact: true })
+    .fill("1000");
+  await page.getByRole("button", { name: "Save tanker", exact: true }).click();
+  await expect(
+    page.getByRole("heading", {
+      name: "AUDIT-T01 · Audit registration",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.reload();
+  await page
+    .getByRole("button", { name: "Edit AUDIT-T01", exact: true })
+    .click();
+  await page
+    .getByLabel("Display name", { exact: true })
+    .fill("Audit updated tanker");
+  await page.getByRole("button", { name: "Save tanker", exact: true }).click();
+  await expect(
+    page.getByRole("heading", {
+      name: "AUDIT-T01 · Audit updated tanker",
+      exact: true,
+    }),
+  ).toBeVisible();
+  const registered = await Tanker.findOne({ identifier: "AUDIT-T01" }).lean();
+  expect(registered.capacityLitres).toBe(2000);
+  expect(registered.availableLitres).toBe(1000);
+  expect(registered.status).toBe("UNAVAILABLE");
+  expect(registered.name).toBe("Audit updated tanker");
 });

@@ -20,6 +20,8 @@ import ReportReviewPage from "./pages/ReportReviewPage.jsx";
 import DeliveriesPage from "./pages/DeliveriesPage.jsx";
 import OperatorAssignmentPage from "./pages/OperatorAssignmentPage.jsx";
 import PredictionsPage from "./pages/PredictionsPage.jsx";
+import CitizenAlertsPage from "./pages/CitizenAlertsPage.jsx";
+import AdvisoriesPage from "./pages/AdvisoriesPage.jsx";
 
 export default function App() {
   return (
@@ -31,6 +33,7 @@ export default function App() {
         <Route path="report/success" element={<ReportSuccessPage />} />
         <Route path="report/:id" element={<ReportStatusPage />} />
         <Route path="my-reports" element={<ReportHistoryPage />} />
+        <Route path="my-alerts" element={<CitizenAlertsPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="citizen/login" element={<LoginPage citizen />} />
         <Route path="register" element={<RegisterPage />} />
@@ -42,6 +45,7 @@ export default function App() {
           <Route path="audit" element={<AuditPage />} />
           <Route path="audit/:id" element={<AuditPage />} />
           <Route path="predictions" element={<PredictionsPage />} />
+          <Route path="advisories" element={<AdvisoriesPage />} />
           <Route path="tankers" element={<OperationsPage fleetOnly />} />
           <Route path="allocations" element={<OperationsPage />} />
           <Route path="deliveries" element={<DeliveriesPage />} />

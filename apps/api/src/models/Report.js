@@ -21,7 +21,10 @@ const reportSchema = new mongoose.Schema(
       default: null,
       immutable: true,
     },
-    audit: { type: [auditSchema()], default: undefined },
+    audit: {
+      type: [auditSchema({ reason: String, provenance: String })],
+      default: undefined,
+    },
     reporterKeyHash: { type: String, required: true, select: false },
     submissionId: { type: String, required: true, select: false },
     location: {
@@ -69,6 +72,9 @@ const reportSchema = new mongoose.Schema(
       immutable: true,
     },
     verificationSource: { type: String, default: null },
+    reviewedAt: { type: Date, default: null },
+    reviewedBy: { type: mongoose.Schema.Types.ObjectId, default: null },
+    reviewNote: { type: String, maxlength: 500, default: "" },
     isDemo: { type: Boolean, default: false, immutable: true },
     hasPhoto: { type: Boolean, default: false },
     sourceType: {

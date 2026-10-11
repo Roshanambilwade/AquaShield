@@ -9,6 +9,7 @@ const flag = z
 export const demonstrationSchema = z.object({
   DEMONSTRATION_MODE: flag,
   DEMO_SEED_ENABLED: flag,
+  FORECAST_DEMO_ENABLED: flag,
   DEMO_DATABASE_NAME: z
     .string()
     .regex(/^aquashield_demo(?:_[a-z0-9]+)*$/)

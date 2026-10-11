@@ -1,4 +1,5 @@
 import express from "express";
+import { createCitizenAlertsRouter } from "./routes/citizenAlerts.js";
 import cors from "cors";
 import { correlationMiddleware } from "./services/auditContext.js";
 import { createAuditRouter } from "./routes/audit.js";
@@ -61,6 +62,8 @@ export function createApp(
   );
   app.use(express.json({ limit: "100kb" }));
   app.use("/api/auth", createAuthRouter(config, databaseStatus));
+  app.use("/api/citizen/alerts", createCitizenAlertsRouter(config, databaseStatus));
+  app.use("/api/advisories", createCitizenAlertsRouter(config, databaseStatus, true));
   app.use("/api/dashboard", createDashboardRouter(config, databaseStatus));
   app.use("/api/audit", createAuditRouter(config, databaseStatus));
   app.use("/api/ai", createAiRouter(config, databaseStatus, aiDependencies));

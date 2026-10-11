@@ -182,6 +182,9 @@ async function progress(page, { demo }) {
   await expect(card).toContainText("EN_ROUTE");
   await card.getByRole("button", { name: "Mark arrived", exact: true }).click();
   await expect(card).toContainText("ARRIVED");
+  await expect(
+    card.getByRole("heading", { name: "Delivery verification", exact: true }),
+  ).toBeVisible();
   await card
     .getByRole("button", {
       name: demo ? "Generate demo OTP" : "Request recipient OTP",
@@ -298,6 +301,12 @@ test("fictional admin assignment, operator trip/OTP/completion and municipal tot
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await signIn(page, admin.email);
   await page.goto("/admin/deliveries?demo=true");
+  await expect(
+    page.getByRole("region", { name: "Delivery verification", exact: true }),
+  ).toContainText("assigned OPERATOR");
+  await expect(
+    page.getByRole("button", { name: "Verify delivery OTP", exact: true }),
+  ).toHaveCount(0);
   await expect(
     page.getByText(/Recorded actual water delivered: 3,500 L/),
   ).toBeVisible();

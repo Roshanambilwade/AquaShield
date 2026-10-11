@@ -56,6 +56,8 @@ Panchavati remains the hero area; Satpur, Indira Nagar, Nashik Road and Adgaon u
 
 ## Faculty walkthrough
 
+**Finding delivery verification:** `/admin/deliveries` is the ADMIN inspection screen. Read its Delivery verification panel, identify the tanker’s assigned operator, sign out and sign in at `/login?returnTo=/operator`. Only that operator sees the OTP controls after ARRIVED. ASSIGNED and EN_ROUTE trips must first be progressed; DELIVERED trips show saved verification rather than another verification action. Never use an administrator account to bypass this boundary.
+
 1. Start using the command above without reseeding. Keep credential contents and session tokens off camera. Sign in as `admin` and open `/admin` without needing `?demo=true`.
 2. Compare areas on the map/table: severity, shortage confidence, approximate people affected, verified versus pending/excluded evidence. Open shortage details. View `/admin/reports` for authorized report/source review and `/admin/analytics` for report activity, response and delivery records.
 3. Open `/admin/tankers`. Inspect all nine tankers and their linked operators, recorded water/capacity, availability and observation freshness. Operator names in the fleet identify the matching key in your local credential file. Unavailable/stale/unknown records are not eligible merely because they exist.
@@ -74,7 +76,7 @@ For an owned citizen handoff, the earliest eligible account-backed reporter for 
 
 ## Time and data limits
 
-The initial report clock is persisted once. Re-seeding does not move timestamps, renew environmental/fleet evidence, refill water or manufacture current activity. Existing freshness windows still apply: after time passes, reports can become historical and evidence/tanker observations can become stale. Before a later demonstration, use honest simulated citizen submissions and the existing municipal evidence/tanker forms to record current observations, or explicitly choose another guarded demo database with separately provisioned credentials. Do not claim old data is fresh. The current credential file is tied to one target and is preserved on mismatch.
+The initial report clock is persisted once. Re-seeding does not move timestamps, renew environmental/fleet evidence, refill water or manufacture current activity. The existing deterministic demo shortage view uses the latest saved demo report as its scenario anchor; it does not automatically age through a virtual clock. Fleet eligibility, operational evidence and Phase 8 freshness use current server time, so these can become stale even while a static shortage scene remains ACTIVE. Before a later demonstration, use honest simulated citizen submissions and the existing municipal evidence/tanker forms to record current observations, or explicitly choose another guarded demo database with separately provisioned credentials. Do not claim old data is fresh. The current credential file is tied to one target and is preserved on mismatch.
 
 Population and environmental observations are scenario estimates. Completed quantities are exact recorded **simulated** quantities; they are not field measurements. Precise location consent/validation, own-report privacy, role guards and public aggregation remain enforced. Road navigation, live tracking/traffic, SMS, verified identity/residency, physical household receipt and numeric forecasting are not provided by this dataset.
 
@@ -108,6 +110,8 @@ These are optional manual commands, never run by seed/startup/ordinary tests. Ea
 Run `npm test`, `npm run test:mongo`, `npm run lint`, `npm run build`, `npm run test:e2e` and `npm run test:dev-origins`. Mongo/browser tests use disposable UUID databases, independent of the persistent demo database; test-only cleanup remains guarded. See the verification report below for observed counts and the exact file inventory. Do not run `test:ai:live` as part of routine checks.
 
 ## Observed verification — 10 October 2026
+
+This section records the original persistent-dataset task. Its counts and exclusions are historical; the later Phase 8 and pre-simulation remediation sections below describe current capabilities and preparation.
 
 | Check | Observed result |
 | --- | --- |
@@ -199,7 +203,7 @@ Additional corrected source file: `apps/web/src/pages/ReportHistoryPage.jsx`. In
 
 ## Phase 8 numerical early warning
 
-Open `/admin/predictions` as ADMIN and select **Evaluate current evidence**. This calculates and persists report-activity forecasts/alerts without Gemini or Strands. The existing 48-report faculty scenario intentionally lacks complete multi-day history: expect `INSUFFICIENT_DATA`, not an invented forecast. No timestamps or existing data are rewritten. Supported-forecast/alert demonstrations use explicit disposable synthetic browser fixtures: `npx playwright test tests/e2e/phase8.spec.js`. This is implementation verification, not real forecast accuracy. See [Phase 8 formulas, APIs, uncertainty and verification](phase8.md). Optional Early Warning explanation now consumes completed, current results when available; this does not alter the historical mocked/live verification table above.
+Open `/admin/predictions` as ADMIN and select **Evaluate current evidence**. This calculates and persists report-activity forecasts/alerts without Gemini or Strands. The existing 48-report faculty scenario intentionally lacks complete multi-day history: **Available report history** correctly returns `INSUFFICIENT_DATA`. No existing timestamps are rewritten. For supported demonstrations, use the separate opt-in persistent fixture and **Prepared synthetic forecast history** described under [remediation preparation](#pre-simulation-remediation-preparation). Disposable browser fixtures remain available through `npx playwright test tests/e2e/phase8.spec.js`. Both demonstrate numerical implementation behavior, not real forecast accuracy. See [Phase 8 formulas, APIs, uncertainty and verification](phase8.md). Optional Early Warning explanation consumes completed, current ordinary-history results when available; this does not alter the historical mocked/live verification table above.
 
 ## Phase 12 concise presentation run sheet
 
@@ -214,3 +218,34 @@ Open `/admin/predictions` as ADMIN and select **Evaluate current evidence**. Thi
 9. Stop npm run dev with Ctrl+C. Restart with the same flags to inspect persisted data. Do not advance clocks, reset records or reseed between presentations.
 
 Presentation preparation: use browser zoom 100%, check desktop and mobile navigation, and verify source timestamps before describing data as current. Street-map tiles may require network access; stored coordinates and the schematic remain usable. The full offline verification command is npm run verify. It includes unit/API, MongoDB, lint, build, secret/config checks, desktop/mobile browser flows and both development origins, without live Gemini inference.
+
+## Pre-simulation remediation preparation
+
+Keep the provisioned faculty database, private credentials and real `.env`. No reset/reseed is needed. Start with the existing demonstration startup flags. In the same PowerShell session, explicitly enable the separate forecast source:
+
+```powershell
+$env:NODE_ENV='development'
+$env:DEMONSTRATION_MODE='true'
+$env:DEMO_DATABASE_NAME='aquashield_demo'
+$env:FORECAST_DEMO_ENABLED='true'
+$env:DEMO_AI_MODE='true'
+$env:DEMO_SEED_ENABLED='false'
+npm run demo:readiness
+# Explicit preparation only; no ordinary reports/accounts are seeded:
+$env:DEMO_SEED_ENABLED='true'
+npm run seed:forecast-demo
+$env:DEMO_SEED_ENABLED='false'
+npm run demo:readiness
+npm run dev
+```
+
+Preparation refuses unsafe/production or mismatched connected targets before writes. It creates 190 synthetic observations at default settings across six areas (40/32/24/28/36/30), twelve completed six-hour UTC windows each, with independent synthetic reporter keys and no VERIFIED status. Repeating within the same cutoff inserts zero and preserves existing documents/timestamps. A later cutoff creates a new immutable batch; retrieval uses one latest completed batch and never mixes histories. Old batches remain. No timer, virtual clock or background generator is installed. Predictions may correctly become stale; explicitly prepare/evaluate a fresh batch when needed.
+
+1. Sign in as administrator; inspect `/admin/tankers`. Status AVAILABLE alone is insufficient. For a suitable idle, unreserved tanker with an active linked operator, expand **Record simulated present-time observation**, assess simulated available litres (bounded by recorded capacity), record an inspection note, confirm authorization and save. This records current server time and preserves the prior observation/balance/location. It does not alter active trips/reservations. If no suitable tanker exists, review the blocker instead of forcing one available. Check eligibility/reasons again. Do not automatically observe every tanker.
+2. Review a PENDING report at `/admin/reports/:id`. Enter an evidence-review note and explicitly verify or reject. This is submitted-evidence review, not a field visit. Seeded verification remains simulated; delivery alone never verifies a report. Terminal review state cannot be silently reversed.
+3. At `/admin/advisories`, choose service area/audience, supported evidence category/type and record ID. A current manually reviewed report, accepted completed delivery or supported ordinary-history forecast is validated on the backend. For a fictional demonstration notice explicitly choose **Explicit simulated advisory** + **Simulated advisory scenario** with a stable scenario key. Wording is fixed and privacy-safe. Publish or explicitly withdraw; expiry preserves history. No SMS/email is sent.
+4. A citizen opens **My Alerts**, explicitly chooses a preferred service area and sees matching/local or municipal notices. Read/unread persists across refresh/re-login without resolving any global alert. Changing area changes authorized visibility immediately. Public Local alerts remains a separate aggregate view.
+5. Open `/admin/predictions`, select **Prepared synthetic forecast history**, then **Evaluate current evidence**. Calculation/persistence uses the unchanged numerical engine without Gemini. UI/provenance identify synthetic observations, not real forecast accuracy. Switch back to **Available report history** to see its honest insufficient-data state. Synthetic results do not fill operational risk KPIs, allocation evidence or citizen alerts.
+6. Run `npm run demo:readiness` to inspect current eligibility, operators, reservations/trips, report provenance, both histories and saved results. It performs no observations, evaluations, indexes, publications or other writes.
+
+Current remediation verification and deployment/provider limitations are recorded separately in [the remediation report](pre-simulation-remediation-report.md). The original acceptance report remains unchanged historical evidence. Real Gemini access, public cloud infrastructure, independent field delivery and real forecast accuracy remain separate unverified claims. Dynamic simulation is not implemented.

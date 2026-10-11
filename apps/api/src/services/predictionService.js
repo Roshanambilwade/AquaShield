@@ -1,4 +1,24 @@
 import Report from "../models/Report.js";
+import {
+  assertForecastSource,
+  forecastHistory,
+} from "../demo/forecastFixture.js";
+export const predictionSourceFilter = (source = "REPORT_HISTORY") => ({
+  inputSource:
+    source === "SYNTHETIC_FORECAST" ? source : { $ne: "SYNTHETIC_FORECAST" },
+});
+function checkSource(config, demo, source) {
+  if (source === "SYNTHETIC_FORECAST") {
+    if (!demo)
+      throw new ApiError(
+        403,
+        "DEMO_DISABLED",
+        "Synthetic history requires the demonstration dataset.",
+      );
+    assertForecastSource(config);
+  } else if (source !== "REPORT_HISTORY")
+    throw new ApiError(422, "VALIDATION_ERROR", "Unknown prediction source.");
+}
 import { auditMetadata } from "./auditContext.js";
 import Area from "../models/Area.js";
 import ShortageEvent from "../models/ShortageEvent.js";
@@ -45,7 +65,15 @@ export async function predictionAreas(demo) {
     map.set(a._id, { id: a._id, name: a.name, center: a.center });
   return [...map.values()];
 }
-async function readHistory(config, demo, now, backtest = false) {
+export async function readHistory(
+  config,
+  demo,
+  now,
+  backtest = false,
+  inputSource = "REPORT_HISTORY",
+) {
+  checkSource(config, demo, inputSource);
+  if (inputSource === "SYNTHETIC_FORECAST") return forecastHistory(config, now);
   const c = predictionConfig(config),
     d = detectionConfig(config);
   const end = observationEnd(now, c);
@@ -105,7 +133,14 @@ function publicAlert(a) {
   };
 }
 export async function reconcileAlert(result, predictionKey, actorId, now) {
-  const key = fingerprint([result.isDemo, result.areaId, result.horizonHours]);
+  const key = fingerprint([
+    result.isDemo,
+    result.areaId,
+    result.horizonHours,
+    ...(result.inputSource === "SYNTHETIC_FORECAST"
+      ? [result.inputSource]
+      : []),
+  ]);
   // Config changes update the same area/horizon alert, preserving its audit trail.
   const { generatedAt, currentSeverity, ...condition } = result;
   void generatedAt;
@@ -121,6 +156,7 @@ export async function reconcileAlert(result, predictionKey, actorId, now) {
     try {
       a = await EarlyWarningAlert.create({
         key,
+        inputSource: result.inputSource || "REPORT_HISTORY",
         areaId: result.areaId,
         areaName: result.areaName,
         horizonHours: result.horizonHours,
@@ -241,7 +277,9 @@ export async function evaluatePredictions(
   actorId,
   areaIds,
   now = new Date(),
+  inputSource = "REPORT_HISTORY",
 ) {
+  checkSource(config, demo, inputSource);
   const deadline = Date.now() + 15000;
   await initializeStorage();
   const catalog = await predictionAreas(demo);
@@ -254,7 +292,7 @@ export async function evaluatePredictions(
       "VALIDATION_ERROR",
       "Select up to twenty known, distinct areas.",
     );
-  const history = await readHistory(config, demo, now);
+  const history = await readHistory(config, demo, now, false, inputSource);
   const events = await ShortageEvent.find({
     isDemo: demo,
     areaId: { $in: areas.map((a) => a.id) },
@@ -285,15 +323,19 @@ export async function evaluatePredictions(
       truncated: history.truncated,
     });
     const event = events.find((e) => e.areaId === area.id);
-    result.currentSeverity = event
-      ? {
-          score: event.severityScore,
-          level: event.severityLevel,
-          shortageConfidence: event.confidenceScore,
-          calculatedAt: event.calculatedAt,
-          note: "Observed shortage context; not an input to the activity-risk calculation.",
-        }
-      : null;
+    result.inputSource = inputSource;
+    if (inputSource === "SYNTHETIC_FORECAST")
+      result.provenance = "SYNTHETIC_FORECAST_OBSERVATIONS";
+    result.currentSeverity =
+      event && inputSource === "REPORT_HISTORY"
+        ? {
+            score: event.severityScore,
+            level: event.severityLevel,
+            shortageConfidence: event.confidenceScore,
+            calculatedAt: event.calculatedAt,
+            note: "Observed shortage context; not an input to the activity-risk calculation.",
+          }
+        : null;
     const { generatedAt, ...stable } = result;
     void generatedAt;
     // Freshness is a state, not a continuously changing fingerprint.
@@ -308,15 +350,23 @@ export async function evaluatePredictions(
         {
           $setOnInsert: {
             key,
+            inputSource,
             areaId: area.id,
             horizonHours: result.horizonHours,
             isDemo: demo,
             generatedAt: now,
             actorId,
             result,
+            createdAt: now,
+            updatedAt: now,
           },
         },
-        { upsert: true, new: true, runValidators: true },
+        {
+          upsert: true,
+          returnDocument: "after",
+          runValidators: true,
+          timestamps: false,
+        },
       ).lean();
     } catch (e) {
       if (e.code !== 11000) throw e;
@@ -332,7 +382,7 @@ export async function evaluatePredictions(
     providerRequested: false,
   };
 }
-function presented(result, config, now) {
+export function presented(result, config, now) {
   const expired =
     +now - +new Date(result.observationWindow.end) >=
       predictionConfig(config).PREDICTION_WINDOW_HOURS * HOUR ||
@@ -351,12 +401,19 @@ function presented(result, config, now) {
     },
   };
 }
-export async function predictionSummary(config, demo, now = new Date()) {
+export async function predictionSummary(
+  config,
+  demo,
+  now = new Date(),
+  inputSource = "REPORT_HISTORY",
+) {
+  checkSource(config, demo, inputSource);
   const areas = await predictionAreas(demo);
   const saved = await Prediction.aggregate([
     {
       $match: {
         isDemo: demo,
+        ...predictionSourceFilter(inputSource),
         areaId: { $in: areas.map((a) => a.id) },
         horizonHours: predictionConfig(config).PREDICTION_WINDOW_HOURS,
       },
@@ -380,6 +437,13 @@ export async function predictionSummary(config, demo, now = new Date()) {
             retrievalStatus: "NOT_EVALUATED",
             reasons: ["NOT_EVALUATED"],
             isDemo: demo,
+            inputSource,
+            provenance:
+              inputSource === "SYNTHETIC_FORECAST"
+                ? "SYNTHETIC_FORECAST_OBSERVATIONS"
+                : demo
+                  ? "SIMULATED_DEMO"
+                  : "RECORDED_CITIZEN_ACTIVITY",
           },
     );
   }
@@ -394,8 +458,20 @@ export async function predictionSummary(config, demo, now = new Date()) {
     isDemo: demo,
   };
 }
-export async function predictionHistory(areaId, demo, page, limit, config) {
-  const rows = await Prediction.find({ areaId, isDemo: demo })
+export async function predictionHistory(
+  areaId,
+  demo,
+  page,
+  limit,
+  config,
+  inputSource = "REPORT_HISTORY",
+) {
+  checkSource(config, demo, inputSource);
+  const rows = await Prediction.find({
+    areaId,
+    isDemo: demo,
+    ...predictionSourceFilter(inputSource),
+  })
     .sort({ generatedAt: -1, _id: -1 })
     .skip((page - 1) * limit)
     .limit(limit + 1)
@@ -410,9 +486,16 @@ export async function predictionHistory(areaId, demo, page, limit, config) {
     hasMore: rows.length > limit,
   };
 }
-export async function alertList(demo, { page, limit, status, areaId }, config) {
+export async function alertList(
+  demo,
+  { page, limit, status, areaId },
+  config,
+  inputSource = "REPORT_HISTORY",
+) {
+  checkSource(config, demo, inputSource);
   const rows = await EarlyWarningAlert.find({
     isDemo: demo,
+    ...predictionSourceFilter(inputSource),
     ...(status ? { status } : {}),
     ...(areaId ? { areaId } : {}),
   })
@@ -431,8 +514,18 @@ export async function alertList(demo, { page, limit, status, areaId }, config) {
     hasMore: rows.length > limit,
   };
 }
-export async function alertDetail(id, demo, config) {
-  const a = await EarlyWarningAlert.findOne({ _id: id, isDemo: demo })
+export async function alertDetail(
+  id,
+  demo,
+  config,
+  inputSource = "REPORT_HISTORY",
+) {
+  checkSource(config, demo, inputSource);
+  const a = await EarlyWarningAlert.findOne({
+    _id: id,
+    isDemo: demo,
+    ...predictionSourceFilter(inputSource),
+  })
     .maxTimeMS(5000)
     .lean();
   if (!a)
@@ -447,6 +540,7 @@ export async function transitionAlert(
   actorId,
   note,
   now = new Date(),
+  inputSource = "REPORT_HISTORY",
 ) {
   const from = action === "acknowledge" ? "ACTIVE" : "ACKNOWLEDGED",
     status = action === "acknowledge" ? "ACKNOWLEDGED" : "RESOLVED";
@@ -454,6 +548,7 @@ export async function transitionAlert(
     {
       _id: id,
       isDemo: demo,
+      ...predictionSourceFilter(inputSource),
       status: from,
       revision,
       "audit.999": { $exists: false },
@@ -490,11 +585,12 @@ export async function backtestPredictions(
   demo,
   areaId,
   now = new Date(),
+  inputSource = "REPORT_HISTORY",
 ) {
   const area = (await predictionAreas(demo)).find((a) => a.id === areaId);
   if (!area)
     throw new ApiError(422, "VALIDATION_ERROR", "Select a known area.");
-  const history = await readHistory(config, demo, now, true);
+  const history = await readHistory(config, demo, now, true, inputSource);
   return backtestActivity(history.reports, {
     areaId,
     areaName: area.name,

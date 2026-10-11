@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { assertForecastSource } from "../demo/forecastFixture.js";
 import { z } from "zod";
 import { requireAdmin } from "../middleware/admin.js";
 import { createSubmissionLimiter } from "../middleware/submissionLimit.js";
@@ -40,8 +41,30 @@ export function createPredictionRouter(config, databaseStatus) {
       );
     return datasetDemo(config, value === "true");
   }
-  const query = (req, extras = {}) =>
-    validate(z.object({ demo: demoQuery, ...extras }).strict(), req.query);
+  const query = (req, extras = {}) => {
+    const q = validate(
+      z
+        .object({
+          demo: demoQuery,
+          source: z
+            .enum(["REPORT_HISTORY", "SYNTHETIC_FORECAST"])
+            .default("REPORT_HISTORY"),
+          ...extras,
+        })
+        .strict(),
+      req.query,
+    );
+    if (q.source === "SYNTHETIC_FORECAST") {
+      if (!dataset(q.demo))
+        throw new ApiError(
+          403,
+          "DEMO_DISABLED",
+          "Synthetic history requires demonstration mode.",
+        );
+      assertForecastSource(config);
+    }
+    return q;
+  };
   const bounded = async (fn) => {
     if (busy)
       throw new ApiError(
@@ -60,14 +83,19 @@ export function createPredictionRouter(config, databaseStatus) {
     const q = query(req);
     res.json({
       success: true,
-      data: await predictionSummary(config, dataset(q.demo)),
+      data: await predictionSummary(
+        config,
+        dataset(q.demo),
+        new Date(),
+        q.source,
+      ),
     });
   });
   router.get("/areas/:areaId", async (req, res) => {
     const q = query(req),
       areaId = validate(area, req.params.areaId);
     const result = (
-      await predictionSummary(config, dataset(q.demo))
+      await predictionSummary(config, dataset(q.demo), new Date(), q.source)
     ).results.find((r) => r.areaId === areaId);
     if (!result)
       throw new ApiError(
@@ -89,7 +117,14 @@ export function createPredictionRouter(config, databaseStatus) {
       );
     res.json({
       success: true,
-      data: await predictionHistory(areaId, demo, q.page, q.limit, config),
+      data: await predictionHistory(
+        areaId,
+        demo,
+        q.page,
+        q.limit,
+        config,
+        q.source,
+      ),
     });
   });
   router.post("/evaluate", limiter, async (req, res) => {
@@ -125,6 +160,8 @@ export function createPredictionRouter(config, databaseStatus) {
           dataset(q.demo),
           req.admin.id,
           body.areaIds,
+          new Date(),
+          q.source,
         ),
       ),
     });
@@ -135,7 +172,13 @@ export function createPredictionRouter(config, databaseStatus) {
     res.json({
       success: true,
       data: await bounded(() =>
-        backtestPredictions(config, dataset(q.demo), body.areaId),
+        backtestPredictions(
+          config,
+          dataset(q.demo),
+          body.areaId,
+          new Date(),
+          q.source,
+        ),
       ),
     });
   });
@@ -147,7 +190,7 @@ export function createPredictionRouter(config, databaseStatus) {
     });
     res.json({
       success: true,
-      data: await alertList(dataset(q.demo), q, config),
+      data: await alertList(dataset(q.demo), q, config, q.source),
     });
   });
   router.get("/alerts/:id", async (req, res) => {
@@ -158,6 +201,7 @@ export function createPredictionRouter(config, databaseStatus) {
         validate(reportIdSchema, req.params.id),
         dataset(q.demo),
         config,
+        q.source,
       ),
     });
   });
@@ -188,6 +232,8 @@ export function createPredictionRouter(config, databaseStatus) {
           body.revision,
           req.admin.id,
           body.note,
+          new Date(),
+          q.source,
         ),
       });
     });

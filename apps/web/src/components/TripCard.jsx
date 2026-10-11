@@ -236,6 +236,7 @@ export default function TripCard({ delivery, admin = false, onChange }) {
           )}
           {d.status === "ARRIVED" && !d.otpVerified && (
             <>
+              <h4>Delivery verification</h4>
               {!d.isDemo && (
                 <p>
                   The designated citizen recipient can open their report status

@@ -2,16 +2,18 @@
 
 An intelligence and decision layer for emergency water management, by **AquaSentinels** for Environmental Hacks — Heat & Water Track.
 
-**Phases 1–11, including Phase 6.5, are implemented locally; complete live Gemini execution remains unverified.** Phase 8 adds Gemini-independent numerical report-activity forecasts and audited early-warning alerts; see [formulas, APIs, data limits and verification](docs/phase8.md). Phase 7 adds persisted operator trips, deterministic route estimates, protected OTP verification, actual delivered litres, completion recovery, municipal history and private citizen response updates. See [Phase 7 behavior, demo, security and verification](docs/phase7.md), [Phase 6.5 accounts](docs/phase65.md), [Phase 6 operations](docs/phase6.md), [Phase 5 agents](docs/phase5.md), [Phase 4](docs/phase4.md) and [Phase 3 calculations](docs/phase3.md).
+**Phases 1–12, including Phase 6.5, are implemented locally; complete live Gemini execution remains unverified.** Phase 8 adds Gemini-independent numerical report-activity forecasts and audited early-warning alerts; see [formulas, APIs, data limits and verification](docs/phase8.md). Phase 7 adds persisted operator trips, deterministic route estimates, protected OTP verification, actual delivered litres, completion recovery, municipal history and private citizen response updates. See [Phase 7 behavior, demo, security and verification](docs/phase7.md), [Phase 6.5 accounts](docs/phase65.md), [Phase 6 operations](docs/phase6.md), [Phase 5 agents](docs/phase5.md), [Phase 4](docs/phase4.md) and [Phase 3 calculations](docs/phase3.md).
 
-Phase 8 verification: 171 unit/API tests, 92 MongoDB tests and 104 desktop/mobile
+The phase-specific counts below are historical snapshots. Current remediation results and unverified infrastructure/provider gates are recorded in the [remediation report](docs/pre-simulation-remediation-report.md).
+
+Historical Phase 8 verification: 171 unit/API tests, 92 MongoDB tests and 104 desktop/mobile
 browser tests passed, plus both development hostnames on isolated port 5175; lint/build passed. These tests use mocked providers or explicit demo mode.
 See [requirement coverage, remaining blocker and manual citizen handoff](docs/through-phase7-audit.md).
 
 Phase 9 prepares future deployment without deploying: production configuration guards,
 liveness/readiness, safe runtime logs/shutdown, containers and locked clean builds.
 Verification: 178 unit/API, 92 MongoDB, 104 desktop/mobile and two origin tests passed;
-lint/build/secret checks and both npm audits passed. Docker engine execution was pending at that phase; Phase 11 now verifies local images and container restart behavior. External
+lint/build/secret checks and both npm audits passed. Docker engine execution was pending at that phase; Phase 11 recorded local image and container restart verification. The engine is unavailable during the current remediation, so current container runtime remains unverified. External
 production checks remain pending. See the [readiness report](docs/phase9-deployment-readiness.md).
 
 Phase 10 extends municipal analytics with UTC/area filters, persisted activity and
@@ -87,6 +89,8 @@ Provision an administrator with `npm run admin:create`. Development generates a 
 
 ## Citizen report workflow
 
+Delivery verification is performed by the **assigned OPERATOR** in **Your assignments**, after **Start trip → Mark arrived**. The ADMIN **Trips and deliveries** screen explains the handoff and displays saved verification/history; it does not grant operator actions. In the fictional demo select **Generate demo OTP**; ordinary delivery uses the designated citizen's private report code or a configured recipient adapter. See the [current master acceptance report](docs/aquashield-master-acceptance-report.md) for current checks and unresolved gates.
+
 1. Register at `/register` with name, email and a password of at least 12 characters, then sign in at `/citizen/login`. Open `/` and choose **Report water shortage**. The backend assigns CITIZEN; public registration cannot create administrators or operators.
 2. Capture device location, enter coordinates, or select the approximate Panchavati locality center. Enter the actual area/locality separately if necessary. Location permission denial has a manual fallback; no map or geocoding service is required.
 3. Choose the problem, household water level, and household size (1–100). Supply time and approximate duration may remain unknown; unknown values are stored as `null`, not made up.
@@ -101,7 +105,7 @@ Officers can review reporter names, email/contact verification state and support
 
 The client sends a unique `submissionId`. Retrying an unchanged submission returns the existing report instead of creating another, including concurrent retries. POST submissions are limited to 30 per connection/IP per 15 minutes with an in-process limiter; production deployments will need appropriate proxy configuration and a shared limiter.
 
-Household size is citizen-provided. Phase 3 derives approximate population, shortage confidence and severity in separate shortage events. Citizen reports remain pending field verification; no verification or edit endpoint is enabled. Public aggregate APIs never expose private report IDs, anonymous keys, descriptions, household coordinates or photos. Zone centers are averages of report coordinates, including explicitly approximate locality centers.
+Household size is citizen-provided. Phase 3 derives approximate population, shortage confidence and severity in separate shortage events. Citizen reports start PENDING. Authorized administrators can verify or reject submitted evidence with a required review note; this is not a physical field inspection, identity check or resolution. Ordinary report creation cannot set verification status. Public aggregate APIs never expose private report IDs, anonymous keys, descriptions, household coordinates or photos. Zone centers are averages of report coordinates, including explicitly approximate locality centers.
 
 ## Persistent faculty demonstration data
 
@@ -245,8 +249,11 @@ Crisis Detection explains evidence/verification; Resource Allocation explains ba
 | 5     | Implemented: four agent roles, protected APIs, dashboard panel, validated real-provider path and key-free demo mode. Complete live Gemini assessment remains unverified after provider unavailability. |
 | 6     | Implemented: deterministic fair allocation, fleet management, approval/rejection, atomic assignment and operator visibility. |
 | 7     | Implemented locally: route estimates, owned trips, private citizen-portal OTP handoff, demo OTP, recorded delivery and operational analytics. |
-| 8     | Planned: full hardening and actual AWS deployment after compatibility/account checks.                                                                                      |
-| 9     | Planned: final demo, documentation and verified deployment evidence.                                                                                                       |
+| 8 | Implemented: Gemini-independent report-activity predictions and audited numerical alerts; inadequate history remains insufficient. |
+| 9 | Implemented: deployment readiness preparation; actual AWS hosting remains unverified. |
+| 10 | Implemented: bounded municipal analytics and searchable audit history. |
+| 11 | Implemented: offline testing and reliability checks. |
+| 12 | Implemented: presentation polish and repeatable faculty guide. |
 
 Later phases require explicit authorization. Bedrock remains optional. The complete Phase 5 file inventory, API contract, limitations and test results are in [docs/phase5.md](docs/phase5.md).
 
@@ -280,3 +287,9 @@ report/staff responses. Operator-triggered messaging still fails closed without
 an external handoff adapter. Normal tests use isolated databases, mocked routing,
 citizen portal handoff and controlled recipient adapters, not paid
 services, live Gemini, production SMS or live GPS.
+
+## Pre-simulation acceptance remediation
+
+Administrator submitted-evidence review, authenticated My Alerts with explicit service-area preference and per-citizen read state, safe municipal advisory publication/withdrawal, audited present-time simulated fleet observations, and a separate opt-in synthetic forecast history are implemented. See [current remediation contracts and results](docs/pre-simulation-remediation-report.md). The [original acceptance audit](docs/pre-simulation-acceptance-report.md) remains historical evidence.
+
+Use `npm run demo:readiness` for a guarded read-only demonstration check. `npm run seed:forecast-demo` requires explicit non-production demonstration, fixture and seed flags and a matching connected database. It adds only synthetic forecast observations, never citizen reports or accounts. In `/admin/predictions`, explicitly choose **Prepared synthetic forecast history**, then evaluate. Ordinary history, operational risk KPIs and allocation remain separate. See [safe preparation steps](docs/demo-guide.md#pre-simulation-remediation-preparation). No virtual clock, background generation, live inference or cloud deployment was added.

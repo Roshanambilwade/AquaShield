@@ -24,6 +24,7 @@ export default function AdminLayout() {
               Trips and deliveries
             </NavLink>
             <NavLink to={`/admin/reports${suffix}`}>Citizen reports</NavLink>
+            <NavLink to={`/admin/advisories${suffix}`}>Citizen advisories</NavLink>
           </nav>
         </div>
         <Outlet />

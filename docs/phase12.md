@@ -1,3 +1,5 @@
+**Historical phase record:** This document records its original phase scope and dated verification. Later authorized pre-simulation changes are documented in [the remediation report](pre-simulation-remediation-report.md) and [current preparation guide](demo-guide.md#pre-simulation-remediation-preparation). Original formulas and Phase 10 metric definitions remain unchanged.
+
 # Phase 12 — hackathon presentation polish
 
 This phase refines the existing React interface and faculty guide. Authentication, authorization, report ownership, deterministic calculations, fairness/eligibility, OTP verification, accounting, AI architecture and database schemas are unchanged. No dependencies were added.

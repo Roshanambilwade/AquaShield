@@ -32,6 +32,15 @@ const audit = new mongoose.Schema(
 const schema = new mongoose.Schema(
   {
     key: { type: String, required: true },
+    inputSource: {
+      type: String,
+      enum: ["REPORT_HISTORY", "SYNTHETIC_FORECAST"],
+      // Do not assign an immutable default while hydrating legacy records.
+      default: function () {
+        return this.isNew ? "REPORT_HISTORY" : undefined;
+      },
+      immutable: true,
+    },
     areaId: { type: String, required: true },
     areaName: { type: String, required: true },
     horizonHours: { type: Number, required: true },

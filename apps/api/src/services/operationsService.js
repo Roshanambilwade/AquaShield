@@ -119,7 +119,7 @@ export async function saveTanker(id, input, actor, demo, revision) {
       isDemo: demo,
       revision,
       activeAllocationId: null,
-      status: { $ne: "ASSIGNED" },
+      status: { $in: ["AVAILABLE", "UNAVAILABLE"] },
     },
     {
       $set: input,

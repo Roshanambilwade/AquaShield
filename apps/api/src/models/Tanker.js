@@ -22,6 +22,27 @@ const schema = new mongoose.Schema(
       default: null,
     },
     observedAt: { type: Date, default: null },
+    observations: {
+      type: [
+        new mongoose.Schema(
+          {
+            at: Date,
+            actorId: mongoose.Schema.Types.ObjectId,
+            provenance: String,
+            assessment: String,
+            previousObservedAt: Date,
+            previousAvailableLitres: Number,
+            previousStatus: String,
+            previousLocation: { lat: Number, lng: Number },
+            availableLitres: Number,
+            status: String,
+            location: { lat: Number, lng: Number },
+          },
+          { _id: false, strict: "throw" },
+        ),
+      ],
+      default: undefined,
+    },
     operatorId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

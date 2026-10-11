@@ -90,6 +90,8 @@ export async function adminRequest(
       "ANALYTICS_CAPACITY",
       "ANALYTICS_TIMEOUT",
       "AUDIT_NOT_FOUND",
+      "ADVISORY_NOT_FOUND",
+      "UNSAFE_DEMO_TARGET",
     ];
     throw new Error(
       known.includes(payload.code)

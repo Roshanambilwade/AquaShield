@@ -6,6 +6,7 @@ import { parseAnalyticsQuery } from "../validation/analytics.js";
 import { createSubmissionLimiter } from "../middleware/submissionLimit.js";
 import { requireAdmin } from "../middleware/admin.js";
 import { ApiError } from "../middleware/errors.js";
+import { reviewReport } from "../services/reportReviewService.js";
 import {
   validate,
   reportIdSchema,
@@ -70,6 +71,31 @@ export function createDashboardRouter(config, databaseStatus) {
         req.demo,
       ),
     }),
+  );
+  router.post(
+    "/reports/:id/review",
+    createSubmissionLimiter({ max: 30 }),
+    async (req, res) => {
+      const input = validate(
+        z
+          .object({
+            status: z.enum(["VERIFIED", "REJECTED"]),
+            note: z.string().trim().min(5).max(500),
+          })
+          .strict(),
+        req.body,
+      );
+      res.json({
+        success: true,
+        data: await reviewReport(
+          validate(reportIdSchema, req.params.id),
+          input,
+          req.admin,
+          config,
+          req.demo,
+        ),
+      });
+    },
   );
   for (const [path, service] of [
     ["shortages", listShortages],

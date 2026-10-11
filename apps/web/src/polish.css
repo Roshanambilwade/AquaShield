@@ -138,3 +138,31 @@ summary {
     scroll-behavior: auto !important;
   }
 }
+.report-form {
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #d5e1d7;
+  border-radius: 12px;
+}
+.report-form > label,
+[aria-label="Administrator evidence review"] > label,
+.operation-card details > label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0;
+  min-width: 0;
+}
+.report-form input,
+.report-form select,
+.report-form textarea,
+[aria-label="Administrator evidence review"] textarea,
+.operation-card details textarea {
+  width: 100%;
+  max-width: 100%;
+  padding: 10px;
+  border: 1px solid #a6bfb7;
+  border-radius: 6px;
+}

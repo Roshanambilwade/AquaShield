@@ -10,6 +10,27 @@ export default function DeliveriesPage() {
     <div className="page operations-page">
       <p className="eyebrow">Municipal operations</p>
       <h1 className="page-title">Trips and deliveries</h1>
+      <section
+        className="admin-panel"
+        aria-labelledby="delivery-verification-heading"
+      >
+        <h2 id="delivery-verification-heading">Delivery verification</h2>
+        <p>
+          ADMIN inspects trips and recorded verification here. Only the assigned
+          OPERATOR can verify a delivery from Your assignments. Sign out and
+          sign in with the operator account linked to the assigned tanker.
+        </p>
+        <p>
+          Start trip → Mark arrived → Verify delivery OTP → Record actual litres
+          and Complete delivery. Verification controls appear after ARRIVED;
+          completed trips show their saved verification and audit history.
+        </p>
+        <p>
+          {demo
+            ? "In the fictional demonstration, the operator selects Generate demo OTP after arrival. This is simulated evidence, not independent delivery proof."
+            : "After arrival, the designated citizen opens their own report and selects Get recipient delivery code. The assigned operator enters that code; external messaging requires a configured recipient adapter."}
+        </p>
+      </section>
       {demo && (
         <p className="demo-note">
           Fictional demo operations. OTP acceptance is simulated evidence, not

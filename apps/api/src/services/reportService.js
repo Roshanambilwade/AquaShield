@@ -25,6 +25,8 @@ export function serializeReport(report, includePhoto = false) {
     householdSize: report.householdSize,
     description: report.description,
     verificationStatus: report.verificationStatus,
+    verificationSource: report.verificationSource,
+    reviewedAt: report.reviewedAt,
     isDemo: report.isDemo,
     sourceType: report.sourceType,
     hasPhoto: report.hasPhoto,

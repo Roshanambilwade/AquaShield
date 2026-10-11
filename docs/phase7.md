@@ -1,3 +1,5 @@
+**Historical phase record:** This document records its original phase scope and dated verification. Later authorized pre-simulation changes are documented in [the remediation report](pre-simulation-remediation-report.md) and [current preparation guide](demo-guide.md#pre-simulation-remediation-preparation). Original formulas and Phase 10 metric definitions remain unchanged.
+
 # Phase 7 — routing, trips and delivery verification
 
 Phase 7 extends the existing JavaScript React/Vite, Express and MongoDB application.

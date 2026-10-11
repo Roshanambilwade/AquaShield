@@ -4,6 +4,7 @@ import { validate } from "./report.js";
 
 export const targetTypes = [
   "REPORT",
+  "CITIZEN_ADVISORY",
   "ALLOCATION",
   "TANKER",
   "DELIVERY",
@@ -55,7 +56,7 @@ export const auditQuery = z
 export const auditId = z
   .string()
   .regex(
-    /^(?:REPORT|ALLOCATION|TANKER|DELIVERY|ALLOCATION_EVIDENCE|EARLY_WARNING_ALERT):[a-f0-9]{24}:(?:[a-f0-9]{24}|r\d{1,4}|i\d{1,6})$/i,
+    /^(?:REPORT|CITIZEN_ADVISORY|ALLOCATION|TANKER|DELIVERY|ALLOCATION_EVIDENCE|EARLY_WARNING_ALERT):[a-f0-9]{24}:(?:[a-f0-9]{24}|r\d{1,4}|i\d{1,6})$/i,
   )
   .transform((v) => {
     const [type, target, key] = v.split(":");

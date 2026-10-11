@@ -35,6 +35,17 @@ export default function ReportDetails({ report }) {
           from field verification.
         </p>
       </div>
+      {report.verificationSource?.includes("ADMIN") && (
+        <p className="demo-note">
+          {report.isDemo
+            ? "Simulated submitted-evidence review"
+            : "Administrator submitted-evidence review"}
+          {report.reviewedAt &&
+            ` · ${new Date(report.reviewedAt).toLocaleString()}`}
+          . No physical field inspection, identity verification or shortage
+          resolution is recorded by this review.
+        </p>
+      )}
       {report.detectionStatus === "DEFERRED" && (
         <p className="missing-evidence">
           Your report is saved. Shortage analysis is temporarily unavailable;
@@ -154,10 +165,14 @@ export default function ReportDetails({ report }) {
         <li>
           <strong>
             {report.verificationStatus === "VERIFIED"
-              ? report.isDemo
-                ? "Simulated field verification"
-                : "Report verified"
-              : "Verification pending"}
+              ? report.verificationSource?.includes("ADMIN")
+                ? "Submitted evidence reviewed"
+                : report.isDemo
+                  ? "Simulated field verification"
+                  : "Report verified"
+              : report.verificationStatus === "REJECTED"
+                ? "Report rejected"
+                : "Verification pending"}
           </strong>
           <span>
             {report.responseStatus

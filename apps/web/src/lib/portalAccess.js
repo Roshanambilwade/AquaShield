@@ -28,7 +28,7 @@ export function allowedDestination(role, candidate) {
   if (["/", "/status"].includes(path) || /^\/alerts(?:\/|$)/.test(path))
     return true;
   const routes = {
-    CITIZEN: /^\/(?:report|my-reports)(?:\/|$)/,
+    CITIZEN: /^\/(?:report|my-reports|my-alerts)(?:\/|$)/,
     ADMIN: /^\/admin(?:\/|$)/,
     OPERATOR: /^\/operator(?:\/|$)/,
   };

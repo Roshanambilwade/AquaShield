@@ -2,6 +2,16 @@ import mongoose from "mongoose";
 const schema = new mongoose.Schema(
   {
     key: { type: String, required: true },
+    inputSource: {
+      type: String,
+      enum: ["REPORT_HISTORY", "SYNTHETIC_FORECAST"],
+      // Legacy documents have no source field. Keep them unchanged on hydration;
+      // the service's ordinary-history filter explicitly includes these records.
+      default: function () {
+        return this.isNew ? "REPORT_HISTORY" : undefined;
+      },
+      immutable: true,
+    },
     areaId: { type: String, required: true },
     horizonHours: { type: Number, required: true },
     isDemo: { type: Boolean, required: true, immutable: true },

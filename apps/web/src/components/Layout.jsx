@@ -15,6 +15,8 @@ export default function Layout() {
       "/": "Overview",
       "/report": "Report water shortage",
       "/my-reports": "My reports",
+      "/my-alerts": "My alerts",
+      "/admin/advisories": "Citizen advisories",
       "/login": new URLSearchParams(search)
         .get("returnTo")
         ?.startsWith("/operator")
@@ -77,6 +79,7 @@ export default function Layout() {
                 Report water shortage
               </NavLink>
               <NavLink to="/my-reports">My reports</NavLink>
+              {auth.user?.role === "CITIZEN" && <NavLink to="/my-alerts">My Alerts</NavLink>}
             </>
           )}
           {!auth.loading && (!auth.user || auth.user.role === "ADMIN") && (

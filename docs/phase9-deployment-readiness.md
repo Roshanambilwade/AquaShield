@@ -30,7 +30,7 @@ Never replace the existing private root `.env`. `.env.example` is a development 
 | AI timeout/retry/circuit/concurrency settings | Existing bounded settings in `.env.example` and [AI reliability](ai-reliability.md); no changes to agent generation flow. |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Used only by explicitly invoked administrator provisioning. No default account/password; production provisioning needs both. Do not inject provisioning passwords into the frontend or retain them unnecessarily in normal API runtime. |
 | `VITE_API_BASE_URL` | **Public build-time value:** `/api` with a real same-origin reverse proxy, or `https://<backend-host>/api` for separate hosting. No credentials, query, fragment, HTTP backend or protocol-relative URL. Changing runtime environment cannot change an already built bundle. |
-| `API_PROXY_TARGET` | Development Vite proxy only; it does not configure Amplify, static hosting or `vite preview`. |
+| `API_PROXY_TARGET` | Local Vite development and preview proxy; it does not configure Amplify or static production hosting. Exact preview browser origin still needs backend CORS permission. |
 | Deterministic detection/fairness/routing/prediction/privacy settings | Existing validated settings/defaults in `.env.example`; review assumptions and thresholds for the real jurisdiction. Optional routing remains unnecessary for supported estimates. |
 
 Production frontend builds permit only `VITE_API_BASE_URL` as application public configuration. Vite's internally generated `VITE_USER_NODE_ENV` is allowed only for its three standard mode values. No key, password or arbitrary `VITE_*` variable is accepted. The main backend/frontend remain JavaScript.

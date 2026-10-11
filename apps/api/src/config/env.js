@@ -96,6 +96,7 @@ const schema = z
       "DEMONSTRATION_MODE",
       "DEMO_SEED_ENABLED",
       "DEMO_AI_MODE",
+      "FORECAST_DEMO_ENABLED",
       "MONGODB_TEST_DB_NAME",
     ]) {
       if (v[field]) reject(field);

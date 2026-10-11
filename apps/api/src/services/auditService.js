@@ -10,6 +10,7 @@ import {
 
 export const auditSources = [
   ["REPORT", "reports"],
+  ["CITIZEN_ADVISORY", "citizenadvisories"],
   ["ALLOCATION", "allocations"],
   ["TANKER", "tankers"],
   ["DELIVERY", "deliveries"],
@@ -154,6 +155,7 @@ const statuses = [
   "ACTIVE",
   "ACKNOWLEDGED",
   "RESOLVED",
+  "WITHDRAWN",
 ];
 function safeState(value) {
   return {

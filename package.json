@@ -24,11 +24,14 @@
     "test:e2e": "playwright test",
     "test:dev-origins": "playwright test --config playwright.dev.config.js",
     "seed:demo": "npm run seed:demo -w @aquashield/api",
+    "seed:forecast-demo": "node apps/api/src/scripts/seedForecastDemo.js",
+    "demo:readiness": "node apps/api/src/scripts/demoReadiness.js",
     "admin:create": "npm run admin:create -w @aquashield/api",
     "config:check": "node apps/api/src/scripts/checkConfig.js",
     "security:check": "node scripts/checkSecrets.js",
     "verify": "node scripts/verify.js",
-    "test:containers": "node scripts/verifyContainers.js"
+    "test:containers": "node scripts/verifyContainers.js",
+    "test:acceptance-journey": "node tests/helpers/acceptanceJourney.js"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -317,6 +317,9 @@ async function reporterSources(records) {
     const owner = byId.get(String(report.ownerId));
     return {
       ...serializeReport(report, true),
+      reviewNote: report.reviewNote,
+      reviewedBy: report.reviewedBy,
+      reviewHistory: (report.audit || []).filter(a => ["REPORT_VERIFIED", "REPORT_REJECTED"].includes(a.action)),
       reporter: owner
         ? {
             name: owner.name,

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { datasetDemo, demonstration } from "../config/demonstration.js";
 import { z } from "zod";
+import { observeDemoTanker } from "../services/tankerObservationService.js";
 import { requireAdmin } from "../middleware/admin.js";
 import { createSubmissionLimiter } from "../middleware/submissionLimit.js";
 import { ApiError } from "../middleware/errors.js";
@@ -67,6 +68,28 @@ export function createOperationsRouter(config, databaseStatus, aiDependencies) {
   router.get("/tankers", async (req, res) =>
     ok(res, await listTankers(config, req.demo)),
   );
+  router.post("/tankers/:id/observation", async (req, res) => {
+    const input = validate(
+      z
+        .object({
+          revision: z.number().int().nonnegative(),
+          availableLitres: z.number().int().min(0).max(100000),
+          status: z.enum(["AVAILABLE", "UNAVAILABLE"]),
+          currentLocation: z
+            .object({
+              lat: z.number().min(-90).max(90),
+              lng: z.number().min(-180).max(180),
+            })
+            .strict()
+            .nullable(),
+          assessment: z.string().trim().min(10).max(500),
+          confirmSimulated: z.literal(true),
+        })
+        .strict(),
+      req.body,
+    );
+    ok(res, await observeDemoTanker(id(req), input, req.admin, config));
+  });
   router.get("/tankers/:id", async (req, res) => {
     const fleet = await listTankers(config, req.demo);
     const tanker = fleet.tankers.find((t) => t.id === id(req));

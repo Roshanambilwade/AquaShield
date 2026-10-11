@@ -1,3 +1,5 @@
+**Historical phase record:** This document records its original phase scope and dated verification. Later authorized pre-simulation changes are documented in [the remediation report](pre-simulation-remediation-report.md) and [current preparation guide](demo-guide.md#pre-simulation-remediation-preparation). Original formulas and Phase 10 metric definitions remain unchanged.
+
 # Phase 10 — municipal analytics and auditability
 
 This extends the existing JavaScript application. Existing dashboard components, sessions/role checks, immutable report ownership/verification, operational eligibility/fairness, allocation approval and assignment, conditional trip/OTP/completion recovery, and Phase 8 numerical services are reused. There is no new provider, prediction formula, simulation, paid dependency, live inference, cloud deployment or automatic Git operation. Normal operational and faculty demo records were not reset, migrated or reseeded.

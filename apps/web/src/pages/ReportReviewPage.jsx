@@ -58,6 +58,11 @@ export default function ReportReviewPage() {
           <section className="report-detail-card">
             <Reporter reporter={current.data.reporter} />
             <ReportDetails report={current.data} />
+            <ReviewControls
+              report={current.data}
+              demo={demo}
+              refresh={() => setAttempt((n) => n + 1)}
+            />
           </section>
         ) : (
           <>
@@ -131,6 +136,80 @@ function Reporter({ reporter }) {
             : "Citizen account"}
       </p>
       <p>{reporter.note}</p>
+    </section>
+  );
+}
+function ReviewControls({ report, demo, refresh }) {
+  const [note, setNote] = useState(""),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState("");
+  async function review(status) {
+    setBusy(true);
+    setError("");
+    try {
+      const result = await adminRequest(
+        `/dashboard/reports/${report.id}/review?demo=${demo}`,
+        { method: "POST", body: { status, note } },
+      );
+      if (result.assessmentRefresh === "PENDING_RETRY")
+        setError(
+          "Review saved; derived assessment refresh is pending. Refresh the shortage view to retry detection.",
+        );
+      refresh();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <section aria-label="Administrator evidence review">
+      <h2>Evidence review</h2>
+      <p>
+        Current review state: {report.verificationStatus}. This reviews
+        submitted evidence, not a physical field inspection, identity check,
+        household receipt or resolution of the shortage.
+      </p>
+      {demo && (
+        <p className="demo-note">
+          Simulated administrator review of demonstration evidence.
+        </p>
+      )}
+      {report.verificationStatus === "PENDING" && (
+        <>
+          <label>
+            Review note (required)
+            <textarea
+              value={note}
+              minLength={5}
+              maxLength={500}
+              onChange={(e) => setNote(e.target.value)}
+            />
+          </label>
+          <div className="prediction-actions">
+            <button
+              disabled={busy || note.trim().length < 5}
+              onClick={() => review("VERIFIED")}
+            >
+              Verify submitted evidence
+            </button>
+            <button
+              disabled={busy || note.trim().length < 5}
+              onClick={() => review("REJECTED")}
+            >
+              Reject report
+            </button>
+          </div>
+        </>
+      )}
+      {busy && <p role="status">Saving review…</p>}
+      {error && <p role="alert">{error}</p>}
+      {report.reviewNote && <p>Recorded review note: {report.reviewNote}</p>}
+      {report.reviewHistory?.map((a) => (
+        <p key={a._id}>
+          {a.action} · {new Date(a.at).toLocaleString()} · {a.reason}
+        </p>
+      ))}
     </section>
   );
 }

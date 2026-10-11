@@ -501,6 +501,7 @@ export async function municipalAnalytics(
       {
         $match: {
           isDemo: demo,
+          inputSource: { $ne: "SYNTHETIC_FORECAST" },
           ...area,
           $or: [{ createdAt: date }, { "audit.at": date }],
         },

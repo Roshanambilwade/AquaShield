@@ -1,3 +1,5 @@
+**Historical phase record:** This document records its original phase scope and dated verification. Later authorized pre-simulation changes are documented in [the remediation report](pre-simulation-remediation-report.md) and [current preparation guide](demo-guide.md#pre-simulation-remediation-preparation). Original formulas and Phase 10 metric definitions remain unchanged.
+
 # Phase 8 — deterministic report-activity early warning
 
 Phase 8 adds JavaScript backend calculations, persistent predictions/alerts, protected municipal APIs and `/admin/predictions`. It preserves the Phase 1–7 engines and operational workflows. No Gemini or Strands import exists in the numerical engine or persistence service. The existing Early Warning role may explain completed, current results on explicit request; missing keys, outages, cancellation and circuit state cannot block numerical APIs. No live inference was requested during implementation.

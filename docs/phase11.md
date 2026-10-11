@@ -1,3 +1,5 @@
+**Historical phase record:** This document records its original phase scope and dated verification. Later authorized pre-simulation changes are documented in [the remediation report](pre-simulation-remediation-report.md) and [current preparation guide](demo-guide.md#pre-simulation-remediation-preparation). Original formulas and Phase 10 metric definitions remain unchanged.
+
 # Phase 11 — comprehensive testing and reliability
 
 This is a regression and test-infrastructure phase. React/Express JavaScript, Gemini + Strands, the twelve specification overrides, authorization, numerical engines and operational application code are unchanged. No live inference, AWS deployment, dynamic simulation, ordinary/demo data reset or Git commit/push was performed. Passing these tests does not establish production readiness, independent household receipt or forecast accuracy.
