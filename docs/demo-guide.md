@@ -1,5 +1,7 @@
 # Persistent faculty demonstration — Phase 12 presentation guide
 
+For the separate Phase 13 dynamic simulation, use [the isolated simulation guide](dynamic-simulation.md). Its database and credentials differ from this preserved faculty dataset. Run faculty presentations in a fresh shell with `SIMULATION_ENABLED=false` and `SIMULATION_PREPARE_ENABLED=false`; never prepare dynamic simulation against the faculty database.
+
 The faculty dataset is stored in MongoDB, not rendered from frontend placeholders. It reuses the existing severity, confidence, population estimation, fairness, eligibility, authentication, trip and delivery services. All households, field checks, weather, capacities and deliveries in this scenario are simulated. Population is approximate; unknown data remains unknown. The interface displays **AquaShield — Demonstration Environment**. Phase 8 adds deterministic report-activity forecasting; AWS deployment and live-provider verification are separate activities.
 
 ## Repeatable startup (already provisioned dataset)

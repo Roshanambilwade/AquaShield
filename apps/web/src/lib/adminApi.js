@@ -51,6 +51,12 @@ export async function adminRequest(
       window.dispatchEvent(new Event("admin-session-ended"));
     }
     const known = [
+      "SIMULATION_DISABLED",
+      "UNSAFE_SIMULATION_TARGET",
+      "SIMULATION_NOT_PREPARED",
+      "SIMULATION_CONFLICT",
+      "SIMULATION_LIMIT",
+      "SIMULATION_TICK_FAILED",
       "INVALID_CREDENTIALS",
       "REGISTRATION_UNAVAILABLE",
       "CITIZEN_REQUIRED",

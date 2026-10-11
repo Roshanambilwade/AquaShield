@@ -1,3 +1,4 @@
+import { addSimulationProvenance } from "./simulationProvenance.js";
 import mongoose from "mongoose";
 
 const schema = new mongoose.Schema(
@@ -47,6 +48,7 @@ const schema = new mongoose.Schema(
 schema.index({ eventKey: 1 }, { unique: true });
 schema.index({ isDemo: 1, status: 1, severityScore: -1 });
 schema.index({ reportIds: 1 });
+addSimulationProvenance(schema);
 const ShortageEvent = mongoose.model("ShortageEvent", schema);
 const initialized = new WeakMap();
 export function initializeShortageStorage() {

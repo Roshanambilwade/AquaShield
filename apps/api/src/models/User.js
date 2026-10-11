@@ -1,3 +1,4 @@
+import { addSimulationProvenance } from "./simulationProvenance.js";
 import mongoose from "mongoose";
 const schema = new mongoose.Schema(
   {
@@ -18,4 +19,5 @@ const schema = new mongoose.Schema(
   { timestamps: true, strict: "throw", autoCreate: false, autoIndex: false },
 );
 schema.index({ email: 1 }, { unique: true });
+addSimulationProvenance(schema);
 export default mongoose.model("User", schema);

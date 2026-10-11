@@ -1,3 +1,4 @@
+import { addSimulationProvenance } from "./simulationProvenance.js";
 import mongoose from "mongoose";
 
 const coordinates = {
@@ -25,4 +26,5 @@ const schema = new mongoose.Schema(
   },
   { timestamps: true, strict: "throw", autoCreate: false, autoIndex: false },
 );
+addSimulationProvenance(schema);
 export default mongoose.model("Area", schema);

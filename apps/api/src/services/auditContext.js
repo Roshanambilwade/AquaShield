@@ -1,5 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { randomUUID } from "node:crypto";
+import { simulationProvenance } from "./simulationContext.js";
 
 export const auditContext = new AsyncLocalStorage();
 export function correlationMiddleware(_req, res, next) {
@@ -13,6 +14,7 @@ export function auditMetadata(actor = {}) {
     actor.role ||
     (String(context?.actorId) === String(actor.id) ? context?.role : null);
   return {
+    ...(simulationProvenance() ? { simulation: simulationProvenance() } : {}),
     ...(context?.correlationId ? { correlationId: context.correlationId } : {}),
     ...(["ADMIN", "OPERATOR", "CITIZEN"].includes(role)
       ? { actorRole: role }
@@ -20,6 +22,7 @@ export function auditMetadata(actor = {}) {
   };
 }
 export const FAILED_ACTIONS = [
+  "SIMULATION_TICK_FAILED",
   "OPERATION_CONFLICT",
   "DELIVERY_OTP_EXPIRED",
   "DELIVERY_OTP_REJECTED",
@@ -31,6 +34,13 @@ export const PENDING_ACTIONS = [
 ];
 export const RECOVERY_ACTIONS = ["ALLOCATION_RECONCILED", "DELIVERY_RECOVERED"];
 export const SUCCESS_ACTIONS = [
+  "SIMULATION_START",
+  "SIMULATION_PAUSE",
+  "SIMULATION_RESUME",
+  "SIMULATION_STOP",
+  "SIMULATION_SPEED",
+  "SIMULATION_TICK_COMPLETED",
+  "SIMULATION_RESTART_PAUSED",
   "REPORT_VERIFIED",
   "REPORT_REJECTED",
   "TANKER_OBSERVED",

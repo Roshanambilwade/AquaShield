@@ -22,6 +22,7 @@ import OperatorAssignmentPage from "./pages/OperatorAssignmentPage.jsx";
 import PredictionsPage from "./pages/PredictionsPage.jsx";
 import CitizenAlertsPage from "./pages/CitizenAlertsPage.jsx";
 import AdvisoriesPage from "./pages/AdvisoriesPage.jsx";
+import SimulationPage from "./pages/SimulationPage.jsx";
 
 export default function App() {
   return (
@@ -46,6 +47,7 @@ export default function App() {
           <Route path="audit/:id" element={<AuditPage />} />
           <Route path="predictions" element={<PredictionsPage />} />
           <Route path="advisories" element={<AdvisoriesPage />} />
+          <Route path="simulation" element={<SimulationPage />} />
           <Route path="tankers" element={<OperationsPage fleetOnly />} />
           <Route path="allocations" element={<OperationsPage />} />
           <Route path="deliveries" element={<DeliveriesPage />} />

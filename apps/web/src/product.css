@@ -932,3 +932,37 @@ dd {
     gap: 12px;
   }
 }
+:root .simulation-controls,
+:root .simulation-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+}
+.simulation-page > section {
+  margin-top: 20px;
+}
+.simulation-page {
+  min-width: 0;
+  padding: 16px;
+}
+.simulation-page .table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.simulation-page .table-scroll table {
+  min-width: 560px;
+}
+.simulation-page li {
+  margin-bottom: 8px;
+  overflow-wrap: anywhere;
+}
+.simulation-page article {
+  border-bottom: 1px solid var(--border);
+  padding: 12px 0;
+}
+@media (max-width: 600px) {
+  .simulation-controls > * {
+    flex: 1 1 100%;
+  }
+}

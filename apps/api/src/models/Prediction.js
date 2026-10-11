@@ -1,3 +1,4 @@
+import { addSimulationProvenance } from "./simulationProvenance.js";
 import mongoose from "mongoose";
 const schema = new mongoose.Schema(
   {
@@ -29,4 +30,5 @@ schema.index({
   generatedAt: -1,
   _id: -1,
 });
+addSimulationProvenance(schema);
 export default mongoose.model("Prediction", schema);

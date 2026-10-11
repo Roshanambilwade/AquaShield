@@ -1,4 +1,9 @@
 import express from "express";
+import SimulationRun from "./models/SimulationRun.js";
+import { assertSimulationTarget } from "./config/simulation.js";
+import { simulationContext } from "./services/simulationContext.js";
+import { createSimulationService } from "./services/simulationService.js";
+import { createSimulationRouter } from "./routes/simulation.js";
 import { createCitizenAlertsRouter } from "./routes/citizenAlerts.js";
 import cors from "cors";
 import { correlationMiddleware } from "./services/auditContext.js";
@@ -27,8 +32,21 @@ export function createApp(
   } = {},
 ) {
   const app = express();
+  const simulator = createSimulationService(config);
+  app.locals.simulation = simulator;
   app.disable("x-powered-by");
   app.use(correlationMiddleware);
+  if (config.SIMULATION_ENABLED)
+    app.use(async (_req, _res, next) => {
+      assertSimulationTarget(config, true);
+      await simulator.initialize();
+      const run = await SimulationRun.findById("municipal-v1").lean();
+      if (!run) return next();
+      simulationContext.run(
+        { runId: run.runId, tick: run.tick, eventAt: run.simulatedAt },
+        next,
+      );
+    });
   app.use((_req, res, next) => {
     res.set({
       "X-Content-Type-Options": "nosniff",
@@ -61,9 +79,19 @@ export function createApp(
     createReportRouter(databaseStatus, config),
   );
   app.use(express.json({ limit: "100kb" }));
+  app.use(
+    "/api/simulation",
+    createSimulationRouter(config, databaseStatus, simulator),
+  );
   app.use("/api/auth", createAuthRouter(config, databaseStatus));
-  app.use("/api/citizen/alerts", createCitizenAlertsRouter(config, databaseStatus));
-  app.use("/api/advisories", createCitizenAlertsRouter(config, databaseStatus, true));
+  app.use(
+    "/api/citizen/alerts",
+    createCitizenAlertsRouter(config, databaseStatus),
+  );
+  app.use(
+    "/api/advisories",
+    createCitizenAlertsRouter(config, databaseStatus, true),
+  );
   app.use("/api/dashboard", createDashboardRouter(config, databaseStatus));
   app.use("/api/audit", createAuditRouter(config, databaseStatus));
   app.use("/api/ai", createAiRouter(config, databaseStatus, aiDependencies));

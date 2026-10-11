@@ -1,3 +1,4 @@
+import { addSimulationProvenance } from "./simulationProvenance.js";
 import mongoose from "mongoose";
 const schema = new mongoose.Schema(
   {
@@ -18,4 +19,5 @@ const schema = new mongoose.Schema(
 );
 schema.index({ key: 1 }, { unique: true });
 schema.index({ scenarioEnd: -1, batch: 1, areaId: 1 });
+addSimulationProvenance(schema);
 export default mongoose.model("ForecastObservation", schema);

@@ -1642,7 +1642,7 @@ Avoid unsupported claims of exact affected population, exact remaining water, pe
 
 # 74. IMPLEMENTATION ORDER
 
-Latest phase-specific prompts control scope. Phases 1–12, including Phase 6.5, are implemented locally. The former Phase 9 stop instruction applied only to its historical deployment-readiness task. The current authorized pre-simulation remediation adds submitted-evidence reviews, private citizen advisories, guarded simulated fleet observations, source-separated synthetic forecast fixtures and documentation/reliability fixes. Preserve all existing calculations, security, records and tests. No live inference, cloud deployment, resets, dynamic simulation or automatic commits. Stop after this remediation; live Gemini and actual AWS acceptance remain separately unverified.
+Latest phase-specific prompts control scope. Phases 1–12, including Phase 6.5, and the pre-simulation remediation are implemented locally. The former Phase 9 stop instruction applied only to its historical deployment-readiness task. The current authorized Phase 13 adds safe isolated dynamic simulation, with saved run/tick provenance, bounded controls and existing manual operational workflows. Preserve all existing calculations, security, records and tests. No live inference, cloud deployment, faculty resets or automatic commits. Stop after Phase 13; live Gemini and actual AWS acceptance remain separately unverified.
 
 ## PHASE 1 — Foundation (complete)
 React/JavaScript/Vite, Express/JavaScript, MongoDB/Mongoose, configuration, routing/layout, health and errors.
@@ -1685,10 +1685,10 @@ Offline verification runner, isolated MongoDB/browser fixtures, backend process 
 ## PHASE 12 — Hackathon polish and presentation readiness (complete locally)
 Responsive presentation/navigation/accessibility improvements and repeatable persisted faculty walkthrough; no numerical or operational rewrite. See docs/phase12.md.
 
-## Pre-simulation acceptance remediation (current authorized scope)
+## Pre-simulation acceptance remediation (historical completed scope)
 Secure pending-to-verified/rejected submitted-evidence review, private area subscriptions/inbox/read state, municipal publish/withdraw, guarded new simulated fleet observations, read-only readiness, separate idempotent forecast observations and explicit source-aware numerical persistence. Keep Phase 8 formulas and thresholds unchanged. Synthetic observations never enter ordinary citizen/report/clustering/allocation data or operational prediction summaries. Original sparse faculty history remains insufficient. See docs/pre-simulation-remediation-report.md.
 
-Dynamic simulation and actual AWS deployment remain separate explicitly authorized later tasks. Preserve labeled data, distinguish real Gemini from demo output, and show actual public URLs/persistence only after deployment is tested.
+Phase 13 dynamic simulation is now explicitly authorized through the phase-specific implementation request. It adds an isolated, bounded, persistent synthetic scenario with administrator controls and manual operational actions, preserving the faculty dataset and all deterministic/security contracts. See docs/dynamic-simulation.md and docs/dynamic-simulation-acceptance-report.md for setup, provenance, limitations and actual checks. Actual AWS deployment remains a separate later task. Distinguish real Gemini from demo output, and show actual public URLs/persistence only after deployment is tested.
 
 ## Optional future enhancement
 Add Bedrock or other provider/hosting adapters only when requested. They do not gate local Gemini work, deterministic calculations or MVP acceptance.

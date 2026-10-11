@@ -1,3 +1,4 @@
+import { addSimulationProvenance } from "./simulationProvenance.js";
 import mongoose from "mongoose";
 import { auditSchema, protectAuditTrail } from "./auditTrail.js";
 const schema = new mongoose.Schema(
@@ -35,4 +36,5 @@ const schema = new mongoose.Schema(
 );
 schema.index({ eventId: 1 }, { unique: true });
 protectAuditTrail(schema);
+addSimulationProvenance(schema);
 export default mongoose.model("AllocationEvidence", schema);

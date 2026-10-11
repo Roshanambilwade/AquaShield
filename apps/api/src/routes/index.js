@@ -16,6 +16,7 @@ export function createApiRouter(databaseStatus, config = {}) {
       success: true,
       data: {
         demonstration: demonstration(config),
+        simulation: config.SIMULATION_ENABLED === true,
         label: demonstration(config)
           ? "AquaShield — Demonstration Environment"
           : null,

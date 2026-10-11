@@ -67,6 +67,7 @@ function projection(a, readAt, now = new Date()) {
     title: a.title,
     message: a.message,
     provenance: a.provenance,
+    ...(a.simulation ? { simulation: a.simulation } : {}),
     isDemo: a.isDemo,
     status: a.status === "ACTIVE" && a.expiresAt <= now ? "EXPIRED" : a.status,
     createdAt: a.createdAt,

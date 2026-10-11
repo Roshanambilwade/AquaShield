@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { simulationMetadataSchema } from "./simulationProvenance.js";
 
 const state = new mongoose.Schema(
   {
@@ -10,6 +11,7 @@ const state = new mongoose.Schema(
   { _id: false, strict: "throw" },
 );
 export const auditFields = {
+  simulation: { type: simulationMetadataSchema, default: undefined },
   actorRole: { type: String, enum: ["ADMIN", "OPERATOR", "CITIZEN"] },
   correlationId: { type: String, match: /^[a-f0-9-]{36}$/i },
   outcome: {

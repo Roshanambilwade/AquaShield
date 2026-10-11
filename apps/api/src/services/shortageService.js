@@ -8,6 +8,8 @@ import { buildShortageEvents } from "./reportClusteringService.js";
 import { ApiError } from "../middleware/errors.js";
 
 import mongoose from "mongoose";
+import SimulationRun from "../models/SimulationRun.js";
+import { assertSimulationTarget } from "../config/simulation.js";
 import { DetectionGate } from "./detectionGate.js";
 const gates = new WeakMap();
 function gate(demo) {
@@ -38,7 +40,24 @@ export function detectShortages(
           "DETECTION_CAPACITY_EXCEEDED",
           "This detection batch exceeds the MVP limit. A paginated worker is required.",
         );
-      const events = buildShortageEvents(reports, areas, config, now);
+      let clock = now;
+      if (config.SIMULATION_ENABLED) {
+        assertSimulationTarget(config, true);
+        const run = await SimulationRun.findById("municipal-v1").lean();
+        if (run)
+          clock = run.inFlight
+            ? new Date(+run.anchorAt + (run.tick + 1) * 15 * 60000)
+            : run.simulatedAt;
+      }
+      // Only the isolated simulator adapts virtual event time into the unchanged
+      // clustering engine. Stored database timestamps remain actual server time.
+      const evidence = config.SIMULATION_ENABLED
+        ? reports.map((r) => ({
+            ...r,
+            createdAt: r.simulation?.eventAt || r.createdAt,
+          }))
+        : reports;
+      const events = buildShortageEvents(evidence, areas, config, clock);
       for (const event of events)
         await ShortageEvent.updateOne(
           { eventKey: event.eventKey },

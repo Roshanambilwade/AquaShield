@@ -1,3 +1,4 @@
+import { addSimulationProvenance } from "./simulationProvenance.js";
 import mongoose from "mongoose";
 const schema = new mongoose.Schema(
   {
@@ -8,4 +9,5 @@ const schema = new mongoose.Schema(
   { strict: "throw", timestamps: true, autoCreate: false, autoIndex: false },
 );
 schema.index({ userId: 1, advisoryId: 1 }, { unique: true });
+addSimulationProvenance(schema);
 export default mongoose.model("AdvisoryReadState", schema);

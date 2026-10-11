@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import { z } from "zod";
 import { ApiError } from "../middleware/errors.js";
+import { assertSimulationTarget } from "./simulation.js";
+import { simulationContext } from "../services/simulationContext.js";
 
 const flag = z
   .enum(["true", "false"])
@@ -27,6 +29,22 @@ export function demonstration(config) {
 export const datasetDemo = (config, requested = false) =>
   demonstration(config) || requested;
 export function assertSeedTarget(config, connected = false) {
+  if (config.SIMULATION_ENABLED) {
+    assertSimulationTarget(config, connected);
+    if (connected && !simulationContext.getStore())
+      throw new ApiError(
+        403,
+        "UNSAFE_SIMULATION_TARGET",
+        "Use the dedicated simulation preparation and authenticated workflows.",
+      );
+    if (!config.DEMO_SEED_ENABLED)
+      throw new ApiError(
+        403,
+        "UNSAFE_DEMO_TARGET",
+        "Explicit isolated preparation permission is required.",
+      );
+    return;
+  }
   if (
     !demonstration(config) ||
     config.DEMO_SEED_ENABLED !== true ||

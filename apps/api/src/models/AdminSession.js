@@ -1,3 +1,4 @@
+import { addSimulationProvenance } from "./simulationProvenance.js";
 import mongoose from "mongoose";
 const schema = new mongoose.Schema(
   {
@@ -13,4 +14,5 @@ const schema = new mongoose.Schema(
 );
 schema.index({ tokenHash: 1 }, { unique: true });
 schema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+addSimulationProvenance(schema);
 export default mongoose.model("AdminSession", schema);

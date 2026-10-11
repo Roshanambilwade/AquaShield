@@ -7,6 +7,7 @@ import { aiSchema } from "./ai.js";
 import { operationsSchema } from "./operations.js";
 import { demonstrationSchema } from "./demonstration.js";
 import { predictionSchema } from "./prediction.js";
+import { simulationSchema, assertSimulationTarget } from "./simulation.js";
 
 const rootEnvPath = fileURLToPath(new URL("../../../../.env", import.meta.url));
 
@@ -84,7 +85,32 @@ const schema = z
   .and(operationsSchema)
   .and(demonstrationSchema)
   .and(predictionSchema)
+  .and(simulationSchema)
   .superRefine((v, ctx) => {
+    if (v.SIMULATION_ENABLED) {
+      try {
+        assertSimulationTarget(v);
+      } catch {
+        ctx.addIssue({
+          code: "custom",
+          path: ["SIMULATION_DATABASE_NAME"],
+          message: "Unsafe simulation target",
+        });
+      }
+      for (const field of ["FORECAST_DEMO_ENABLED", "DEMO_AI_MODE"])
+        if (!v[field])
+          ctx.addIssue({
+            code: "custom",
+            path: [field],
+            message: "Simulation requires explicit offline demonstration flags",
+          });
+    }
+    if (v.SIMULATION_PREPARE_ENABLED && !v.SIMULATION_ENABLED)
+      ctx.addIssue({
+        code: "custom",
+        path: ["SIMULATION_PREPARE_ENABLED"],
+        message: "Simulation must be enabled",
+      });
     if (v.NODE_ENV !== "production") return;
     const reject = (field) =>
       ctx.addIssue({
@@ -98,6 +124,8 @@ const schema = z
       "DEMO_AI_MODE",
       "FORECAST_DEMO_ENABLED",
       "MONGODB_TEST_DB_NAME",
+      "SIMULATION_ENABLED",
+      "SIMULATION_PREPARE_ENABLED",
     ]) {
       if (v[field]) reject(field);
     }
@@ -130,7 +158,7 @@ const schema = z
         !tls ||
         insecure ||
         !/^[a-zA-Z0-9_-]+$/.test(db) ||
-        /(?:^|_)(demo|test)(?:_|$)/i.test(db) ||
+        /(?:^|_)(demo|test|simulation)(?:_|$)/i.test(db) ||
         ["admin", "local", "config"].includes(db)
       )
         reject("MONGODB_URI");

@@ -1,5 +1,7 @@
 # AquaShield
 
+Phase 13 adds a bounded, persistent **isolated dynamic simulation**, reusing the existing report, assessment, manual allocation, operator verification and citizen workflows. It does not reset the faculty dataset or call Gemini. See [safe setup and controls](docs/dynamic-simulation.md) and [actual acceptance results](docs/dynamic-simulation-acceptance-report.md).
+
 An intelligence and decision layer for emergency water management, by **AquaSentinels** for Environmental Hacks — Heat & Water Track.
 
 **Phases 1–12, including Phase 6.5, are implemented locally; complete live Gemini execution remains unverified.** Phase 8 adds Gemini-independent numerical report-activity forecasts and audited early-warning alerts; see [formulas, APIs, data limits and verification](docs/phase8.md). Phase 7 adds persisted operator trips, deterministic route estimates, protected OTP verification, actual delivered litres, completion recovery, municipal history and private citizen response updates. See [Phase 7 behavior, demo, security and verification](docs/phase7.md), [Phase 6.5 accounts](docs/phase65.md), [Phase 6 operations](docs/phase6.md), [Phase 5 agents](docs/phase5.md), [Phase 4](docs/phase4.md) and [Phase 3 calculations](docs/phase3.md).

@@ -1,3 +1,4 @@
+import { addSimulationProvenance } from "./simulationProvenance.js";
 import mongoose from "mongoose";
 import { auditSchema, protectAuditTrail } from "./auditTrail.js";
 const schema = new mongoose.Schema(
@@ -76,4 +77,5 @@ schema.pre("validate", function () {
   )
     this.invalidate("availableLitres", "Available water exceeds capacity.");
 });
+addSimulationProvenance(schema);
 export default mongoose.model("Tanker", schema);

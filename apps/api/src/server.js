@@ -5,10 +5,17 @@ import { startRuntime, runtimeLog } from "./runtime.js";
 
 try {
   const config = loadEnv();
+  const app = createApp(config);
   startRuntime(config, {
-    app: createApp(config),
-    connect: connectDatabase,
-    disconnect: disconnectDatabase,
+    app,
+    connect: async (c) => {
+      await connectDatabase(c);
+      await app.locals.simulation.initialize();
+    },
+    disconnect: async () => {
+      await app.locals.simulation.close();
+      await disconnectDatabase();
+    },
   });
 } catch (error) {
   const configurationError = error.message.startsWith(

@@ -17,6 +17,7 @@ export default function Layout() {
       "/my-reports": "My reports",
       "/my-alerts": "My alerts",
       "/admin/advisories": "Citizen advisories",
+      "/admin/simulation": "Dynamic simulation",
       "/login": new URLSearchParams(search)
         .get("returnTo")
         ?.startsWith("/operator")
@@ -131,7 +132,9 @@ export default function Layout() {
         {(environment.demonstration ||
           new URLSearchParams(search).get("demo") === "true") && (
           <p className="environment-indicator" role="status">
-            Demonstration Environment · simulated data
+            {environment.simulation
+              ? "Demonstration Environment · dynamic simulation"
+              : "Demonstration Environment · simulated data"}
           </p>
         )}
       </header>

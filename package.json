@@ -25,6 +25,8 @@
     "test:dev-origins": "playwright test --config playwright.dev.config.js",
     "seed:demo": "npm run seed:demo -w @aquashield/api",
     "seed:forecast-demo": "node apps/api/src/scripts/seedForecastDemo.js",
+    "simulation:prepare": "node apps/api/src/scripts/prepareSimulation.js",
+    "test:simulation": "node --import ./scripts/testEnvironment.js --test apps/api/test/simulation.test.js apps/api/test/simulation.mongo.test.js",
     "demo:readiness": "node apps/api/src/scripts/demoReadiness.js",
     "admin:create": "npm run admin:create -w @aquashield/api",
     "config:check": "node apps/api/src/scripts/checkConfig.js",

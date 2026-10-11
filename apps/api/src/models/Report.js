@@ -1,3 +1,4 @@
+import { addSimulationProvenance } from "./simulationProvenance.js";
 import mongoose from "mongoose";
 import { auditSchema, protectAuditTrail } from "./auditTrail.js";
 import {
@@ -96,6 +97,7 @@ reportSchema.index({ ownerId: 1, createdAt: -1, _id: -1 });
 reportSchema.index({ isDemo: 1, areaId: 1, createdAt: -1 });
 protectAuditTrail(reportSchema);
 
+addSimulationProvenance(reportSchema);
 const Report = mongoose.model("Report", reportSchema);
 const initializedDatabases = new WeakMap();
 

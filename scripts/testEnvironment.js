@@ -12,6 +12,9 @@ export function testEnvironment(source) {
     DEMONSTRATION_MODE: "false",
     DEMO_SEED_ENABLED: "false",
     FORECAST_DEMO_ENABLED: "false",
+    SIMULATION_ENABLED: "false",
+    SIMULATION_PREPARE_ENABLED: "false",
+    SIMULATION_DATABASE_NAME: "aquashield_simulation",
     ROUTING_BASE_URL: "",
   };
 }

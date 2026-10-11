@@ -1,6 +1,8 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import RoleGuard from "./RoleGuard.jsx";
+import { useEnvironment } from "../lib/environment.js";
 export default function AdminLayout() {
+  const environment = useEnvironment();
   const location = useLocation();
   const suffix =
     new URLSearchParams(location.search).get("demo") === "true"
@@ -12,6 +14,9 @@ export default function AdminLayout() {
         <div className="admin-toolbar">
           <p className="sidebar-label">Municipal command center</p>
           <nav aria-label="Administrator navigation">
+            {environment.simulation && (
+              <NavLink to="/admin/simulation">Simulation</NavLink>
+            )}
             <NavLink to={`/admin${suffix}`} end>
               Overview
             </NavLink>

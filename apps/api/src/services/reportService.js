@@ -29,6 +29,7 @@ export function serializeReport(report, includePhoto = false) {
     reviewedAt: report.reviewedAt,
     isDemo: report.isDemo,
     sourceType: report.sourceType,
+    ...(report.simulation ? { simulation: report.simulation } : {}),
     hasPhoto: report.hasPhoto,
     createdAt: report.createdAt,
     updatedAt: report.updatedAt,

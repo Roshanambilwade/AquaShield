@@ -1,3 +1,4 @@
+import { addSimulationProvenance } from "./simulationProvenance.js";
 import mongoose from "mongoose";
 import { auditSchema, protectAuditTrail } from "./auditTrail.js";
 const ref = (name) => ({
@@ -85,4 +86,5 @@ schema.index({ isDemo: 1, status: 1, deliveredAt: -1 });
 schema.index({ isDemo: 1, createdAt: -1 });
 schema.index({ isDemo: 1, eventId: 1, deliveredAt: 1 });
 protectAuditTrail(schema);
+addSimulationProvenance(schema);
 export default mongoose.model("Delivery", schema);

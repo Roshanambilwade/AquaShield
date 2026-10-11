@@ -30,6 +30,7 @@ export function serializeDelivery(d) {
   const value = d.toObject ? d.toObject() : d;
   const fields = [
     "allocationId",
+    "simulation",
     "eventId",
     "tankerId",
     "operatorId",
