@@ -14,3 +14,9 @@ playwright-report/
 *.pfx
 *.dump
 *.archive
+# Private access files are never release inputs, wherever saved.
+*credentials*.json
+*.tmp
+*.swp
+.DS_Store
+Thumbs.db

@@ -86,6 +86,56 @@ test("production refuses unauthenticated, ambiguous, test/demo and insecure Mong
   );
 });
 
+test("production refuses authenticated TLS loopback databases but preserves local development", () => {
+  for (const host of [
+    "localhost",
+    "db.localhost",
+    "127.0.0.1",
+    "127.1.2.3",
+    "0.0.0.0",
+    "[::1]",
+    "[0:0:0:0:0:0:0:1]",
+    "[::ffff:127.0.0.1]",
+    "host.docker.internal",
+  ]) {
+    const uri = `mongodb://fixture:fixture@${host}:27017/aquashield?tls=true`;
+    assert.throws(
+      () => parseEnv({ ...production, MONGODB_URI: uri }),
+      (error) =>
+        error.message.includes("MONGODB_URI") &&
+        !error.message.includes("fixture"),
+    );
+    assert.doesNotThrow(() =>
+      parseEnv({ NODE_ENV: "development", MONGODB_URI: uri }),
+    );
+  }
+  assert.throws(
+    () =>
+      parseEnv({
+        ...production,
+        MONGODB_URI:
+          "mongodb://fixture:fixture@db.example:27017,localhost:27017/aquashield?tls=true",
+      }),
+    /MONGODB_URI/,
+  );
+  assert.doesNotThrow(() =>
+    parseEnv({
+      ...production,
+      DEMO_DATABASE_NAME: "aquashield_demo_preserved",
+      SIMULATION_DATABASE_NAME: "aquashield_simulation",
+    }),
+  );
+  assert.throws(
+    () =>
+      parseEnv({
+        ...production,
+        MONGODB_URI:
+          "mongodb+srv://fixture:fixture@db.example/aquashield_simulation",
+      }),
+    /MONGODB_URI/,
+  );
+});
+
 test("liveness bypasses database/provider; readiness requires Mongo but never claims provider health", async () => {
   let pings = 0;
   const config = parseEnv({});

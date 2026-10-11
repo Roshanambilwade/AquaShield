@@ -142,6 +142,25 @@ const schema = z
         ...new URLSearchParams(v.MONGODB_URI.split("?")[1] || ""),
       ].map(([key, value]) => [key.toLowerCase(), value.toLowerCase()]);
       const tls = clientOptions.tls === true;
+      const localOnly = clientOptions.hosts.some(({ host, socketPath }) => {
+        const name = (host || "")
+          .toLowerCase()
+          .replace(/^\[|\]$/g, "")
+          .replace(/\.$/, "");
+        return (
+          Boolean(socketPath) ||
+          name === "localhost" ||
+          name.endsWith(".localhost") ||
+          name === "host.docker.internal" ||
+          name === "0.0.0.0" ||
+          name === "::" ||
+          name === "::1" ||
+          name === "0:0:0:0:0:0:0:1" ||
+          /^127\./.test(name) ||
+          /^::ffff:127\./.test(name) ||
+          /^::ffff:7f[0-9a-f]{2}:/.test(name)
+        );
+      });
       const insecure = options.some(
         ([key, value]) =>
           (["tls", "ssl"].includes(key) && value === "false") ||
@@ -156,6 +175,7 @@ const schema = z
         !clientOptions.credentials?.username ||
         !clientOptions.credentials?.password ||
         !tls ||
+        localOnly ||
         insecure ||
         !/^[a-zA-Z0-9_-]+$/.test(db) ||
         /(?:^|_)(demo|test|simulation)(?:_|$)/i.test(db) ||
