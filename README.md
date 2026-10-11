@@ -6,6 +6,8 @@ AquaShield connects household water-shortage reports with municipal assessment, 
 
 Built by **AquaSentinels** for **Environmental Hacks — Heat & Water Track**.
 
+**Website:** [Open AquaShield](http://3.111.33.20/) · [Demo login accounts](DEMO_ACCESS.md). The project owner provided this AWS address; hosted workflows and demo account access have not yet been independently verified.
+
 ## Why AquaShield exists
 
 During water shortages, household complaints, fleet availability and delivery records can become disconnected. A large number of complaints does not automatically establish a verified crisis, and dispatching water without considering previous deliveries can leave some areas underserved.
@@ -223,7 +225,7 @@ Live Gemini diagnostics are separate opt-in tests that may consume quota or incu
 
 Hosting preparation targets **AWS Amplify Hosting** for the static frontend and **AWS App Runner** for the backend, subject to account/service compatibility. **MongoDB Atlas** can remain the database. AWS hosting is separate from AI; Bedrock and AWS model credentials are not required.
 
-The repository includes frontend build configuration, backend container configuration, health/readiness handling, production validation and a release checklist. Atlas connection and isolated simulation preparation have been verified in the developer workspace. **Public AWS deployment has not been completed or verified.**
+The repository includes frontend build configuration, backend container configuration, health/readiness handling, production validation and a release checklist. Atlas connection and isolated simulation preparation have been verified in the developer workspace. The project owner reports an AWS deployment at [http://3.111.33.20/](http://3.111.33.20/). Hosted authentication, persistence and end-to-end workflows have not yet been independently verified; the hosting address alone does not establish completion of the release checklist. The supplied address uses HTTP; enable HTTPS before transmitting private credentials or real citizen information.
 
 Hosted builds need an actual API URL or a configured reverse proxy; Vite's development proxy is absent on static hosting. Database/Gemini secrets belong in backend runtime configuration. Production requires exact hosted-origin CORS, restricted database access and verified authentication/persistence workflows. Review proxy/rate-limit and multi-instance behavior before scaling.
 

@@ -1,5 +1,11 @@
 # AquaShield demo access
 
+**Website:** [Open AquaShield](http://3.111.33.20/)
+
+**Municipal/operator login:** [Sign in](http://3.111.33.20/login) · **Citizen login:** [Citizen sign in](http://3.111.33.20/citizen/login) · **Citizen registration:** [Create an account](http://3.111.33.20/register).
+
+The project owner provided this AWS address. Availability and account login have not been independently verified. This address uses HTTP; use only synthetic demo information and enable HTTPS before using private credentials or real citizen records.
+
 These intentionally public accounts are for the synthetic aquashield_simulation_atlas demonstration database. Do not reuse these passwords for other accounts or environments. Anyone using the administrator/operator accounts can perform their permitted actions and change demo records.
 
 ## Login accounts
