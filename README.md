@@ -1,301 +1,250 @@
 # AquaShield
 
-Phase 13 adds a bounded, persistent **isolated dynamic simulation**, reusing the existing report, assessment, manual allocation, operator verification and citizen workflows. It does not reset the faculty dataset or call Gemini. See [safe setup and controls](docs/dynamic-simulation.md) and [actual acceptance results](docs/dynamic-simulation-acceptance-report.md).
+**Emergency water-management decision support for citizens and municipal teams.**
 
-An intelligence and decision layer for emergency water management, by **AquaSentinels** for Environmental Hacks — Heat & Water Track.
+AquaShield connects household water-shortage reports with municipal assessment, fair tanker allocation, delivery tracking and early warning. It helps a municipal team answer: **Where is the crisis? How serious is it? How confident are we? Approximately how many people are affected? Which areas need attention?**
 
-**Phases 1–12, including Phase 6.5, are implemented locally; complete live Gemini execution remains unverified.** Phase 8 adds Gemini-independent numerical report-activity forecasts and audited early-warning alerts; see [formulas, APIs, data limits and verification](docs/phase8.md). Phase 7 adds persisted operator trips, deterministic route estimates, protected OTP verification, actual delivered litres, completion recovery, municipal history and private citizen response updates. See [Phase 7 behavior, demo, security and verification](docs/phase7.md), [Phase 6.5 accounts](docs/phase65.md), [Phase 6 operations](docs/phase6.md), [Phase 5 agents](docs/phase5.md), [Phase 4](docs/phase4.md) and [Phase 3 calculations](docs/phase3.md).
+Built by **AquaSentinels** for **Environmental Hacks — Heat & Water Track**.
 
-The phase-specific counts below are historical snapshots. Current remediation results and unverified infrastructure/provider gates are recorded in the [remediation report](docs/pre-simulation-remediation-report.md).
+## Why AquaShield exists
 
-Historical Phase 8 verification: 171 unit/API tests, 92 MongoDB tests and 104 desktop/mobile
-browser tests passed, plus both development hostnames on isolated port 5175; lint/build passed. These tests use mocked providers or explicit demo mode.
-See [requirement coverage, remaining blocker and manual citizen handoff](docs/through-phase7-audit.md).
+During water shortages, household complaints, fleet availability and delivery records can become disconnected. A large number of complaints does not automatically establish a verified crisis, and dispatching water without considering previous deliveries can leave some areas underserved.
 
-Phase 9 prepares future deployment without deploying: production configuration guards,
-liveness/readiness, safe runtime logs/shutdown, containers and locked clean builds.
-Verification: 178 unit/API, 92 MongoDB, 104 desktop/mobile and two origin tests passed;
-lint/build/secret checks and both npm audits passed. Docker engine execution was pending at that phase; Phase 11 recorded local image and container restart verification. The engine is unavailable during the current remediation, so current container runtime remains unverified. External
-production checks remain pending. See the [readiness report](docs/phase9-deployment-readiness.md).
+AquaShield brings those records into one system. Citizens provide household evidence; deterministic backend services assess shortages and resource priorities; municipal staff review the evidence and control operational decisions. The application distinguishes recorded facts, estimates, synthetic demonstration data and unknown information.
 
-Phase 10 extends municipal analytics with UTC/area filters, persisted activity and
-operational response metrics with explicit valid denominators. ADMIN-only audit
-search/detail reuses atomic workflow journals, adding safe actor/role/correlation,
-transition and outcome metadata. Historical unknowns remain unknown; saved report
-activity forecasts stay separate and require no Gemini call. See [metric formulas,
-audit coverage, limits, exact changed files and verification](docs/phase10.md).
-Verification: 185 unit/API, 103 MongoDB, 112 desktop/mobile and two development-origin
-tests passed; final targeted browser checks passed 28 tests. Lint, production build,
-secret exclusion and diff checks passed. No live inference or cloud deployment occurred.
+## Who uses the project?
 
-Phase 11 adds a fail-fast `npm run verify` workflow, isolated offline test configuration, failure-safe database cleanup, actual backend process-restart coverage, bounded analytics fixtures and a browser retry-after-commit regression. See [commands, acceptance coverage, measured results and remaining limits](docs/phase11.md). Phase 11 is testing/reliability work; application behavior and numerical formulas are unchanged. Final verification passed 193 unit/API tests, 106 MongoDB tests, 114 browser tests (57 per viewport) and both development-origin tests. Both local Docker images and the container persistence/restart smoke test passed.
+| Role              | Responsibilities                                                                                                                                                                               |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Citizen**       | Register, report a household shortage, track owned reports, view area advisories and participate in an authorized delivery-code handoff.                                                       |
+| **Administrator** | Review reports, inspect shortage zones, manage tankers/operators, review fair allocation recommendations, approve and assign resources, publish advisories and inspect delivery/audit history. |
+| **Operator**      | View assigned jobs, start a trip, record arrival, perform delivery-code verification and record delivered litres.                                                                              |
 
-**Strategy:** AWS will host the functioning application; it is not a mandatory AI/LLM provider. Phase 5 integrates Strands Agents SDK with Google Gemini for four roles. All numeric facts remain deterministic backend calculations. On 10 October 2026, authorized live Crisis Detection, Logistics and Early Warning tests passed validation; Resource Allocation generation returned Google HTTP 503 and remains unverified. Bedrock is optional; AWS deployment has not been performed. See the [through-Phase-7 audit](docs/through-phase7-audit.md) and [honest demo guide](docs/demo.md).
+Public visitors can view privacy-protected shortage aggregates. Private reports, municipal tools and operator assignments require the appropriate authenticated role. Public registration creates citizens only.
 
-## Completed
+## The complete workflow
 
-Gemini outages now use bounded retries/circuit recovery and explicitly labeled rule-based assessments where backend evidence supports them. See [AI reliability, configuration and limits](docs/ai-reliability.md). No new live Gemini verification is claimed by this update.
+1. **Report:** A citizen supplies location, area/locality, problem type, last supply time, shortage duration, household water level and household size. Description and photo are optional; unknown values remain unknown.
+2. **Assess:** The backend saves the account-owned report in MongoDB. Geographic/time clustering, duplicate checks and suspicious-evidence handling produce shortage events.
+3. **Review:** The command center shows severity, confidence, approximate affected population, evidence coverage and map locations. Administrators verify or reject submitted evidence with a review note.
+4. **Recommend:** Deterministic allocation services consider supported demand, previous deliveries and tanker eligibility, including capacity, availability, freshness, reservations and active trips.
+5. **Approve and assign:** An administrator explicitly reviews, approves and assigns resources. Recommendation, approval and assignment are separate actions. AI advice and simulation ticks cannot dispatch tankers.
+6. **Deliver:** The assigned operator follows `ASSIGNED → EN_ROUTE → ARRIVED → DELIVERED`, including protected code verification and recorded litre accounting.
+7. **Track and anticipate:** Saved outcomes update municipal history, tanker balances, citizen area-response views, analytics and audit records. Numerical early warning evaluates supported historical report activity independently of Gemini.
 
-- JavaScript npm workspaces: React + Vite in `apps/web`; Node.js + Express in `apps/api`.
-- Responsive base layout, client-side routing, and a system status page.
-- MongoDB connection through Mongoose, bounded timeouts, initial connection retries, and graceful shutdown.
-- Root environment configuration, validation, and `.env.example` without real credentials.
-- Explicit CORS origins, JSON size limits, consistent API errors, frontend error boundary, and status errors with retry.
-- API/configuration tests, a read-only real MongoDB integration test, and desktop/mobile browser tests.
-- Citizen reporting with device location capture, manual coordinates, or an explicitly approximate locality center.
-- Household problem type, supply time, approximate shortage duration, water level, household size, and optional description/photo.
-- MongoDB Report model, Zod validation, citizen account-owned history, and report confirmation/status pages; legacy anonymous records remain preserved.
-- Size-limited JPEG/PNG photos, validated and re-encoded by Sharp with metadata removed; submission rate limiting.
-- Repeatable simulated report seeding and real persistence tests, including reconnects and safe submission retries.
-- Geographic/time clustering, duplicate/suspicious evidence handling, persisted shortage events and independently counted verified reports.
-- Configurable deterministic confidence/severity, approximate affected-population estimates, elapsed shortage duration and explicit unknown inputs.
-- Municipal shortage overview with an offline geographic zone map, LOW/MEDIUM/HIGH/CRITICAL badges, emerging evidence and inspectable calculation tables.
-- Administrator provisioning, password hashing, expiring MongoDB sessions, role authorization and server-side logout.
-- Protected command center with eight KPI cards, OpenStreetMap/Leaflet plus offline map fallback, private report layers, event filters/details, activity and evidence analytics.
-- Four Strands/Gemini agent roles, protected read-only APIs and a responsive recommendation panel with backend numeric evidence, source references, missing inputs and human-review status.
-- Explicit key-free demo simulation, real-provider configuration/errors, bounded calls and validated output. Complete live Google assessment remains unverified after provider unavailability.
-- Persisted tanker management, source-attributed fairness evidence, deterministic eligible-candidate selection, explicit approval/rejection/assignment, audit snapshots, concurrency checks and private operator assignment views.
-- Database-backed ASSIGNED → EN_ROUTE → ARRIVED → DELIVERED trip controls, scrypt-hashed expiring delivery OTPs, actual litre accounting, conditional completion recovery, municipal delivery history and owner-scoped citizen response tracking. A designated citizen can retrieve a private, single-use delivery code from their own report after arrival; SMS is not required. Account participation is not independent identity or household-receipt verification. Demo OTP reveal remains fictional and non-production only. Phase 8 adds independent numerical report-activity forecasts; physical water forecasting is not supported.
-- Logistics advice consumes persisted backend trip/route estimates without dispatch authority. Operational analytics show recorded assignments, water response by area, response times, snapshot fleet utilization and high-priority areas needing support review.
+## What AquaShield provides
 
-## Running locally
+### Citizen reporting and privacy
 
-Use **Node.js 22.13+** and a running **MongoDB** instance (MongoDB 8 is suitable).
-From the repository root:
+Citizens can capture device location, enter coordinates or select an explicitly approximate locality center. Reports collect household evidence, not an invented total neighborhood population. Optional JPEG/PNG photos undergo size checks, server-side re-encoding and metadata removal.
+
+Private report history, status pages and idempotent submission retries use persistent MongoDB records. The backend assigns report ownership from the authenticated session; another citizen cannot read a private report by guessing its ID. My Alerts supports service-area preferences, published municipal advisories and individual read state.
+
+Names, contact details and locality are user-provided. Registration and submitted-evidence review do not independently verify identity, residency or physical conditions. Public aggregates suppress private household evidence.
+
+### Municipal command center and map
+
+The responsive dashboard combines an interactive Leaflet/OpenStreetMap map, an offline geographic fallback, shortage lists, detail views, recommendations and recent activity. Map layers show shortage severity, emerging risk, authorized report evidence and tanker positions where observations exist.
+
+Eight KPI cards cover **Active Shortages, Critical Areas, Estimated People Affected, Available Tankers, Tankers En Route, Water Delivered, Average Response Time and High-Risk Areas**. Unsupported values remain unknown.
+
+Shortage details explain duration, reported water levels, report and verified-report counts, confidence, estimated population, available environmental evidence, previous deliveries and recommended actions.
+
+### Explainable numerical assessment
+
+All numeric calculations run in backend services. An LLM does not calculate severity, confidence, population estimates, fairness, distance, ETA or prediction risk scores.
+
+| Measurement           | Meaning                                                                                                  |
+| --------------------- | -------------------------------------------------------------------------------------------------------- |
+| Report count          | Recorded reports associated with an event; duplicate and independent evidence are assessed separately.   |
+| Verified report count | Evidence explicitly reviewed and verified by authorized staff; not proof of a physical field inspection. |
+| Confidence            | Confidence that a genuine shortage event exists, **not water remaining**.                                |
+| Affected population   | An approximate estimate with assumptions, not an exact verified neighborhood count.                      |
+| Water level           | Household-reported evidence, not a municipal sensor measurement.                                         |
+| Severity              | A configurable weighted score classified as **LOW, MEDIUM, HIGH or CRITICAL**.                           |
+
+Default severity weights are shortage duration **25%**, affected population **20%**, current water level **20%**, environmental stress **15%**, vulnerable population **10%** and shortage confidence **10%**. Default classification boundaries are MEDIUM at 30, HIGH at 60 and CRITICAL at 80. Missing inputs remain visible alongside calculation coverage and bounds; environmental or vulnerability evidence is not invented.
+
+### Fair allocation and delivery verification
+
+Operational fairness reuses authoritative backend evidence. Tanker eligibility is rechecked during assignment, with concurrency protections against conflicting allocations.
+
+**Delivery verification belongs to the assigned operator** in **Your assignments**, after starting the trip and marking arrival. The administrator's **Trips and deliveries** screen provides inspection, history and controlled recovery; it does not grant operator delivery actions.
+
+Ordinary mode supports a private, expiring code retrieved by the designated citizen from their own report, or a configured recipient handoff adapter. Codes are hashed, attempt-limited and protected against replay. Explicit demonstration mode supports a clearly fictional demo-code flow. Completion records delivered litres with capacity/balance checks and safeguards against double accounting.
+
+Code participation and recorded litres do not independently prove physical household receipt. Distance and ETA remain estimates with their source and assumptions; tanker observations do not establish live GPS tracking.
+
+### Four AI advisory roles
+
+The **Strands Agents SDK with Google Gemini** provides optional qualitative decision support:
+
+| Agent               | Purpose                                                               |
+| ------------------- | --------------------------------------------------------------------- |
+| Crisis Detection    | Explain shortage evidence, confidence and verification limitations.   |
+| Resource Allocation | Explain backend priority, fairness and tanker eligibility.            |
+| Logistics           | Explain supported trip/route evidence and missing operational inputs. |
+| Early Warning       | Explain completed numerical results and trend limitations.            |
+
+Agents receive controlled evidence and return strictly validated structured advice. Unsupported facts, invented numerical claims, false verification claims and unauthorized actions are rejected. Recommendations remain subject to human review and cannot approve, assign or complete deliveries.
+
+Real Gemini execution, explicit key-free `DEMO_AI_MODE` output and evidence-supported rule-based fallback are labeled separately. Provider failures use bounded timeouts, retries and circuit handling. Fallback is not represented as successful Gemini execution. Complete four-role live-provider verification is not claimed; see the [AI reliability guide](docs/ai-reliability.md) and [recorded live results](docs/through-phase7-audit.md).
+
+### Independent early warning, analytics and audit
+
+Feature extraction, report-activity prediction, risk classification, uncertainty evaluation and numerical alert persistence execute through deterministic backend services. Supported prediction calculation/retrieval needs no Gemini or Strands call. Insufficient history returns **`INSUFFICIENT_DATA`**.
+
+The risk index is not a calibrated probability, and report-activity forecasting is not physical water-depletion forecasting. Synthetic history is separated from ordinary evidence. Saving a numerical alert does not automatically publish a citizen advisory.
+
+Administrators can inspect persisted activity using bounded area/time filters, recorded litres, response metrics and explicit denominators. Audit history includes supported actors, transitions, outcomes and correlation information. Historical unknowns remain unknown; snapshot fleet utilization is not a historical time series. Application audit records are not claimed to be tamper-proof against direct database administration.
+
+## Demonstration and simulation
+
+**Panchavati is the primary demonstration scenario**, alongside other areas with different household evidence, durations, derived severity/confidence and emerging risk.
+
+- **Persistent faculty demonstration:** Prepared accounts, reports and operational examples for a repeatable walkthrough. Follow the [faculty demo guide](docs/demo-guide.md); guarded preparation preserves existing actions.
+- **Dynamic simulation:** An isolated persistent scenario with six areas, fictional accounts and two synthetic tankers. It generates up to 72 reports across 24 ticks through existing submission/assessment services. Follow the [simulation setup guide](docs/dynamic-simulation.md).
+
+Simulation controls support start, pause, resume, step, speed and stop. Fifteen virtual minutes advance per tick; authentication, code expiry and operational freshness retain real timestamps. Allocation, delivery and advisory publication remain explicit human actions. No live Gemini calls, physical deliveries or live GPS are implied.
+
+**Refresh saved simulation** reloads stored evidence and operational results. It does not advance or restart the scenario. A stopped/finished run is terminal. Another independent run requires a new isolated simulation database with matching configuration, preserving the previous run. A same-database New simulation run feature is not implemented. One backend instance is supported per simulation database.
+
+Generated credentials remain in ignored private `.local` files. There are no public shared passwords, production simulation mode or automatic startup seeds.
+
+## Architecture
+
+```text
+React + Vite frontend
+  Citizen portal / Municipal command center / Operator portal
+                         |
+                 Authenticated HTTP APIs
+                         |
+Node.js + Express backend
+  Validation, authorization and report ownership
+  Clustering, confidence, severity and population estimates
+  Fairness, allocation, trips and delivery accounting
+  Numerical prediction, alerts, analytics and audit
+  Validated advisory service -> Strands -> Google Gemini (optional)
+                         |
+                      Mongoose
+                         |
+                MongoDB / MongoDB Atlas
+```
+
+The main frontend and backend use **JavaScript**. React Router handles navigation, Zod validates contracts and Sharp processes report photos. Shared JavaScript definitions live in `packages/shared`. MongoDB persists application records; there is no in-memory database fallback.
+
+| Directory          | Contents                                                    |
+| ------------------ | ----------------------------------------------------------- |
+| `apps/web`         | React pages, reusable components, styles and API clients.   |
+| `apps/api`         | Express routes, middleware, models and business services.   |
+| `packages/shared`  | Shared JavaScript definitions.                              |
+| `tests`, `scripts` | Browser/acceptance checks and verification tooling.         |
+| `deploy`, `docs`   | Deployment templates, operational guides and audit reports. |
+
+## Run locally
+
+Use **Node.js 22.13+**, npm and an accessible MongoDB server. Local MongoDB and MongoDB Atlas are supported.
+
+From the repository root in PowerShell:
 
 ```powershell
-npm install --cache .local/npm-cache
-Copy-Item .env.example .env
+npm ci --include=dev --cache .local/npm-cache
+if (!(Test-Path .env)) { Copy-Item .env.example .env }
+```
+
+Edit the private root `.env` to configure `MONGODB_URI`. For Atlas, use the intended database, database-user credentials and permitted network access. Keep the connection string out of Git, screenshots and public logs. The command above preserves an existing `.env`.
+
+```powershell
+npm run config:check
 npm run dev
 ```
 
-Open `http://localhost:5173`. The backend listens on `http://localhost:5000`.
-Start MongoDB using your existing installation, or set `MONGODB_URI` in `.env` to your connection string. The default is `mongodb://127.0.0.1:27017/aquashield`.
+Open `http://localhost:5173` or `http://127.0.0.1:5173`. The API defaults to port **5000**. Development CORS explicitly supports both frontend origins; other origins require configuration.
 
-The API stays reachable if MongoDB is unavailable; `/api/health` returns **503**, and initial connections are retried. After a successful connection, Mongoose handles reconnection. There is no in-memory database fallback.
+For an ordinary administrator account, run `npm run admin:create`. Development can generate private credentials in ignored `.local/admin-access.json`; existing accounts are not overwritten. Production provisioning requires explicit administrator credentials. Administrators provision operators through fleet management; citizens use public registration. Demonstration/simulation accounts use their respective preparation guides instead.
+
+| Portal                       | Entry points                                                                 |
+| ---------------------------- | ---------------------------------------------------------------------------- |
+| Citizen                      | `/register`, `/citizen/login`, `/report`, `/my-reports`, `/my-alerts`        |
+| Municipal                    | `/login`, `/admin`, `/admin/reports`, `/admin/allocations`, `/admin/tankers` |
+| Delivery oversight           | `/admin/deliveries`                                                          |
+| Prediction, analytics, audit | `/admin/predictions`, `/admin/analytics`, `/admin/audit`                     |
+| Operator                     | `/login`, `/operator`, `/operator/assignment/:id`                            |
+| Public information           | `/alerts`, `/status`                                                         |
+| Enabled simulation           | `/admin/simulation`                                                          |
+
+Login and navigation respect the authenticated role. Sign out before switching accounts.
+
+## Configuration and security
+
+The root [.env.example](.env.example) documents settings without real credentials. Runtime variables take precedence over `.env`. Restart backend processes after configuration changes; rebuild the frontend after changing public build variables.
+
+| Setting                             | Purpose                                                                       |
+| ----------------------------------- | ----------------------------------------------------------------------------- |
+| `MONGODB_URI`                       | Private backend database connection.                                          |
+| `CORS_ORIGIN`                       | Exact comma-separated frontend origins; explicit HTTPS origins in production. |
+| `VITE_API_BASE_URL`                 | Public frontend build-time API URL; `/api` uses the local proxy.              |
+| `PORT`, `NODE_ENV`                  | Backend port and runtime environment.                                         |
+| `GEMINI_API_KEY`, `GEMINI_MODEL_ID` | Backend-only real-provider configuration.                                     |
+| `DEMO_AI_MODE`                      | Explicit non-production key-free agent demonstration.                         |
+| `AI_TIMEOUT_MS`                     | Bounded overall advisory request deadline.                                    |
+| `MONGODB_TEST_URI`                  | Optional dedicated test server.                                               |
+| Demonstration/simulation flags      | Guarded non-production preparation and execution; see the guides.             |
+
+Never put credentials in `VITE_*` variables: those values are public browser configuration. `.env`, local access files and generated credentials are ignored by Git. Commit templates, not secrets.
+
+The backend enforces password hashing, expiring/revocable database-backed sessions, role authorization, report ownership, input/image limits, rate limits and sanitized errors. Production rejects demonstration/simulation configuration and insecure database/origin settings.
+
+## Testing
 
 ```powershell
-npm run lint
+npm run verify
+```
+
+The offline verification workflow runs lint, production build, security/configuration checks, unit/API tests, MongoDB integration tests, desktop/mobile browser tests and development-origin checks. It makes no live Gemini inference requests.
+
+Individual checks include:
+
+```powershell
 npm test
 npm run test:mongo
 npm run build
 npm run test:e2e
-npm run test:dev-origins
-npm run seed:demo
-npm run admin:create
+npm run test:simulation
+npm run test:acceptance-journey
+npm run security:check
 ```
 
-`npm run verify` runs the offline regression gates in order and fails immediately if a stage fails. Tests default to loopback MongoDB on port 27017, independently of the private application URI; set `MONGODB_TEST_URI` explicitly for a dedicated test server. The read-only health test also uses a unique test database. All mutating suites use generated UUID database names and drop only those databases. `MONGODB_TEST_URI` can select the test server. Browser fixtures and the test API share a generated, explicit test-only database; helpers verify it before account/report writes and cleanup. Final teardown verifies the exact database name before dropping it. Ordinary application records and accounts are preserved.
+MongoDB tests default to a local test server independently of the private application URI. Mutating suites use uniquely named owned test databases with guarded cleanup. Browser checks require a built frontend and a supported browser; Microsoft Edge is the default. See the [testing guide](docs/phase11.md) for prerequisites and alternatives.
 
-Provision an administrator with `npm run admin:create`. Development generates a random password in the ignored `.local/admin-access.json` when `ADMIN_PASSWORD` is unset. Open `/admin` and sign in using that file. Existing accounts are never overwritten. Production provisioning requires explicit `ADMIN_EMAIL` and `ADMIN_PASSWORD` (at least 12 characters). No public administrator/operator registration or shared default password exists. See [Phase 4](docs/phase4.md) for session/security details and map fallback.
+Live Gemini diagnostics are separate opt-in tests that may consume quota or incur charges. Mocked success is not proof of live-provider availability. Measured verification results and remaining infrastructure gates are retained in acceptance reports instead of historical test counts in this overview.
 
-## Citizen report workflow
+## Deployment status
 
-Delivery verification is performed by the **assigned OPERATOR** in **Your assignments**, after **Start trip → Mark arrived**. The ADMIN **Trips and deliveries** screen explains the handoff and displays saved verification/history; it does not grant operator actions. In the fictional demo select **Generate demo OTP**; ordinary delivery uses the designated citizen's private report code or a configured recipient adapter. See the [current master acceptance report](docs/aquashield-master-acceptance-report.md) for current checks and unresolved gates.
+Hosting preparation targets **AWS Amplify Hosting** for the static frontend and **AWS App Runner** for the backend, subject to account/service compatibility. **MongoDB Atlas** can remain the database. AWS hosting is separate from AI; Bedrock and AWS model credentials are not required.
 
-1. Register at `/register` with name, email and a password of at least 12 characters, then sign in at `/citizen/login`. Open `/` and choose **Report water shortage**. The backend assigns CITIZEN; public registration cannot create administrators or operators.
-2. Capture device location, enter coordinates, or select the approximate Panchavati locality center. Enter the actual area/locality separately if necessary. Location permission denial has a manual fallback; no map or geocoding service is required.
-3. Choose the problem, household water level, and household size (1–100). Supply time and approximate duration may remain unknown; unknown values are stored as `null`, not made up.
-4. Optionally add a description (up to 2000 characters) and a JPEG/PNG photo (up to 2 MB and 16 million input pixels). The server verifies the image, resizes it to at most 1280 × 1280, re-encodes as JPEG, and strips metadata.
-5. Submit. The API saves a MongoDB report and the confirmation shows its ID and **Pending verification** status. Open the status page or `/my-reports` to retrieve the saved report. Refreshes read MongoDB, not a frontend mock.
+The repository includes frontend build configuration, backend container configuration, health/readiness handling, production validation and a release checklist. Atlas connection and isolated simulation preparation have been verified in the developer workspace. **Public AWS deployment has not been completed or verified.**
 
-Citizen accounts reuse the existing scrypt password hashing and expiring, revocable MongoDB bearer sessions. The frontend retains the existing sessionStorage token key; refresh preserves the session, and sign-in from another browser retrieves account-owned history. The backend sets immutable report ownerId from authentication, never the request body. Another citizen cannot read a private report by ID. Old browser keys no longer authorize live reporting or private history; ownerless records remain preserved as legacy/imported for officer review. See [Phase 6.5](docs/phase65.md) for security assumptions and compatibility.
+Hosted builds need an actual API URL or a configured reverse proxy; Vite's development proxy is absent on static hosting. Database/Gemini secrets belong in backend runtime configuration. Production requires exact hosted-origin CORS, restricted database access and verified authentication/persistence workflows. Review proxy/rate-limit and multi-instance behavior before scaling.
 
-Login routes citizens to `/my-reports`, administrators to `/admin`, and operators to `/operator`, preserving an intended destination only for that role or a public page. Shared navigation/landing links show permitted portals; direct wrong-role URLs display a denial with a return link without discarding the valid session. Account/logout is available throughout the application. Sign out and authenticate as another provisioned account to use another role. See [portal access, root cause and verification](docs/portal-access.md).
+Follow the [deployment guide](docs/deployment-readiness.md) and [readiness report](docs/deployment-readiness-report.md) for commands, compatibility checks and outstanding gates. Local functionality and deployment files alone do not establish production readiness.
 
-Officers can review reporter names, email/contact verification state and supporting household evidence under `/admin/reports`. Names/contact/locality are user-provided; email ownership, identity and residency are not verified. No email/SMS provider, fake OTP or government ID is used. Public live clusters below the configured household threshold are withheld, coordinates of larger clusters are generalized, and household population breakdowns are suppressed. Authorized municipal views retain precise evidence. Agent snapshots omit citizen identity and household coordinates. Own history and status pages show recorded area approval/assignment without claiming household delivery. See [remediation policy and verification](docs/remediation.md).
+## Documentation
 
-The client sends a unique `submissionId`. Retrying an unchanged submission returns the existing report instead of creating another, including concurrent retries. POST submissions are limited to 30 per connection/IP per 15 minutes with an in-process limiter; production deployments will need appropriate proxy configuration and a shared limiter.
+[AQUASHIELD_SPEC.md](AQUASHIELD_SPEC.md) is the authoritative specification, including its overriding rules. This README explains the project; detailed implementation history and acceptance evidence remain in supporting documents.
 
-Household size is citizen-provided. Phase 3 derives approximate population, shortage confidence and severity in separate shortage events. Citizen reports start PENDING. Authorized administrators can verify or reject submitted evidence with a required review note; this is not a physical field inspection, identity check or resolution. Ordinary report creation cannot set verification status. Public aggregate APIs never expose private report IDs, anonymous keys, descriptions, household coordinates or photos. Zone centers are averages of report coordinates, including explicitly approximate locality centers.
+| Topic                    | Reference                                                                                                                        |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| Shortage calculations    | [Clustering, confidence and severity](docs/phase3.md)                                                                            |
+| Authentication/access    | [Citizen ownership](docs/phase65.md), [portal authorization](docs/portal-access.md)                                              |
+| Municipal workflows      | [Fair allocation](docs/phase6.md), [trips and verification](docs/phase7.md)                                                      |
+| AI contracts/reliability | [Agent architecture](docs/phase5.md), [provider resilience](docs/ai-reliability.md)                                              |
+| Numerical predictions    | [Formulas, uncertainty and data limits](docs/phase8.md)                                                                          |
+| Analytics/audit          | [Metric definitions and audit coverage](docs/phase10.md)                                                                         |
+| Demonstrations           | [Faculty walkthrough](docs/demo-guide.md), [dynamic simulation](docs/dynamic-simulation.md)                                      |
+| Acceptance evidence      | [Master report](docs/aquashield-master-acceptance-report.md), [simulation results](docs/dynamic-simulation-acceptance-report.md) |
+| Deployment               | [Hosting/Atlas guide](docs/deployment-readiness.md), [readiness results](docs/deployment-readiness-report.md)                    |
 
-## Persistent faculty demonstration data
+## Current boundaries
 
-Follow [the persistent faculty guide](docs/demo-guide.md) for exact PowerShell configuration, private generated credentials and the full Phase 1–7 walkthrough. `npm run seed:demo` now requires `NODE_ENV=development`, `DEMONSTRATION_MODE=true`, `DEMO_SEED_ENABLED=true` and an explicitly named `DEMO_DATABASE_NAME=aquashield_demo`. It selects a separate database on the configured MongoDB server, preserving the normal application database and the real root `.env`. Production mode, missing flags and target mismatches are refused.
-
-An empty safe target receives 16 citizen accounts, 9 operator accounts, 1 admin, 48 owned reports across 6 areas, 9 tankers, 5 municipal fairness evidence records, 12 allocations and 9 trips/deliveries. Six completed trips use genuinely generated/verified **demo** OTPs and record 3,000 simulated litres through the existing services. Panchavati remains the hero; the fictional sixth area has insufficient/emerging evidence. Severity/confidence/population are derived, not hardcoded. Re-seeding inserts missing records without deleting/resetting existing actions or submissions. It does not renew timestamps or observations. Credentials are private in ignored `.local/demo-credentials.json`; no default password/backdoor exists. Read the guide's freshness limitations before later demonstrations.
-
-The server provides the demonstration environment banner and source context; newly registered citizens create no automatic reports. Explicit submissions become normal persisted, owned `CITIZEN_SUBMISSION` records alongside `DEMO_SEED` scenarios. Own history works at `/my-reports`, without `?demo=true`; the legacy public demo preview excludes owned records. No live Gemini call occurs during seed/startup/regression tests. Four-role mocked success and provider-outage fallback are tested separately from live inference. The opt-in live script supports guarded aggregate `--persisted-demo` evidence with no fallback; see the guide before authorizing quota/charges. AWS deployment remains deferred. Phase 8 numerical APIs/dashboard require no Gemini key; sparse demo history returns INSUFFICIENT_DATA.
-
-Browser tests require an installed Microsoft Edge by default and a built frontend (`npm run build` first). They start isolated API/preview servers on **5100/4174**, so those ports must be free. For Chrome, set `$env:PLAYWRIGHT_CHANNEL='chrome'`. For Playwright Chromium, set `$env:PLAYWRIGHT_BROWSERS_PATH` to a directory inside this repository, run `npx playwright install chromium`, then set `$env:PLAYWRIGHT_CHANNEL='chromium'`.
-
-`npm run dev:api` and `npm run dev:web` run either workspace independently. `npm run start` runs the API without a watcher. `npm run build` creates `apps/web/dist`. `npm run preview` serves that build at `http://localhost:4173` with an API proxy; add that exact origin to `CORS_ORIGIN` when using preview. Vite preview is for local verification. Production hosting needs SPA fallback to `index.html` and an API reverse proxy, or an absolute `VITE_API_BASE_URL`.
-
-## Environment configuration
-
-Both applications use the root `.env`. Shell values take precedence. Backend startup validates active configuration without exposing secrets. Restart the relevant process after changing `.env`; rebuild for changes to browser variables.
-
-The frontend build explicitly sets `NODE_ENV=production`, so the backend's development setting in the shared `.env` does not turn the React build into a development bundle.
-
-| Variable                                      | Purpose                                            | Default                                                                                            |
-| --------------------------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `NODE_ENV`                                    | `development`, `test`, or `production`             | `development`                                                                                      |
-| `PORT`                                        | API port                                           | `5000`                                                                                             |
-| `MONGODB_URI`                                 | MongoDB URI                                        | Local `aquashield` database                                                                        |
-| `MONGODB_CONNECT_TIMEOUT_MS`                  | Connection/server selection timeout                | `5000`                                                                                             |
-| `MONGODB_RETRY_INTERVAL_MS`                   | Initial connection retry delay                     | `5000`                                                                                             |
-| `CORS_ORIGIN`                                 | Comma-separated exact origins; no trailing slash   | Development/test: `http://localhost:5173,http://127.0.0.1:5173`; required explicitly in production |
-| `VITE_API_BASE_URL`                           | Public relative or absolute API base URL           | `/api`                                                                                             |
-| `API_PROXY_TARGET`                            | Vite dev/preview proxy target                      | `http://127.0.0.1:<PORT>`                                                                          |
-| `MONGODB_TEST_URI`                            | Optional MongoDB test server; mutating suites use isolated UUID databases             | `MONGODB_URI`                                                                                      |
-| `ADMIN_SESSION_HOURS`                         | Admin session lifetime, 0.1–24 hours               | `8`                                                                                                |
-| `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | Provisioning command only; password ≥12 characters | Development can generate credentials; production requires email/password                           |
-| `ROUTING_BASE_URL` | Optional backend OSRM-compatible HTTPS endpoint | Empty; straight-line fallback |
-| `ROUTING_AVERAGE_SPEED_KPH`, `ROUTING_TIMEOUT_MS` | Labeled average-speed ETA / service timeout | `25` km/h / `5000` ms |
-| `DELIVERY_OTP_TTL_SECONDS`, `DELIVERY_OTP_MAX_ATTEMPTS`, `DELIVERY_OTP_REISSUE_SECONDS` | Bounded expiry, attempts and cooldown | `300` / `5` / `60` |
-
-Only variables prefixed with `VITE_` are exposed to the browser. Never use that prefix for secrets. `.env` files, build output, dependencies, and local test artifacts are ignored by Git.
-
-### CORS and local origins
-
-Use `CORS_ORIGIN=http://localhost:5173,http://127.0.0.1:5173` in the root `.env` for the default development server. These are distinct browser origins, even though both refer to this computer. Explicit environment values replace the defaults; add any different frontend port or host to that list. Restart the API after changing it. Production requires an explicit list such as `CORS_ORIGIN=https://your-frontend.example`; local origins are never added automatically in production.
-
-Keep `VITE_API_BASE_URL=/api` for the Vite proxy. The proxy preserves the browser's Origin on report POST requests, so its backend target is not the frontend origin to allow. CORS runs before routes and handles JSON/Authorization preflights with explicit origins. Authentication uses bearer sessions rather than credentialed cross-origin cookies.
-
-`npm run test:dev-origins` starts a separate test API and Vite server, never reuses a normal development server, and uses a UUID-named test database. It checks both localhost and 127.0.0.1. Port 5173 must be free, or set `AQUASHIELD_BROWSER_DEV_PORT` to a free port (for example 5175). Existing CORS unit tests also cover both default port-5173 origins. Browser fixture guards reject ordinary databases; teardown drops only the verified test database.
-
-Current admin authentication uses opaque MongoDB sessions, not `JWT_SECRET`. Redis, Mapbox and Bedrock placeholders remain optional. Strands/Gemini use backend-only `AI_PROVIDER=gemini`, `GEMINI_API_KEY`, configurable `GEMINI_MODEL_ID`, `DEMO_AI_MODE` and bounded `AI_TIMEOUT_MS` (default 15000). `.env.example` currently uses `DEMO_AI_MODE=false`; explicitly set true for key-free simulation. Absence defaults to false. Production rejects demo AI and fictional evidence. Any legacy `.env` value `AI_PROVIDER=bedrock` must be changed to `gemini` before real execution; `STRANDS_MODE` is unused.
-
-Explicit demo mode needs no key, performs no provider calls and shows “Demo AI simulation — no Gemini execution.” For real mode set `DEMO_AI_MODE=false`, a backend-only key and an account-accessible model ID, then restart. Missing configuration or provider failure returns an explicit error; there is no silent demo/Bedrock fallback. Never prefix the key with `VITE_`, commit it, log it or return it to browsers. AWS authentication is separate.
-
-`npm run test:ai:live` checks model access, then sends only fictional evidence through the actual Strands/Google provider, validates the response and prints safe stage/timing/error metadata. Missing key/model prints **SKIPPED**, not success. Live calls require explicit authorization and can incur charges. Three roles passed the 10 October checks; Resource Allocation returned Google HTTP 503. See [current per-role results](docs/through-phase7-audit.md) and [the full agent guide](docs/phase5.md).
-
-## Routes
-
-| Frontend route               | Behavior                                                                             |
-| ---------------------------- | ------------------------------------------------------------------------------------ |
-| `/`                          | Citizen landing page and base layout                                                 |
-| `/report`                    | Water problem reporting form                                                         |
-| `/report/success?id=<id>`    | Persisted report confirmation                                                        |
-| `/my-reports`                | Signed-in citizen's account-owned report history |
-| `/my-reports?demo=true`      | Clearly labeled simulated report history                                             |
-| `/report/:id`                | Owner-only report details, verification status and aggregate shortage evidence       |
-| `/status`                    | API/database health, loading/error states, retry                                     |
-| `/login`                     | Administrator sign-in                                                                |
-| `/register`, `/citizen/login` | Public citizen registration and shared-session citizen sign-in |
-| `/admin/reports`, `/admin/reports/:id` | Officer-only reporter source, contact and supporting evidence review |
-| `/admin`, `/admin/shortages` | Protected command center and shortage map/table                                      |
-| `/alerts`                    | Public aggregate shortage evidence; no private report/fleet layers                   |
-| `/alerts/:id`                | Public aggregate detail without private assessment context                           |
-| `/admin?demo=true`           | Labeled deterministic multi-area demo                                                |
-| `/admin/shortages/:id`       | Shortage evidence and numeric calculation details                                    |
-| `/admin/analytics`           | Protected evidence analytics                                                         |
-| `/admin/tankers`             | Protected fleet management and operator provisioning |
-| `/admin/allocations`         | Fair recommendations, review, approval/rejection and explicit assignment |
-| `/operator`                  | Authenticated operator's own tanker and assignments |
-| `/operator/assignment/:id`    | Owned assigned-job detail, route estimates and trip controls |
-| `/admin/deliveries` | Protected trip/delivery history, actual litres, verification audits and recovery |
-| `/admin` AI panel            | Four role assessments with explicit real/demo mode, evidence and human-review status |
-| Other paths                  | Friendly 404                                                                         |
-
-| Method     | Backend route                                                              | Behavior                                                                           |
-| ---------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| GET        | `/`                                                                        | Backend identity and API link                                                      |
-| GET        | `/api`                                                                     | Phase/version and endpoint metadata                                                |
-| GET        | `/api/health`                                                              | `200` when MongoDB responds to ping; `503` otherwise                               |
-| POST       | `/api/reports`                                                             | CITIZEN session; validate/save account-owned report; `201` new, `200` idempotent retry |
-| GET        | `/api/reports`                                                             | CITIZEN account's history; `page` and `limit` pagination                            |
-| GET        | `/api/reports?demo=true`                                                   | Public simulated reports only                                                      |
-| GET        | `/api/reports/:id`                                                         | Owner-only details/photo, or a public demo report                                  |
-| GET        | `/api/shortages`, `/api/shortages/:id`                                     | Refresh and return public aggregates; `?demo=true` selects only simulated evidence |
-| POST       | `/api/shortages/detect`                                                    | Admin-only aggregate refresh; rate limited                                         |
-| GET / POST | `/api/shortages/:id/severity`, `/api/shortages/:id/calculate-severity`     | Public inspect / admin-only refresh of deterministic severity                      |
-| POST       | `/api/auth/login`, `/api/auth/logout`                                      | Rate-limited shared login / authenticated session revocation                       |
-| GET        | `/api/auth/me`                                                             | Validate current CITIZEN, ADMIN or OPERATOR session                                 |
-| POST | `/api/auth/register` | Strict public citizen registration with server-assigned role |
-| GET | `/api/dashboard/reports`, `/api/dashboard/reports/:id` | ADMIN-only source/contact and report evidence |
-| GET        | `/api/dashboard/summary`, `/api/dashboard/map`, `/api/dashboard/analytics` | Protected metrics/activity, map layers and analytics                               |
-| GET        | `/api/dashboard/shortages/:id`                                             | Protected assessment context and recorded delivery history if available            |
-
-**Phase 5 admin-only POST endpoints:** `/api/ai/detect`, `/api/ai/allocate`, `/api/ai/logistics`, `/api/ai/predict`, `/api/ai/recommend-allocation`. Accept only optional `eventId` and boolean `demo`; the two allocation routes share one implementation. Recommendations cannot assign/dispatch resources. See [request/response and error details](docs/phase5.md#protected-apis).
-
-Live report POST/list/detail require the existing `Authorization: Bearer <session>` for a CITIZEN account. All private reads are filtered by backend-authenticated account ownership; `X-Citizen-Token` is no longer sufficient. JSON errors remain consistent: `422` invalid report, `401` missing/expired session, `403` wrong role, `404` unavailable report, `413` oversized payload, `429` rate limit, and `503` unavailable database. Photo contents are omitted from list/submission responses and included only in an authorized detail response. Public fictional reports remain available outside production through explicit demo mode.
-
-Errors use the spec's format:
-
-```json
-{
-  "success": false,
-  "message": "The requested endpoint does not exist.",
-  "code": "NOT_FOUND",
-  "details": {}
-}
-```
-
-Health additionally includes `data.service`, `data.status`, `data.database`, `data.uptimeSeconds`, and `data.timestamp`. It exposes no connection strings, credentials, or stack traces.
-
-## Architecture and scope
-
-```text
-React / React Router
-        | /api through Vite dev/preview proxy
-Express routes -> health controller -> Mongoose -> MongoDB ping
-               -> report controller -> validation/photo processing -> Report collection
-        | centralized error middleware
-```
-
-Backend configuration, routes, controllers, and middleware are separate modules. Frontend pages, layout, API client, and status hook are separated. There are no TypeScript application files or shared-types package.
-
-The Report collection stores citizen-provided household evidence, sanitized photo, server-assigned citizen ownerId, an internal reporter hash for duplicate detection, submission ID, timestamps, verification status and a demo flag. Legacy ownerless and demo records are retained without assigning them to real users. JavaScript report options are shared in `packages/shared/reportOptions.js`.
-
-Phase 6 adds persisted fleet/allocation APIs and private operator assignments. Phase 6.5 ties report history to accounts. Phase 7 adds trusted delivery records, operator trip controls, protected OTP verification, recorded actual litres, standalone-MongoDB completion recovery and citizen area-response updates. Scoring, fairness, agents and allocation evidence remain authoritative backend logic. Phase 8 now adds bounded report-activity forecasting independently of Gemini; insufficient history stays unknown.
-
-## Agent architecture and remaining phases
-
-The API pins `@strands-agents/sdk@1.20.0` and `@google/genai@2.6.0`. Node 22.21.1 was verified; no TypeScript service is required. `Agent` uses the explicit `GoogleModel` provider, Zod structured output and one read-only evidence tool. Configuration, prompts, input construction, output validation, demo simulation and provider invocation live in separate backend modules. [Official SDK](https://github.com/strands-agents/sdk-typescript), [Google provider](https://strandsagents.com/docs/user-guide/sdk/model-providers/google/)
-
-Crisis Detection explains evidence/verification; Resource Allocation explains backend priority/fairness limitations; Logistics identifies missing operational inputs; Early Warning explains current/trend evidence without inventing a risk score. Backend numeric facts are authoritative. Model prose remains subject to human review, and recommendation confidence stays null rather than an invented percentage.
-
-| Phase | Status / scope                                                                                                                                                             |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 5     | Implemented: four agent roles, protected APIs, dashboard panel, validated real-provider path and key-free demo mode. Complete live Gemini assessment remains unverified after provider unavailability. |
-| 6     | Implemented: deterministic fair allocation, fleet management, approval/rejection, atomic assignment and operator visibility. |
-| 7     | Implemented locally: route estimates, owned trips, private citizen-portal OTP handoff, demo OTP, recorded delivery and operational analytics. |
-| 8 | Implemented: Gemini-independent report-activity predictions and audited numerical alerts; inadequate history remains insufficient. |
-| 9 | Implemented: deployment readiness preparation; actual AWS hosting remains unverified. |
-| 10 | Implemented: bounded municipal analytics and searchable audit history. |
-| 11 | Implemented: offline testing and reliability checks. |
-| 12 | Implemented: presentation polish and repeatable faculty guide. |
-
-Later phases require explicit authorization. Bedrock remains optional. The complete Phase 5 file inventory, API contract, limitations and test results are in [docs/phase5.md](docs/phase5.md).
-
-Phase 12 preserves the backend and data while refining shared controls/focus/navigation, dashboard drill-downs, trip guidance and read-only recovery after uncertain actions. The faculty guide starts existing records without reseeding. Verification passed 193 unit/API, 106 MongoDB, 116 desktop/mobile browser and 2 origin tests; lint, build, secret and configuration checks passed. See [the file inventory, visual review and limitations](docs/phase12.md) and [the faculty presentation sequence](docs/demo-guide.md#phase-12-concise-presentation-run-sheet).
-
-## AWS deployment strategy — planned, not deployed
-
-The AWS requirement is real application hosting with tested public frontend/backend URLs and database persistence, demonstrated in the final video. Prefer **AWS Amplify Hosting** for the existing static React/Vite frontend and **AWS App Runner** for the Express backend, with **MongoDB Atlas** allowed as the external database. Final service/configuration selection remains subject to account eligibility, runtime, build, routing, secrets and network compatibility checks; no cloud resources are provisioned in this task.
-
-App Runner's eligibility is a required check: AWS stopped accepting new customers on April 30, 2026. Check the target account before selecting it; document a compatible AWS backend alternative if needed. [AWS service notice](https://aws.amazon.com/apprunner/)
-
-Verify the existing npm-workspace/root-lockfile build, `apps/web/dist`, Node.js 22.13+, Sharp dependencies, backend start/port/readiness, Atlas connectivity and restricted access. Static hosting must use a tested hosted API base URL or explicit reverse proxy rather than assume Vite's local proxy exists. Preserve exact hosted-origin CORS, admin/citizen-token authorization, production demo restrictions and current tests. Assess in-process rate limits/detection before scaling across backend instances. Section 47–48 of the [specification](AQUASHIELD_SPEC.md) contains service documentation and the deployment acceptance checklist.
-
-Do not claim AWS deployment from configuration placeholders, mock output or local-only screenshots. Publish actual service names, tested URLs and results only after successful public health/auth/report/dashboard/persistence checks. Bedrock calls and AWS model credentials are not required. Local Gemini integration does not prove AWS hosting; later hosting must also verify any agent-service build, protected internal boundary, Gemini outbound connectivity and backend-only secret injection. Local AWS CLI authentication is currently unavailable; verify deployment account access separately in that later phase.
-
-Phase 9 prepares deployment configuration, health/readiness checks, safe runtime logs,
-container definitions and a clean locked build. See [deployment readiness, exact
-commands, file inventory and blockers](docs/phase9-deployment-readiness.md).
-Actual deployment and dynamic simulation remain deferred. Phase 12 adds frontend presentation polish and a repeatable faculty walkthrough; see [Phase 12 changes and verification](docs/phase12.md). Further phases are not started. Live AI diagnostics are separate opt-in commands, never part of `npm run verify`; see docs/ai-reliability.md and docs/demo-guide.md.
-
-## Phase 7 API and verification
-
-Authenticated ADMIN/OPERATOR: `GET /api/deliveries?demo=true|false` and
-`GET /api/deliveries/:id`. Owning OPERATOR: `POST /api/deliveries/:id/start`,
-`/arrive`, `/otp`, `/demo-otp`, `/verify` and `/complete`. ADMIN-only:
-`POST /api/deliveries/:id/recover`. Inputs, limits, recovery policy and the exact
-fictional UI walkthrough are documented in [docs/phase7.md](docs/phase7.md).
-`POST /api/reports/:id/delivery-otp` supplies a private code only to the designated
-authenticated citizen after arrival. Code retrieval is separate from ordinary
-report/staff responses. Operator-triggered messaging still fails closed without
-an external handoff adapter. Normal tests use isolated databases, mocked routing,
-citizen portal handoff and controlled recipient adapters, not paid
-services, live Gemini, production SMS or live GPS.
-
-## Pre-simulation acceptance remediation
-
-Administrator submitted-evidence review, authenticated My Alerts with explicit service-area preference and per-citizen read state, safe municipal advisory publication/withdrawal, audited present-time simulated fleet observations, and a separate opt-in synthetic forecast history are implemented. See [current remediation contracts and results](docs/pre-simulation-remediation-report.md). The [original acceptance audit](docs/pre-simulation-acceptance-report.md) remains historical evidence.
-
-Use `npm run demo:readiness` for a guarded read-only demonstration check. `npm run seed:forecast-demo` requires explicit non-production demonstration, fixture and seed flags and a matching connected database. It adds only synthetic forecast observations, never citizen reports or accounts. In `/admin/predictions`, explicitly choose **Prepared synthetic forecast history**, then evaluate. Ordinary history, operational risk KPIs and allocation remain separate. See [safe preparation steps](docs/demo-guide.md#pre-simulation-remediation-preparation). No virtual clock, background generation, live inference or cloud deployment was added.
-
-## Deployment with MongoDB Atlas
-
-AWS hosting files and the Atlas release procedure are in [the deployment guide](docs/deployment-readiness.md). The frontend uses `amplify.yml`; the backend uses its existing Docker image and private `MONGODB_URI`. Local MongoDB and the isolated simulation remain supported. Cloud deployment and Atlas connectivity are pending actual account/network configuration; no secrets belong in frontend settings.
+AquaShield supports evidence-based decisions; it does not independently establish physical shortage conditions, verified household receipt or continuous GPS tracking. Population, distance, ETA and forecast risks retain their uncertainty. Live AI depends on provider availability, while supported numerical services continue independently. External messaging, production scaling and public deployment need separate integration and acceptance checks. Demonstration data and simulations are synthetic and separated from ordinary operations.
