@@ -109,7 +109,7 @@ Simulation controls support start, pause, resume, step, speed and stop. Fifteen 
 
 **Refresh saved simulation** reloads stored evidence and operational results. It does not advance or restart the scenario. A stopped/finished run is terminal. Another independent run requires a new isolated simulation database with matching configuration, preserving the previous run. A same-database New simulation run feature is not implemented. One backend instance is supported per simulation database.
 
-Generated credentials remain in ignored private `.local` files. There are no public shared passwords, production simulation mode or automatic startup seeds.
+Generated credential files remain ignored in `.local`. Selected synthetic simulation accounts are intentionally published in [Demo access](DEMO_ACCESS.md); their AWS login access is not verified. There is no production simulation mode or automatic startup seeding.
 
 ## Architecture
 
